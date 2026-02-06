@@ -1,0 +1,15 @@
+.DS_Store
+.AppleDouble
+.LSOverride
+.uvc
+*.xcuserstate
+*.xcuserdata/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+.build/
+Packages/
+Package.resolved
+timeline.xctimeline
+playground.xcworkspace
