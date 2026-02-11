@@ -4,40 +4,46 @@ import SwiftData
 @main
 @available(iOS 17.0, *)
 struct TransferTrackApp: App {
-    let container: ModelContainer
-    
-    // track if onboarding is done
-    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
-
-    init() {
-        do {
-            let schema = Schema([
-                University.self,
-                Course.self,
-                SimulationState.self
-            ])
-            let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-            container = try ModelContainer(for: schema, configurations: [config])
-        } catch {
-            fatalError("Failed to create ModelContainer: \(error)")
-        }
-    }
+    @State private var isOnboardingComplete: Bool = false
 
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                if hasCompletedOnboarding {
-                    DashboardView()
-                        .transition(.opacity)
-                } else {
-                    OnboardingFlowView(isOnboardingComplete: $hasCompletedOnboarding)
-                }
-            }
-            .animation(.easeInOut, value: hasCompletedOnboarding)
-            .onAppear {
-                Seeder.seedIfNeeded(container.mainContext)
+            RootView(isOnboardingComplete: $isOnboardingComplete)
+        }
+        .modelContainer(DataController.makeContainer())
+    }
+}
+
+@available(iOS 17.0, *)
+struct RootView: View {
+    @Binding var isOnboardingComplete: Bool
+
+    var body: some View {
+        ZStack {
+            if isOnboardingComplete {
+                DashboardView()
+            } else {
+                OnboardingFlowView(isOnboardingComplete: $isOnboardingComplete)
             }
         }
-        .modelContainer(container)
+        .preferredColorScheme(.dark)
+    }
+}
+
+
+@available(iOS 17.0, *)
+enum DataController {
+    static func makeContainer() -> ModelContainer {
+        let schema = Schema([
+            University.self,
+            Course.self,
+            SimulationState.self
+        ])
+        let config = ModelConfiguration(isStoredInMemoryOnly: false)
+        do {
+            return try ModelContainer(for: schema, configurations: [config])
+        } catch {
+            fatalError("Failed to create ModelContainer: \(error)")
+        }
     }
 }

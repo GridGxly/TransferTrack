@@ -1,488 +1,448 @@
 import SwiftUI
 import SwiftData
-import MapKit
+
+enum USState: String, CaseIterable, Identifiable {
+    case florida = "Florida"
+    case california = "California"
+    case texas = "Texas"
+    case newYork = "New York"
+    var id: Self { self }
+}
+
+struct TransferPipeline: Hashable {
+    let origin: String
+    let target: String
+}
+
 
 @available(iOS 17.0, *)
 struct OnboardingFlowView: View {
     @Binding var isOnboardingComplete: Bool
-    @State private var currentStep = 0
-    
-    // user choices
-    @State private var selectedOrigin: University?
-    @State private var selectedTarget: University?
-    @State private var currentSavings: Double = 2000
-    @State private var housingMode: Int = 0
-    
-    // data access
-    @Query(sort: \University.name) var universities: [University]
     @Environment(\.modelContext) var context
     
-    // map state
-    @State private var cameraPosition: MapCameraPosition = .region(MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 28.5383, longitude: -81.3792),
-        span: MKCoordinateSpan(latitudeDelta: 1.0, longitudeDelta: 1.0)
-    ))
+    // logic State
+    @State private var currentStep = 0
+    
+
+    @State private var selectedState: USState = .florida
+    @State private var selectedPipeline: TransferPipeline?
+    @State private var gpa: Double = 3.2
+    @State private var credits: Double = 45
+    @State private var housingSelection: HousingType?
     
     var body: some View {
         ZStack {
-            Map(position: $cameraPosition) {
-                if let origin = selectedOrigin {
-                    Marker("Start", systemImage: "figure.walk", coordinate: origin.location)
-                        .tint(.green)
-                }
-                if let target = selectedTarget {
-                    Marker("Goal", systemImage: "flag.checkered", coordinate: target.location)
-                        .tint(.yellow)
-                }
-                if let origin = selectedOrigin, let target = selectedTarget {
-                    MapPolyline(coordinates: [origin.location, target.location])
-                        .stroke(.blue, lineWidth: 3)
-                }
-            }
-            .mapStyle(.imagery(elevation: .realistic))
-            .overlay(Color.black.opacity(0.7))
-            .ignoresSafeArea()
-            .animation(.easeInOut(duration: 2.0), value: cameraPosition)
-            .allowsHitTesting(false)
-            TabView(selection: $currentStep) {
-                
-                RouteSelectionView(
-                    universities: universities,
-                    selectedOrigin: $selectedOrigin,
-                    selectedTarget: $selectedTarget,
-                    onNext: {
-                        if let o = selectedOrigin, let t = selectedTarget {
-                            let midLat = (o.location.latitude + t.location.latitude) / 2
-                            let midLon = (o.location.longitude + t.location.longitude) / 2
-                            withAnimation {
-                                cameraPosition = .region(MKCoordinateRegion(
-                                    center: CLLocationCoordinate2D(latitude: midLat, longitude: midLon),
-                                    span: MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
-                                ))
-                                currentStep = 1
-                            }
-                        }
+            LiquidBackground()
+            
+            VStack {
+                // progress Bar
+                HStack(spacing: 8) {
+                    ForEach(0..<4) { index in
+                        Capsule()
+                            .fill(index <= currentStep ? Color.blue : Color.gray.opacity(0.1))
+                            .frame(height: 6)
+                            .animation(.spring(), value: currentStep)
                     }
-                )
-                .tag(0)
+                }
+                .padding(.horizontal, 40)
+                .padding(.top, 20)
                 
-
-                FinancialBaselineView(
-                    savings: $currentSavings,
-                    onNext: { withAnimation { currentStep = 2 } }
-                )
-                .tag(1)
-
-
-                LifestyleSelectionView(
-                    housingMode: $housingMode,
-                    onNext: { withAnimation { currentStep = 3 } }
-                )
-                .tag(2)
-
-
-                ImpactRevealView(
-                    origin: selectedOrigin,
-                    target: selectedTarget,
-                    housingMode: housingMode,
-                    savings: currentSavings,
-                    onFinish: {
-                        finishOnboarding()
-                    }
-                )
-                .tag(3)
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-        }
-        .onAppear {
-            if universities.isEmpty {
-                seedData()
+                TabView(selection: $currentStep) {
+                    // location & pipeline
+                    StateAndSchoolStep(
+                        selectedState: $selectedState,
+                        selectedPipeline: $selectedPipeline,
+                        onNext: nextStep
+                    )
+                    .tag(0)
+                    
+                    // academics
+                    AcademicStatsStep(
+                        gpa: $gpa,
+                        credits: $credits,
+                        onNext: nextStep
+                    )
+                    .tag(1)
+                    
+                    // housing
+                    HousingSelectionStep(
+                        selection: $housingSelection,
+                        onNext: nextStep
+                    )
+                    .tag(2)
+                    
+                    // simulation
+                    SimulationLoadingStep(
+                        pipeline: selectedPipeline,
+                        onFinish: finishOnboarding
+                    )
+                    .tag(3)
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
             }
         }
+    }
+    
+    func nextStep() {
+        withAnimation { currentStep += 1 }
     }
     
     func finishOnboarding() {
-        UserDefaults.standard.set(Double(housingMode), forKey: "initialSliderValue")
+        let isApt = housingSelection == .apartment
+        let rent = isApt ? 1200.0 : 0.0
         
-        do {
-            // ensure state exists
-            if let state = try context.fetch(FetchDescriptor<SimulationState>()).first {
-                state.userSavings = currentSavings
-                state.rentCost = housingMode == 1 ? 1200 : 0
-            } else {
-                let state = SimulationState(userSavings: currentSavings, rentCost: housingMode == 1 ? 1200 : 0, tuitionGap: 0)
-                context.insert(state)
-            }
-            try context.save()
-            withAnimation { isOnboardingComplete = true }
-        } catch {
-            print("Failed to save simulation state: \(error)")
-        }
-    }
-    
-    
-    func seedData() {
-        let list = [
-            University(name: "Valencia College", tuitionRate: 103.0, colorHex: "#8C2131"),
-            University(name: "UCF", tuitionRate: 212.0, colorHex: "#FFC904"),
-            University(name: "Univ. of Florida", tuitionRate: 212.0, colorHex: "#FA4616"),
-            University(name: "FIU", tuitionRate: 205.0, colorHex: "#081E3F"),
-            University(name: "Miami Dade College", tuitionRate: 118.0, colorHex: "#00578A"),
-            University(name: "UCLA", tuitionRate: 450.0, colorHex: "#2D68C4")
-        ]
+
+        try? context.delete(model: SimulationState.self)
         
-        for uni in list {
-            context.insert(uni)
-        }
-        
-        let state = SimulationState(userSavings: 2000, rentCost: 0, tuitionGap: 0)
+
+        let state = SimulationState(
+            userSavings: 2500,
+            rentCost: rent,
+            tuitionGap: 0
+        )
         context.insert(state)
         
-        try? context.save()
+        withAnimation { isOnboardingComplete = true }
     }
 }
 
 
-
 @available(iOS 17.0, *)
-struct RouteSelectionView: View {
-    var universities: [University]
-    @Binding var selectedOrigin: University?
-    @Binding var selectedTarget: University?
+struct StateAndSchoolStep: View {
+    @Binding var selectedState: USState
+    @Binding var selectedPipeline: TransferPipeline?
     var onNext: () -> Void
     
-    // sheet state
-    @State private var showOriginSheet = false
-    @State private var showTargetSheet = false
-    
-    var body: some View {
-        VStack(spacing: 25) {
-            Spacer()
-            
-            Text("Design Your Path")
-                .font(.system(size: 34, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white)
-                .shadow(color: .blue.opacity(0.8), radius: 20)
-            
-            VStack(spacing: 15) {
-                Button(action: { showOriginSheet = true }) {
-                    GlassCard(title: "Current College", value: selectedOrigin?.name ?? "Tap to Select", icon: "building.columns.fill", isSet: selectedOrigin != nil)
-                }
-                .sheet(isPresented: $showOriginSheet) {
-                    UniversityPickerSheet(title: "Select Origin", universities: universities, selection: $selectedOrigin)
-                }
 
-                Image(systemName: "arrow.down")
-                    .font(.title2)
-                    .foregroundStyle(.white.opacity(0.5))
-
-                Button(action: { showTargetSheet = true }) {
-                    GlassCard(title: "Target University", value: selectedTarget?.name ?? "Tap to Select", icon: "graduationcap.fill", isSet: selectedTarget != nil)
-                }
-                .sheet(isPresented: $showTargetSheet) {
-                    UniversityPickerSheet(title: "Select Target", universities: universities, selection: $selectedTarget)
-                }
-            }
-            .padding(.horizontal)
-            
-            Spacer()
-            
-            if selectedOrigin != nil && selectedTarget != nil {
-                ContinueButton(title: "Calculate Route", action: onNext)
-            }
+    var pipelines: [TransferPipeline] {
+        switch selectedState {
+        case .florida:
+            return [
+                TransferPipeline(origin: "Valencia College", target: "UCF"),
+                TransferPipeline(origin: "Miami Dade College", target: "UF"),
+                TransferPipeline(origin: "Seminole State", target: "FSU"),
+                TransferPipeline(origin: "Santa Fe College", target: "UF")
+            ]
+        case .california:
+            return [
+                TransferPipeline(origin: "Santa Monica College", target: "UCLA"),
+                TransferPipeline(origin: "De Anza College", target: "UC Berkeley"),
+                TransferPipeline(origin: "Irvine Valley College", target: "UC Irvine"),
+                TransferPipeline(origin: "Mt. San Antonio", target: "Cal Poly Pomona")
+            ]
+        case .texas:
+            return [
+                TransferPipeline(origin: "Austin Comm. College", target: "UT Austin"),
+                TransferPipeline(origin: "Dallas College", target: "UT Dallas"),
+                TransferPipeline(origin: "El Paso Comm. College", target: "Texas Tech")
+            ]
+        case .newYork:
+            return [
+                TransferPipeline(origin: "BMCC", target: "NYU"),
+                TransferPipeline(origin: "Nassau Comm. College", target: "Stony Brook"),
+                TransferPipeline(origin: "LaGuardia CC", target: "Columbia GS")
+            ]
         }
-        .padding(.bottom, 50)
-    }
-}
-
-// helper sheet for selection
-@available(iOS 17.0, *)
-struct UniversityPickerSheet: View {
-    let title: String
-    let universities: [University]
-    @Binding var selection: University?
-    @Environment(\.dismiss) var dismiss
-    
-    var body: some View {
-        NavigationStack {
-            List(universities) { uni in
-                Button {
-                    selection = uni
-                    dismiss()
-                } label: {
-                    HStack {
-                        Text(uni.name)
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        if selection?.name == uni.name {
-                            Image(systemName: "checkmark").foregroundStyle(.blue)
-                        }
-                    }
-                }
-            }
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-        }
-        .presentationDetents([.medium, .large])
-    }
-}
-
-@available(iOS 17.0, *)
-struct FinancialBaselineView: View {
-    @Binding var savings: Double
-    var onNext: () -> Void
-    
-    var body: some View {
-        VStack(spacing: 30) {
-            Spacer()
-            
-            Text("Day 1 Funding")
-                .font(.largeTitle).bold()
-                .foregroundStyle(.white)
-            
-            Text("How much cash will you have on the day you transfer?")
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.gray)
-                .padding(.horizontal)
-            
-            VStack {
-                Text(savings, format: .currency(code: "USD"))
-                    .font(.system(size: 56, weight: .black, design: .rounded))
-                    .foregroundStyle(.green)
-                    .contentTransition(.numericText())
-                
-                Slider(value: $savings, in: 0...10000, step: 100)
-                    .tint(.green)
-                    .padding()
-            }
-            .padding()
-            .background(.ultraThinMaterial)
-            .cornerRadius(20)
-            .padding()
-            
-            Spacer()
-            
-            ContinueButton(title: "Lock it in", action: onNext)
-        }
-        .padding(.bottom, 50)
-    }
-}
-
-@available(iOS 17.0, *)
-struct LifestyleSelectionView: View {
-    @Binding var housingMode: Int
-    var onNext: () -> Void
-    
-    var body: some View {
-        VStack(spacing: 30) {
-            Spacer()
-            Text("Fall 2026 Lifestyle")
-                .font(.largeTitle).bold()
-                .foregroundStyle(.white)
-            
-            HStack(spacing: 15) {
-                Button(action: { housingMode = 0; onNext() }) {
-                    LifestyleOption(
-                        title: "The Commuter",
-                        icon: "house.fill",
-                        desc: "Living at home.\nLow cost, high traffic.",
-                        color: .green
-                    )
-                }
-                
-                Button(action: { housingMode = 1; onNext() }) {
-                    LifestyleOption(
-                        title: "The Relocator",
-                        icon: "building.2.fill",
-                        desc: "Apartment life.\nIndependence, but expensive.",
-                        color: .orange
-                    )
-                }
-            }
-            .padding(.horizontal)
-            
-            Spacer()
-        }
-        .padding(.bottom, 50)
-    }
-}
-
-@available(iOS 17.0, *)
-struct ImpactRevealView: View {
-    var origin: University?
-    var target: University?
-    var housingMode: Int
-    var savings: Double
-    var onFinish: () -> Void
-    
-    @State private var animatedCost: Double = 0
-    @State private var showButton = false
-    
-    var projectedCost: Double {
-        return housingMode == 1 ? 4200 : 950
     }
     
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
             
-            Text("Projected Transfer Shock")
-                .font(.headline)
-                .foregroundStyle(.gray)
-                .textCase(.uppercase)
-                .tracking(2)
+            Text("Select Your Path")
+                .font(.system(size: 34, weight: .bold, design: .rounded))
             
-            HStack(alignment: .firstTextBaseline, spacing: 5) {
-                Text("-")
-                    .font(.system(size: 60, weight: .black))
-                    .foregroundStyle(.red)
-                Text(animatedCost, format: .currency(code: "USD"))
-                    .font(.system(size: 60, weight: .black, design: .rounded))
-                    .foregroundStyle(.red)
-                    .contentTransition(.numericText())
-            }
-            
-            Text("Per Semester Deficit")
-                .font(.caption)
-                .foregroundStyle(.red.opacity(0.8))
-            
-            if showButton {
-                Text(housingMode == 1 ? "Rent in Orlando is the killer." : "Tuition hikes will eat your savings.")
-                    .font(.body)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(.white)
-                    .padding(.top, 20)
-                    .padding(.horizontal)
-                    .transition(.opacity)
-            }
-            
-            Spacer()
-            
-            if showButton {
-                Button(action: onFinish) {
-                    Text("Enter Simulation")
-                        .font(.headline)
-                        .foregroundStyle(.black)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.white)
-                        .cornerRadius(30)
-                        .shadow(radius: 10)
+            // state picker
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack {
+                    ForEach(USState.allCases) { state in
+                        Button {
+                            withAnimation {
+                                selectedState = state
+                                selectedPipeline = nil // reset pipeline on state change
+                            }
+                        } label: {
+                            Text(state.rawValue)
+                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                                .background(selectedState == state ? Color.black : Color.gray.opacity(0.1))
+                                .foregroundStyle(selectedState == state ? .white : .black)
+                                .clipShape(Capsule())
+                        }
+                    }
                 }
-                .padding(.horizontal, 30)
-                .transition(.move(edge: .bottom))
+                .padding(.horizontal)
             }
-        }
-        .padding(.bottom, 50)
-        .task {
-            await startCounting()
-        }
-    }
-    
-    func startCounting() async {
-        let duration = 1.5
-        let steps = 50
-        let stepDuration = UInt64(duration / Double(steps) * 1_000_000_000)
-        let increment = projectedCost / Double(steps)
-        
-        for _ in 0..<steps {
-            try? await Task.sleep(nanoseconds: stepDuration)
+            .padding(.bottom, 10)
             
-            if animatedCost < projectedCost {
-                withAnimation(.linear(duration: 0.05)) {
-                    animatedCost += increment
+            // pipeline List
+            ScrollView {
+                VStack(spacing: 12) {
+                    ForEach(pipelines, id: \.self) { pipeline in
+                        Button {
+                            selectedPipeline = pipeline
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(pipeline.origin)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                    Image(systemName: "arrow.down")
+                                        .font(.caption2)
+                                        .foregroundStyle(.gray.opacity(0.5))
+                                        .padding(.vertical, 2)
+                                    Text(pipeline.target)
+                                        .font(.headline)
+                                        .foregroundStyle(.primary)
+                                }
+                                Spacer()
+                                if selectedPipeline == pipeline {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(Color.blue)
+                                        .font(.title2)
+                                } else {
+                                    Image(systemName: "circle")
+                                        .foregroundStyle(Color.gray.opacity(0.3))
+                                        .font(.title2)
+                                }
+                            }
+                            .padding()
+                            .liquidGlass()
+                        }
+                        .buttonStyle(ScaleButtonStyle())
+                    }
                 }
-                let generator = UIImpactFeedbackGenerator(style: .light)
-                generator.impactOccurred()
+                .padding(.horizontal)
             }
+            
+            Button("Continue") { onNext() }
+                .buttonStyle(PrimaryActionStyle())
+                .disabled(selectedPipeline == nil)
+                .opacity(selectedPipeline != nil ? 1 : 0.5)
+                .padding(.bottom, 20)
+                .padding(.horizontal)
         }
-        
-        animatedCost = projectedCost
-        withAnimation { showButton = true }
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.error)
     }
 }
 
 
-struct GlassCard: View {
-    let title: String
-    let value: String
-    let icon: String
-    let isSet: Bool
+@available(iOS 17.0, *)
+struct AcademicStatsStep: View {
+    @Binding var gpa: Double
+    @Binding var credits: Double
+    var onNext: () -> Void
     
     var body: some View {
-        HStack {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundStyle(isSet ? .white : .gray)
-                .frame(width: 40)
-            
-            VStack(alignment: .leading) {
-                Text(title).font(.caption).foregroundStyle(.gray)
-                Text(value).font(.title3).bold().foregroundStyle(.white)
-            }
+        VStack(spacing: 24) {
             Spacer()
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.gray.opacity(0.5))
-        }
-        .padding()
-        .background(.ultraThinMaterial)
-        .cornerRadius(16)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(.white.opacity(isSet ? 0.5 : 0.1), lineWidth: 1)
-        )
-        // ensures the tap hits the entire card
-        .contentShape(Rectangle())
-    }
-}
-
-struct LifestyleOption: View {
-    let title: String
-    let icon: String
-    let desc: String
-    let color: Color
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            Image(systemName: icon)
-                .font(.system(size: 40))
-                .foregroundStyle(color)
+            Text("The Academic Reality.")
+                .font(.system(size: 34, weight: .bold, design: .rounded))
             
-            Text(title)
-                .font(.headline)
-                .foregroundStyle(.white)
-            
-            Text(desc)
-                .font(.caption)
-                .foregroundStyle(.gray)
-                .multilineTextAlignment(.leading)
+            VStack(spacing: 30) {
+                VStack {
+                    HStack {
+                        Text("Current GPA")
+                        Spacer()
+                        Text(String(format: "%.2f", gpa))
+                            .font(.title2.bold())
+                            .foregroundStyle(.blue)
+                    }
+                    Slider(value: $gpa, in: 0.0...4.0, step: 0.01)
+                }
+                
+                Divider()
+                
+                VStack {
+                    HStack {
+                        Text("Credits Earned")
+                        Spacer()
+                        Text("\(Int(credits))")
+                            .font(.title2.bold())
+                            .foregroundStyle(.blue)
+                    }
+                    Slider(value: $credits, in: 0...90, step: 1)
+                    Text("60 Credits = AA Degree (Ready to Transfer)")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            .padding(30)
+            .liquidGlass()
+            .padding(.horizontal)
             
             Spacer()
+            Button("Continue") { onNext() }
+                .buttonStyle(PrimaryActionStyle())
+                .padding(.bottom, 40)
+                .padding(.horizontal)
         }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: 220)
-        .background(.ultraThinMaterial)
-        .cornerRadius(20)
     }
 }
 
-struct ContinueButton: View {
-    let title: String
-    let action: () -> Void
+enum HousingType { case commuter, apartment }
+
+@available(iOS 17.0, *)
+struct HousingSelectionStep: View {
+    @Binding var selection: HousingType?
+    var onNext: () -> Void
     
     var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.headline)
-                .foregroundStyle(.black)
-                .frame(maxWidth: .infinity)
+        VStack(spacing: 20) {
+            Spacer()
+            Text("The Financial Shock.")
+                .font(.system(size: 34, weight: .bold, design: .rounded))
+            Text("Housing is the #1 cost variable. Where will you sleep?")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .padding(.bottom)
+            
+            // commuter option
+            Button { selection = .commuter } label: {
+                HStack {
+                    Image(systemName: "car.fill")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.green)
+                        .frame(width: 60)
+                    VStack(alignment: .leading) {
+                        Text("The Commuter")
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                        Text("Living at home. Paying gas money.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if selection == .commuter { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green) }
+                }
                 .padding()
-                .background(Color.white)
-                .cornerRadius(30)
+                .liquidGlass()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24)
+                        .stroke(selection == .commuter ? Color.green : Color.clear, lineWidth: 2)
+                )
+            }
+            .buttonStyle(ScaleButtonStyle())
+            
+            // relocator option
+            Button { selection = .apartment } label: {
+                HStack {
+                    Image(systemName: "building.2.fill")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.orange)
+                        .frame(width: 60)
+                    VStack(alignment: .leading) {
+                        Text("The Relocator")
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                        Text("Moving to campus. Paying rent.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if selection == .apartment { Image(systemName: "checkmark.circle.fill").foregroundStyle(.orange) }
+                }
+                .padding()
+                .liquidGlass()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24)
+                        .stroke(selection == .apartment ? Color.orange : Color.clear, lineWidth: 2)
+                )
+            }
+            .buttonStyle(ScaleButtonStyle())
+            
+            Spacer()
+            
+            Button("Run Simulation") { onNext() }
+                .buttonStyle(PrimaryActionStyle())
+                .disabled(selection == nil)
+                .opacity(selection != nil ? 1 : 0.5)
+                .padding(.bottom, 40)
+                .padding(.horizontal)
         }
-        .padding(.horizontal, 30)
+        .padding(.horizontal)
+    }
+}
+
+
+@available(iOS 17.0, *)
+struct SimulationLoadingStep: View {
+    var pipeline: TransferPipeline?
+    var onFinish: () -> Void
+    @State private var loadingText = "Connecting..."
+    @State private var progress: CGFloat = 0.0
+    
+    var body: some View {
+        VStack {
+            Spacer()
+            ZStack {
+                Circle()
+                    .stroke(Color.gray.opacity(0.1), lineWidth: 10)
+                    .frame(width: 120, height: 120)
+                
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(Color.blue, style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                    .frame(width: 120, height: 120)
+                    .rotationEffect(.degrees(-90))
+            }
+            .padding(.bottom, 40)
+            
+            Text(loadingText)
+                .font(.title3.bold())
+                .multilineTextAlignment(.center)
+                .contentTransition(.numericText())
+                .padding(.horizontal)
+            Spacer()
+        }
+        .onAppear {
+            runSim()
+        }
+    }
+    
+    func runSim() {
+        let target = pipeline?.target ?? "University"
+        let origin = pipeline?.origin ?? "College"
+        
+        let phases = [
+            (0.2, "Analyzing \(origin) transcripts..."),
+            (0.5, "Checking \(target) transfer agreements..."),
+            (0.7, "Calculating cost of living shock..."),
+            (1.0, "Simulation Complete.")
+        ]
+        
+        Task {
+            for (p, text) in phases {
+                try? await Task.sleep(nanoseconds: 800_000_000)
+                withAnimation {
+                    progress = p
+                    loadingText = text
+                }
+            }
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            onFinish()
+        }
+    }
+}
+
+
+struct PrimaryActionStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline)
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color.blue)
+            .clipShape(Capsule())
+            .scaleEffect(configuration.isPressed ? 0.95 : 1)
+            .animation(.spring(), value: configuration.isPressed)
+    }
+}
+
+struct ScaleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.spring(), value: configuration.isPressed)
     }
 }
