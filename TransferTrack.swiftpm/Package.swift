@@ -8,20 +8,20 @@ import PackageDescription
 import AppleProductTypes
 
 let package = Package(
-    name: "unnamed",
+    name: "TransferTrack",
     platforms: [
         .iOS("16.0")
     ],
     products: [
         .iOSApplication(
-            name: "unnamed",
+            name: "TransferTrack",
             targets: ["AppModule"],
             bundleIdentifier: "com.ralphnoel.unnamed",
             teamIdentifier: "7H94MDPW2B",
-            displayVersion: "1.0",
+            displayVersion: "17.0",
             bundleVersion: "1",
             appIcon: .placeholder(icon: .carrot),
-            accentColor: .presetColor(.orange),
+            accentColor: .presetColor(.red),
             supportedDeviceFamilies: [
                 .pad,
                 .phone
@@ -31,7 +31,8 @@ let package = Package(
                 .landscapeRight,
                 .landscapeLeft,
                 .portraitUpsideDown(.when(deviceFamilies: [.pad]))
-            ]
+            ],
+            appCategory: .education
         )
     ],
     targets: [
@@ -40,5 +41,5 @@ let package = Package(
             path: "."
         )
     ],
-    swiftLanguageModes: [.v6]
+    swiftLanguageModes: [.version("6")]
 )

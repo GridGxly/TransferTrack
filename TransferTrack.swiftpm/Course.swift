@@ -13,3 +13,4 @@ final class Course {
         self.credits = credits
     }
 }
+

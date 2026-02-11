@@ -8,7 +8,7 @@ enum DataController {
             Course.self,
             SimulationState.self
         ])
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)  // Fixed typo
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)  
         return try! ModelContainer(for: schema, configurations: [config])
     }
 }
