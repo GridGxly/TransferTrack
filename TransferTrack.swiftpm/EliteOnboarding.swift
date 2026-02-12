@@ -2,8 +2,6 @@ import SwiftUI
 import SwiftData
 
 
-
-
 @available(iOS 17.0, *)
 struct EliteOnboardingFlow: View {
     @Binding var isOnboardingComplete: Bool
@@ -141,7 +139,7 @@ struct EliteOnboardingFlow: View {
         )
         context.insert(state)
         
-
+        // mark as complete
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         
         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
@@ -165,41 +163,34 @@ struct HeroPageElite: View {
             VStack(spacing: 40) {
                 Spacer()
                 
-               
+                // custom app logo
                 ZStack {
                     RoundedRectangle(cornerRadius: 28, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [Color(red: 0.8, green: 0.9, blue: 0.2), Color(red: 0.9, green: 1.0, blue: 0.3)],
+                                colors: [Color(red: 0.82, green: 0.95, blue: 0.18), Color(red: 0.85, green: 0.97, blue: 0.22)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                         .frame(width: 130, height: 130)
-                        .shadow(color: Color(red: 0.8, green: 0.9, blue: 0.2).opacity(0.5), radius: 25, x: 0, y: 15)
+                        .shadow(color: Color(red: 0.82, green: 0.95, blue: 0.18).opacity(0.5), radius: 25, x: 0, y: 15)
                     
-                    // abstract transfer icon arrows/lines suggesting movement
+ 
                     ZStack {
-                        // diagonal lines suggesting progression
+                        // first stroke (left)
                         Path { path in
-                            path.move(to: CGPoint(x: 35, y: 75))
-                            path.addLine(to: CGPoint(x: 65, y: 45))
+                            path.move(to: CGPoint(x: 38, y: 78))
+                            path.addLine(to: CGPoint(x: 68, y: 48))
                         }
-                        .stroke(Color.black, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                        .stroke(Color.black, style: StrokeStyle(lineWidth: 11, lineCap: .round))
                         
+                        // second stroke (right)
                         Path { path in
-                            path.move(to: CGPoint(x: 55, y: 75))
-                            path.addLine(to: CGPoint(x: 85, y: 45))
+                            path.move(to: CGPoint(x: 58, y: 78))
+                            path.addLine(to: CGPoint(x: 88, y: 48))
                         }
-                        .stroke(Color.black, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                        
-                        // arrow cap
-                        Path { path in
-                            path.move(to: CGPoint(x: 75, y: 40))
-                            path.addLine(to: CGPoint(x: 85, y: 45))
-                            path.addLine(to: CGPoint(x: 80, y: 55))
-                        }
-                        .stroke(Color.black, style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round))
+                        .stroke(Color.black, style: StrokeStyle(lineWidth: 11, lineCap: .round))
                     }
                     .frame(width: 130, height: 130)
                 }
@@ -336,7 +327,7 @@ struct ProblemPageElite: View {
                 .padding(24)
                 .background {
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .fill(.white)
+                        .fill(Color(uiColor: .secondarySystemGroupedBackground))
                         .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 5)
                 }
                 .padding(.horizontal, 24)
@@ -445,7 +436,7 @@ struct ThreeStudentsPage: View {
                     .font(.system(size: 32, weight: .bold, design: .rounded))
                     .opacity(showContent ? 1 : 0)
                 
-                // Student carousel
+                // student carousel
                 TabView(selection: $selectedStudent) {
                     ForEach(0..<students.count, id: \.self) { index in
                         StudentCard(student: students[index])
@@ -504,7 +495,7 @@ struct StudentCard: View {
     
     var body: some View {
         VStack(spacing: 24) {
-            // Student avatar
+            // student avatar
             ZStack {
                 Circle()
                     .fill(student.color.opacity(0.15))
@@ -574,7 +565,7 @@ struct StudentCard: View {
         .padding(24)
         .background {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(.white)
+                .fill(Color(uiColor: .secondarySystemGroupedBackground))
                 .shadow(color: .black.opacity(0.08), radius: 15, x: 0, y: 8)
         }
         .padding(.horizontal, 24)
@@ -601,7 +592,7 @@ struct FeaturePage: View {
             VStack(spacing: 40) {
                 Spacer()
                 
-                // Feature icon
+                // feature icon
                 ZStack {
                     Circle()
                         .fill(.white.opacity(0.25))
@@ -700,7 +691,7 @@ struct PersonalizationWithLogos: View {
         }
     }
     
-    // University options per state
+    // university options per state
     func uniOptions(for state: String) -> [String] {
         switch state {
         case "Florida": return ["UCF", "University of Florida", "Florida State", "USF", "FIU"]
@@ -746,7 +737,7 @@ struct PersonalizationWithLogos: View {
                             ForEach(states, id: \.self) { s in
                                 Button(s) {
                                     state = s
-                                    // Reset CC and Uni when state changes
+                                    // reset CC and Uni when state changes
                                     cc = ccOptions(for: s).first ?? ""
                                     uni = uniOptions(for: s).first ?? ""
                                 }
@@ -769,18 +760,17 @@ struct PersonalizationWithLogos: View {
                     .padding(20)
                     .background {
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .fill(.white)
+                            .fill(Color(uiColor: .secondarySystemGroupedBackground))
                             .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 5)
                     }
                     
-                    // Transfer Path
+                    // transfer Path
                     VStack(alignment: .leading, spacing: 12) {
                         Label("Your Transfer Path", systemImage: "arrow.triangle.2.circlepath")
                             .font(.headline)
                             .foregroundStyle(.purple)
                         
                         HStack(spacing: 16) {
-                            // FROM
                             VStack(spacing: 8) {
                                 Text("From")
                                     .font(.caption)
@@ -792,7 +782,6 @@ struct PersonalizationWithLogos: View {
                                     }
                                 } label: {
                                     VStack(spacing: 6) {
-                                        // College logo placeholder (would use actual logos)
                                         Image(systemName: "building.columns.fill")
                                             .font(.title2)
                                             .foregroundStyle(.blue)
@@ -812,7 +801,7 @@ struct PersonalizationWithLogos: View {
                             Image(systemName: "arrow.right")
                                 .foregroundStyle(.secondary)
                             
-                            // TO
+
                             VStack(spacing: 8) {
                                 Text("To")
                                     .font(.caption)
@@ -824,7 +813,7 @@ struct PersonalizationWithLogos: View {
                                     }
                                 } label: {
                                     VStack(spacing: 6) {
-                                        // University logo placeholder
+                                        // university logo placeholder
                                         Image(systemName: "star.fill")
                                             .font(.title2)
                                             .foregroundStyle(.purple)
@@ -845,7 +834,7 @@ struct PersonalizationWithLogos: View {
                     .padding(20)
                     .background {
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .fill(.white)
+                            .fill(Color(uiColor: .secondarySystemGroupedBackground))
                             .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 5)
                     }
                     
@@ -889,11 +878,11 @@ struct PersonalizationWithLogos: View {
                     .padding(20)
                     .background {
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .fill(.white)
+                            .fill(Color(uiColor: .secondarySystemGroupedBackground))
                             .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 5)
                     }
                     
-                    // Finances (compact)
+                    // finances (compact)
                     VStack(alignment: .leading, spacing: 16) {
                         Label("Financial Snapshot", systemImage: "dollarsign.circle.fill")
                             .font(.headline)
@@ -930,7 +919,7 @@ struct PersonalizationWithLogos: View {
                     .padding(20)
                     .background {
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .fill(.white)
+                            .fill(Color(uiColor: .secondarySystemGroupedBackground))
                             .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 5)
                     }
                 }

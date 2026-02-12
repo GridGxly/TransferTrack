@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 import Charts
 
-// mark - chart data
+// mark1 - chart data
 struct MonthlyBalance: Identifiable, Hashable {
     let id = UUID()
     let month: String
@@ -16,7 +16,7 @@ class DashboardViewModel {
     var sliderValue: Double = 0.0
     var chartData: [MonthlyBalance] = []
     
-
+   
     var viabilityScore: Int = 72
     var monthlyGap: Int = -450
     var commuteCost: Int = 60
@@ -32,7 +32,7 @@ class DashboardViewModel {
     }
 }
 
-// mark - main dashboard view
+// mark2 - main dashboard view
 @available(iOS 17.0, *)
 struct DashboardView: View {
     @State private var selectedTab: Int = 0
@@ -71,7 +71,7 @@ struct DashboardView: View {
     }
 }
 
-// mark1 - forecast tab
+// mark3 - forecast tab
 @available(iOS 17.0, *)
 struct ForecastView: View {
     var viewModel: DashboardViewModel
@@ -81,8 +81,6 @@ struct ForecastView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    
-    
                     VStack(spacing: 8) {
                         Text("TRANSFERTRACK")
                             .font(.caption)
@@ -130,7 +128,7 @@ struct ForecastView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
                     
-                    // metric cards
+                    // metric Cards
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
                             MetricCard(
@@ -171,7 +169,7 @@ struct ForecastView: View {
     }
 }
 
-// mark2 - academics tab
+// mark4 - academics tab
 @available(iOS 17.0, *)
 struct AcademicsView: View {
     var body: some View {
@@ -233,7 +231,7 @@ struct AcademicsView: View {
     }
 }
 
-// mark3 - housing tab
+// mark5 - housing tab
 @available(iOS 17.0, *)
 struct HousingView: View {
     var body: some View {
@@ -299,7 +297,7 @@ struct HousingView: View {
     }
 }
 
-// mark4 - solutions tab
+// mark6 - solutions tab
 @available(iOS 17.0, *)
 struct SolutionsView: View {
     var body: some View {
@@ -350,7 +348,7 @@ struct SolutionsView: View {
 }
 
 
-// MARK - reuseable componenets
+// mark7 - reuseable componenets
 
 @available(iOS 17.0, *)
 struct MetricCard: View {
@@ -382,7 +380,7 @@ struct MetricCard: View {
         }
         .padding(16)
         .frame(width: 160, alignment: .leading)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
@@ -437,7 +435,7 @@ struct CourseRow: View {
             }
         }
         .padding()
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.03), radius: 2, x: 0, y: 1)
     }
@@ -495,7 +493,7 @@ struct ApartmentCard: View {
                 .clipShape(Capsule())
         }
         .padding()
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
@@ -544,11 +542,10 @@ struct SolutionRow: View {
                     .opacity(isChecked ? 0.5 : 1.0)
             }
             .padding()
-            .background(Color.white)
+            .background(Color(uiColor: .secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .shadow(color: .black.opacity(0.03), radius: 2, x: 0, y: 1)
         }
         .buttonStyle(.plain)
     }
 }
-
