@@ -1,7 +1,5 @@
 import SwiftUI
 
-
-
 @available(iOS 17.0, *)
 struct DashboardView: View {
     @State private var selectedTab = 0
@@ -20,7 +18,9 @@ struct DashboardView: View {
         ("lightbulb.fill", "Solutions"),
     ]
 
-// mark -- computated scores
+
+    // MARK: - computed scores
+
     private var viabilityScore: Int {
         var score = 50
         if userGPA >= 3.5 { score += 20 }
@@ -49,44 +49,39 @@ struct DashboardView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // content area
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 20) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("TRANSFERTRACK")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .tracking(1.5)
-
-                        HStack(spacing: 8) {
-                            Text(userName.isEmpty ? "Your Transfer Plan" : "\(userName)'s Transfer Plan")
-                                .font(.title2.weight(.bold))
-                            Spacer()
-                        }
-
-                        // CC → Uni with logos
-                        HStack(spacing: 8) {
-                            CollegeLogo(schoolName: selectedCC, size: 24)
-                            Text(selectedCC)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                            Image(systemName: "arrow.right")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            CollegeLogo(schoolName: selectedUni, size: 24)
-                            Text(selectedUni)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
+        ZStack(alignment: .bottom) {
+            VStack(spacing: 0) {
+                // MARK: fixed header
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 8) {
+                        Text(userName.isEmpty ? "Your Transfer Plan" : "\(userName)'s Transfer Plan")
+                            .font(.title2.weight(.bold))
+                        Spacer()
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
 
-                // mark tab content
-                    switch selectedTab {
-                    case 0:
+                    HStack(spacing: 8) {
+                        CollegeLogo(schoolName: selectedCC, size: 24)
+                        Text(selectedCC)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Image(systemName: "arrow.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        CollegeLogo(schoolName: selectedUni, size: 24)
+                        Text(selectedUni)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
+                .background(.ultraThinMaterial) // optional: gives a subtle glass separation for the header
+
+                // MARK: swipeable tab content
+                TabView(selection: $selectedTab) {
+                    ScrollView(showsIndicators: false) {
                         ForecastTab(
                             score: viabilityScore,
                             gap: monthlyGap,
@@ -95,36 +90,80 @@ struct DashboardView: View {
                             ccName: selectedCC,
                             uniName: selectedUni
                         )
-                    case 1:
+                        .padding(.top, 10)
+                        // add padding at the bottom to ensure content isn't covered by the floating tab bar
+                        .padding(.bottom, 100)
+                    }
+                    .tag(0)
+
+                    ScrollView(showsIndicators: false) {
                         AcademicsTab(
                             gpa: userGPA,
                             credits: Int(userCredits),
                             ccName: selectedCC,
                             uniName: selectedUni
                         )
-                    case 2:
+                        .padding(.top, 10)
+                        .padding(.bottom, 100)
+                    }
+                    .tag(1)
+
+                    ScrollView(showsIndicators: false) {
                         HousingTab(
                             currentRent: userRent,
                             uniName: selectedUni
                         )
-                    case 3:
+                        .padding(.top, 10)
+                        .padding(.bottom, 100)
+                    }
+                    .tag(2)
+
+                    ScrollView(showsIndicators: false) {
                         SolutionsTab(
                             score: viabilityScore,
                             uniName: selectedUni,
                             ccName: selectedCC,
                             state: selectedState
                         )
-                    default:
-                        EmptyView()
+                        .padding(.top, 10)
+                        .padding(.bottom, 100)
                     }
-
-                    Spacer(minLength: 100) // space for tab bar
+                    .tag(3)
                 }
+                .tabViewStyle(.page(indexDisplayMode: .never))
             }
 
-           
-            BottomTabBar(selectedTab: $selectedTab, tabs: tabs)
+            // MARK: liquid glass tab bar
+            if #available(iOS 26.0, *) {
+                LiquidTabBar(selectedTab: $selectedTab, tabs: tabs)
+            } else {
+                // fallback for older iOS versions
+                HStack {
+                    ForEach(0..<tabs.count, id: \.self) { index in
+                        Spacer()
+                        VStack(spacing: 4) {
+                            Image(systemName: tabs[index].icon)
+                                .font(.system(size: 24))
+                            Text(tabs[index].label)
+                                .font(.caption2)
+                        }
+                        .foregroundStyle(selectedTab == index ? Color.accentColor : Color.gray)
+                        .onTapGesture {
+                            selectedTab = index
+                        }
+                        Spacer()
+                    }
+                }
+                .frame(height: 60)
+                .background(.ultraThinMaterial)
+                .clipShape(Capsule())
+                .padding(.horizontal, 24)
+                .padding(.bottom, 10)
+            }
         }
         .background(Color(uiColor: .systemGroupedBackground))
+        .ignoresSafeArea(edges: .bottom)
+
     }
 }
+

@@ -2,7 +2,6 @@ import SwiftUI
 
 // MARK: - solutions tab
 
-
 @available(iOS 17.0, *)
 struct SolutionsTab: View {
     let score: Int
@@ -25,14 +24,44 @@ struct SolutionsTab: View {
         SchoolDatabase.solutions(for: uniName, from: ccName, state: state)
     }
 
+    private var totalPoints: Int {
+        solutions.reduce(0) { $0 + $1.points }
+    }
+
+    private var earnedPoints: Int {
+        completedItems.reduce(0) { total, idx in
+            idx < solutions.count ? total + solutions[idx].points : total
+        }
+    }
+
     var body: some View {
         VStack(spacing: 20) {
-            // MARK: header
+            // MARK: header with progress
             VStack(alignment: .leading, spacing: 8) {
                 SectionHeader(
                     title: "Improve Your Score",
-                    subtitle: "Check off actions to boost your Viability Score."
+                    subtitle: "Complete actions to boost your Viability Score."
                 )
+
+                HStack(spacing: 12) {
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.gray.opacity(0.15))
+                                .frame(height: 8)
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(TTColors.points)
+                                .frame(width: totalPoints > 0 ? geo.size.width * CGFloat(earnedPoints) / CGFloat(totalPoints) : 0, height: 8)
+                                .animation(.spring(response: 0.4), value: earnedPoints)
+                        }
+                    }
+                    .frame(height: 8)
+
+                    Text("\(earnedPoints)/\(totalPoints) pts")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(TTColors.points)
+                        .frame(width: 70, alignment: .trailing)
+                }
             }
             .padding(.horizontal, 20)
 
@@ -43,7 +72,7 @@ struct SolutionsTab: View {
                         title: solution.title,
                         description: solution.description,
                         points: solution.points,
-                        color: solution.color,
+                        icon: solution.icon,
                         isCompleted: completedItems.contains(index),
                         onToggle: {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
@@ -77,26 +106,26 @@ struct SolutionsTab: View {
 }
 
 // MARK: - solution row
+
 struct SolutionRow: View {
     let title: String
     let description: String
     let points: Int
-    let color: Color
+    let icon: String
     let isCompleted: Bool
     let onToggle: () -> Void
 
     var body: some View {
         Button(action: onToggle) {
             HStack(spacing: 14) {
-                // circle checkbox
                 ZStack {
                     Circle()
-                        .stroke(isCompleted ? color : Color.gray.opacity(0.3), lineWidth: 2)
+                        .stroke(isCompleted ? TTColors.points : Color.gray.opacity(0.3), lineWidth: 2)
                         .frame(width: 24, height: 24)
 
                     if isCompleted {
                         Circle()
-                            .fill(color)
+                            .fill(TTColors.points)
                             .frame(width: 24, height: 24)
                         Image(systemName: "checkmark")
                             .font(.caption2.weight(.bold))
@@ -104,7 +133,11 @@ struct SolutionRow: View {
                     }
                 }
 
-                // title + description
+                Image(systemName: icon)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 20)
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.subheadline.weight(.medium))
@@ -118,10 +151,9 @@ struct SolutionRow: View {
 
                 Spacer()
 
-                // points badge
                 Text("+\(points) pts")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(isCompleted ? .green : color)
+                    .foregroundStyle(TTColors.points)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)

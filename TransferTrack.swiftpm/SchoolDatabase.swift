@@ -1,12 +1,11 @@
 import SwiftUI
 
-// mark -- school database
-// central data source for all CC→University transfer paths
-// housing, courses, solutions, and logos are all keyed to the user's selected university
+// MARK: - school database
 
 struct SchoolDatabase {
 
-   // mark -- state to school mapping
+    // MARK: state to school mapping
+
     static let stateData: [String: (ccs: [String], unis: [String])] = [
         "Florida": (
             ccs: ["Valencia College", "Miami Dade College", "Seminole State", "Polk State", "Santa Fe College"],
@@ -40,91 +39,92 @@ struct SchoolDatabase {
 
     static var states: [String] { Array(stateData.keys).sorted() }
 
-    // mark -- logo assets names
-    // maps display names and exact Xcode asset catalog names
+    // MARK: logo asset names
+
     static let logoMap: [String: String] = [
-        // florida CCs
-        "Valencia College": "Seal_of_Valencia_College",
-        "Miami Dade College": "miamicollegelogo",
-        "Seminole State": "seminole-state-college",
-        "Polk State": "Logo-of-Polk-State-College",
-        "Santa Fe College": "santafe",
-        // florida Unis
-        "UCF": "ucf",
-        "Univ. of Florida": "uflorida-logo",
-        "FSU": "fsu",
-        "USF": "Official_USF_Bulls_Athletic_Logo",
-        "FIU": "FIU_Panthers",
-        // california CCs
-        "Santa Monica College": "Santa Monica",
-        "De Anza College": "DeAnza",
-        "Pasadena City College": "Pasadena City",
-        "Diablo Valley College": "Diablo Valley",
-        "Orange Coast College": "range Coast",
-        // california Unis
-        "UCLA": "UCLA",
-        "UC Berkeley": "Seal_of_University_of_California,_Berkeley",
-        "UC Davis": "UCDavisUnofficialSeal_2Color_0",
-        "CSU LA": "CSU,_Los_Angeles_seal.svg.png",
-        "San Jose State": "San_Jose_State_Spartans_logo",
-        // texas CCs
-        "Austin CC": "Austin CC",
-        "Houston CC": "Houston_Cougars_primary_logo",
-        "Lone Star College": "Lone Star College",
-        "Dallas College": "Dallas College",
-        "Alamo Colleges": "Alamo Colleges",
-        // texas Unis
-        "UT Austin": "UT Austin",
-        "Texas A&M": "Texas_A&M_University_seal",
-        "Univ. of Houston": "Univ. of Houston",
-        "UTSA": "UTSA",
-        "Texas State": "Texas State",
-        // virginia CCs
-        "NOVA": "NOVA",
-        "Tidewater CC": "tidewater CC",
-        "Virginia Western CC": "virginia Western CC",
-        "Reynolds CC": "Reynolds CC",
-        // virginia Unis
-        "UVA": "UVA",
-        "Virginia Tech": "Virginia Tech",
-        "JMU": "JMU",
-        "George Mason": "George Mason",
-        "VCU": "VCU",
-        // washington CCs
-        "Seattle Central": "Seattle Central",
-        "Bellevue College": "Bellevue College",
-        "Spokane CC": "spokane CC",
-        "Green River College": "Green River College",
-        // washington Unis
-        "Univ. of Washington": "w-logo-with-wordmark_0",
-        "WSU": "WSU",
-        "Central Washington": "central Washington",
-        "Eastern Washington": "Eastern Washington",
-        // north Carolina CCs
-        "Central Piedmont CC": "Central Piedmont CC",
-        "Wake Tech": "Wake Tech",
-        "Guilford Tech": "Guilford Tech",
-        "Cape Fear CC": "Cape Fear CC",
-        // north Carolina Unis
-        "UNC Chapel Hill": "UNC Chapel Hill",
-        "NC State": "NC State",
-        "App State": "App State",
-        "ECU": "ECU",
-        "UNC Charlotte": "UNC Charlotte",
-        // new Jersey CCs
-        "Bergen CC": "Bergen CC",
-        "Middlesex College": "Middlesex College",
-        "Camden County College": "Camden County College",
-        "Union College": "Union College",
-        // new jersey Unis
-        "Rutgers": "Rutgers",
-        "Rowan Univ.": "Rowan Univ.",
-        "Montclair State": "Montclair State",
-        "NJIT": "NJIT",
-        "Stockton Univ.": "Stockton Univ.",
+        // Florida CCs
+        "Valencia College":     "valencia-college",
+        "Miami Dade College":   "miami-dade-college",
+        "Seminole State":       "seminole-state",
+        "Polk State":           "polk-state",
+        "Santa Fe College":     "santa-fe-college",
+        // Florida Unis
+        "UCF":                  "ucf",
+        "Univ. of Florida":     "univ-of-florida",
+        "FSU":                  "fsu",
+        "USF":                  "usf",
+        "FIU":                  "fiu",
+        // California CCs
+        "Santa Monica College":     "santa-monica-college",
+        "De Anza College":          "de-anza-college",
+        "Pasadena City College":    "pasadena-city-college",
+        "Diablo Valley College":    "diablo-valley-college",
+        "Orange Coast College":     "orange-coast-college",
+        // California Unis
+        "UCLA":             "ucla",
+        "UC Berkeley":      "uc-berkeley",
+        "UC Davis":         "uc-davis",
+        "CSU LA":           "csu-la",
+        "San Jose State":   "san-jose-state",
+        // Texas CCs
+        "Austin CC":        "austin-cc",
+        "Houston CC":       "houston-cc",
+        "Lone Star College":"lone-star-college",
+        "Dallas College":   "dallas-college",
+        "Alamo Colleges":   "alamo-colleges",
+        // Texas Unis
+        "UT Austin":        "ut-austin",
+        "Texas A&M":        "texas-am",
+        "Univ. of Houston": "univ-of-houston",
+        "UTSA":             "utsa",
+        "Texas State":      "texas-state",
+        // Virginia CCs
+        "NOVA":                 "nova",
+        "Tidewater CC":         "tidewater-cc",
+        "Virginia Western CC":  "virginia-western-cc",
+        "Reynolds CC":          "reynolds-cc",
+        // Virginia Unis
+        "UVA":              "uva",
+        "Virginia Tech":    "virginia-tech",
+        "JMU":              "jmu",
+        "George Mason":     "george-mason",
+        "VCU":              "vcu",
+        // Washington CCs
+        "Seattle Central":      "seattle-central",
+        "Bellevue College":     "bellevue-college",
+        "Spokane CC":           "spokane-cc",
+        "Green River College":  "green-river-college",
+        // Washington Unis
+        "Univ. of Washington":  "univ-of-washington",
+        "WSU":                  "wsu",
+        "Central Washington":   "central-washington",
+        "Eastern Washington":   "eastern-washington",
+        // North Carolina CCs
+        "Central Piedmont CC":  "central-piedmont-cc",
+        "Wake Tech":            "wake-tech",
+        "Guilford Tech":        "guilford-tech",
+        "Cape Fear CC":         "cape-fear-cc",
+        // North Carolina Unis
+        "UNC Chapel Hill":  "unc-chapel-hill",
+        "NC State":         "nc-state",
+        "App State":        "app-state",
+        "ECU":              "ecu",
+        "UNC Charlotte":    "unc-charlotte",
+        // New Jersey CCs
+        "Bergen CC":            "bergen-cc",
+        "Middlesex College":    "middlesex-college",
+        "Camden County College":"camden-county-college",
+        "Union College":        "union-college",
+        // New Jersey Unis
+        "Rutgers":          "rutgers",
+        "Rowan Univ.":      "rowan-univ",
+        "Montclair State":  "montclair-state",
+        "NJIT":             "njit",
+        "Stockton Univ.":   "stockton-univ",
     ]
 
-// mark -- tuition data
+    // MARK: tuition data
+
     static let ccTuition: [String: Int] = [
         "Valencia College": 3120, "Miami Dade College": 3400, "Seminole State": 3100,
         "Polk State": 2900, "Santa Fe College": 2800,
@@ -148,20 +148,20 @@ struct SchoolDatabase {
         "Rutgers": 15804, "Rowan Univ.": 13880, "Montclair State": 13288, "NJIT": 18096, "Stockton Univ.": 13558,
     ]
 
-   // university specific housing
+    // MARK: housing
+
     struct Apartment {
         let name: String
         let distance: String
         let beds: Int
         let baths: Int
         let rent: Int
-        let odds: String  // "High Odds", "Medium Odds", "Low Odds"
-        let oddsDetail: String  // "Student-Friendly", "Co-signer Recommended", etc.
+        let odds: String
+        let oddsDetail: String
     }
 
     static func housing(for university: String) -> [Apartment] {
         switch university {
-        // FLORIDA
         case "UCF":
             return [
                 Apartment(name: "Knights Landing", distance: "0.5 mi", beds: 2, baths: 2, rent: 1200, odds: "High Odds", oddsDetail: "Student-Friendly"),
@@ -196,8 +196,6 @@ struct SchoolDatabase {
                 Apartment(name: "Student Housing FIU", distance: "Adjacent", beds: 1, baths: 1, rent: 1100, odds: "High Odds", oddsDetail: "Student-Friendly"),
                 Apartment(name: "The Flats at CityPlace", distance: "2.0 mi", beds: 2, baths: 2, rent: 1600, odds: "Low Odds", oddsDetail: "Guarantor Required"),
             ]
-
-        // CALIFORNIA
         case "UCLA":
             return [
                 Apartment(name: "Westwood Palms", distance: "0.8 mi", beds: 2, baths: 2, rent: 2800, odds: "Low Odds", oddsDetail: "Guarantor Required"),
@@ -227,8 +225,6 @@ struct SchoolDatabase {
                 Apartment(name: "South Campus", distance: "0.3 mi", beds: 2, baths: 2, rent: 1800, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
                 Apartment(name: "Spartan Village", distance: "0.5 mi", beds: 1, baths: 1, rent: 1500, odds: "High Odds", oddsDetail: "Student-Friendly"),
             ]
-
-        // TEXAS
         case "UT Austin":
             return [
                 Apartment(name: "West Campus Lofts", distance: "0.4 mi", beds: 2, baths: 2, rent: 1500, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
@@ -242,8 +238,6 @@ struct SchoolDatabase {
                 Apartment(name: "College Station Crossing", distance: "1.2 mi", beds: 1, baths: 1, rent: 850, odds: "High Odds", oddsDetail: "No Credit Check"),
                 Apartment(name: "Park West", distance: "0.8 mi", beds: 4, baths: 4, rent: 650, odds: "High Odds", oddsDetail: "Per-bed Lease"),
             ]
-
-        // default — generic housing
         default:
             return [
                 Apartment(name: "Campus View Apartments", distance: "0.5 mi", beds: 2, baths: 2, rent: 1100, odds: "High Odds", oddsDetail: "Student-Friendly"),
@@ -260,19 +254,18 @@ struct SchoolDatabase {
         return apts.reduce(0) { $0 + $1.rent } / apts.count
     }
 
-// mark -- uni courses
+    // MARK: course transfer
+
     struct CourseTransfer {
         let name: String
         let code: String
         let credits: Int
         let grade: String
-        let transfers: Bool  // true = degree-applicable, false = wasted/elective-only
-        let costIfWasted: Int  // $ lost if wasted
+        let transfers: Bool
+        let costIfWasted: Int
     }
 
     static func courses(from cc: String, to uni: String) -> [CourseTransfer] {
-        // generates realistic course lists based on the CC→Uni path
-        // base courses that most paths share, with path-specific wasted ones
         var transferable: [CourseTransfer] = [
             CourseTransfer(name: "English Composition I", code: "ENC 1101", credits: 3, grade: "A-", transfers: true, costIfWasted: 0),
             CourseTransfer(name: "College Algebra", code: "MAC 1105", credits: 3, grade: "B+", transfers: true, costIfWasted: 0),
@@ -281,7 +274,6 @@ struct SchoolDatabase {
             CourseTransfer(name: "Microeconomics", code: "ECO 2023", credits: 3, grade: "B+", transfers: true, costIfWasted: 0),
         ]
 
-        // add cs specific courses for tech schools
         if ["UCF", "UT Austin", "UCLA", "UC Berkeley", "Georgia Tech", "Virginia Tech"].contains(uni) {
             transferable.append(contentsOf: [
                 CourseTransfer(name: "Intro to Programming", code: "COP 2000", credits: 3, grade: "A", transfers: true, costIfWasted: 0),
@@ -296,7 +288,6 @@ struct SchoolDatabase {
             ])
         }
 
-        // wasted credits — vary by path
         let wasted: [CourseTransfer] = [
             CourseTransfer(name: "Art Appreciation", code: "ARH 1000", credits: 3, grade: "A", transfers: false, costIfWasted: 600),
             CourseTransfer(name: "Music of the World", code: "MUH 2012", credits: 3, grade: "B+", transfers: false, costIfWasted: 600),
@@ -306,7 +297,8 @@ struct SchoolDatabase {
         return transferable + wasted
     }
 
-// mark -- university specific solutions
+    // MARK: solutions
+
     struct Solution {
         let title: String
         let description: String
@@ -318,7 +310,6 @@ struct SchoolDatabase {
     static func solutions(for uni: String, from cc: String, state: String) -> [Solution] {
         var items: [Solution] = []
 
-        // state specific transfer programs
         switch state {
         case "Florida":
             items.append(Solution(title: "Apply for DirectConnect", description: "Guaranteed admission from \(cc) to \(uni) with 2.0+ GPA", points: 8, icon: "link", color: .blue))
@@ -341,11 +332,10 @@ struct SchoolDatabase {
             break
         }
 
-        // universal solutions
         items.append(contentsOf: [
             Solution(title: "Submit FAFSA Renewal", description: "Financial aid must be renewed for \(uni)", points: 10, icon: "doc.text.fill", color: .green),
-            Solution(title: "Appeal Credit Transfer Decision", description: "Contest at-risk credits with course syllabus documentation", points: 5, icon: "arrow.uturn.backward", color: .red),
-            Solution(title: "Find a Roommate", description: "Split rent costs to reduce monthly housing gap", points: 6, icon: "person.2.fill", color: .purple),
+            Solution(title: "Appeal Credit Transfer", description: "Contest at-risk credits with syllabus docs", points: 5, icon: "arrow.uturn.backward", color: .red),
+            Solution(title: "Find a Roommate", description: "Split rent costs to reduce monthly gap", points: 6, icon: "person.2.fill", color: .purple),
             Solution(title: "Apply for Transfer Scholarships", description: "\(uni) offers transfer-specific awards", points: 7, icon: "dollarsign.circle.fill", color: .orange),
             Solution(title: "Set Up Emergency Fund", description: "Save 3 months of projected gap before transfer", points: 3, icon: "banknote.fill", color: .cyan),
             Solution(title: "Get a Campus Job", description: "\(uni) Federal Work-Study covers ~$200/mo", points: 4, icon: "briefcase.fill", color: .brown),

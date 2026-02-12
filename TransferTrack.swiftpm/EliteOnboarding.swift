@@ -1,6 +1,6 @@
 import SwiftUI
 
-
+// MARK: - onboarding flow
 
 @available(iOS 17.0, *)
 struct OnboardingFlow: View {
@@ -15,7 +15,6 @@ struct OnboardingFlow: View {
             Color.black.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // progress bar (pages 1-3 only)
                 if currentPage > 0 && currentPage < totalPages - 1 {
                     OnboardingProgressBar(current: currentPage, total: totalPages - 1)
                         .padding(.horizontal, 24)
@@ -23,17 +22,10 @@ struct OnboardingFlow: View {
                 }
 
                 TabView(selection: $currentPage) {
-                    HeroPage(onNext: advancePage)
-                        .tag(0)
-
-                    TransferShockPage(onNext: advancePage)
-                        .tag(1)
-
-                    InteractiveDemoPage(onNext: advancePage)
-                        .tag(2)
-
-                    PersonalizationPage(isOnboardingComplete: $isOnboardingComplete)
-                        .tag(3)
+                    HeroPage(onNext: advancePage).tag(0)
+                    TransferShockPage(onNext: advancePage).tag(1)
+                    InteractiveDemoPage(onNext: advancePage).tag(2)
+                    PersonalizationPage(isOnboardingComplete: $isOnboardingComplete).tag(3)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(.easeInOut(duration: 0.45), value: currentPage)
@@ -52,7 +44,8 @@ struct OnboardingFlow: View {
     }
 }
 
-// mark -- progress bar
+// MARK: - progress bar
+
 struct OnboardingProgressBar: View {
     let current: Int
     let total: Int
@@ -73,7 +66,8 @@ struct OnboardingProgressBar: View {
     }
 }
 
-// mark -- hero
+// MARK: - hero page
+
 @available(iOS 17.0, *)
 struct HeroPage: View {
     var onNext: () -> Void
@@ -86,7 +80,6 @@ struct HeroPage: View {
         VStack(spacing: 0) {
             Spacer()
 
-            // app Icon with glow
             ZStack {
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
                     .fill(Color(red: 0.85, green: 0.95, blue: 0.0))
@@ -101,7 +94,6 @@ struct HeroPage: View {
                         .frame(width: 120, height: 120)
                         .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
                 } else {
-                    // fallback matching the neon green TT app icon
                     RoundedRectangle(cornerRadius: 26, style: .continuous)
                         .fill(
                             LinearGradient(
@@ -146,8 +138,7 @@ struct HeroPage: View {
 
             Button(action: onNext) {
                 HStack(spacing: 8) {
-                    Text("Start Your Journey")
-                        .font(.headline)
+                    Text("Start Your Journey").font(.headline)
                     Image(systemName: "arrow.right")
                 }
                 .foregroundStyle(.black)
@@ -170,7 +161,8 @@ struct HeroPage: View {
     }
 }
 
-// mark -- transfer shock
+// MARK: - transfer shock page
+
 @available(iOS 17.0, *)
 struct TransferShockPage: View {
     var onNext: () -> Void
@@ -199,7 +191,6 @@ struct TransferShockPage: View {
                 .foregroundStyle(.white)
                 .padding(.top, 16)
 
-            // visceral one liners that slam in
             VStack(alignment: .leading, spacing: 20) {
                 ShockLine(text: horrors[0].text, color: horrors[0].color, show: line1)
                 ShockLine(text: horrors[1].text, color: horrors[1].color, show: line2)
@@ -240,13 +231,14 @@ struct TransferShockPage: View {
             withAnimation(.spring(response: 0.5, dampingFraction: 0.7).delay(1.1)) { line3 = true }
             withAnimation(.easeOut(duration: 0.5).delay(1.6)) { showCTA = true }
 
-            // haptics for each slam
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.1) { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }
         }
     }
 }
+
+// MARK: - shock line
 
 struct ShockLine: View {
     let text: String
@@ -255,38 +247,22 @@ struct ShockLine: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Circle()
-                .fill(color)
-                .frame(width: 8, height: 8)
-            Text(text)
-                .font(.title3.weight(.bold))
-                .foregroundStyle(.white)
+            Circle().fill(color).frame(width: 8, height: 8)
+            Text(text).font(.title3.weight(.bold)).foregroundStyle(.white)
         }
         .opacity(show ? 1 : 0)
         .offset(x: show ? 0 : -30)
     }
 }
 
-// mark -- interactive demo
+// MARK: - interactive demo page
+
 @available(iOS 17.0, *)
 struct InteractiveDemoPage: View {
     var onNext: () -> Void
     @State private var livingCost: Double = 800
     @State private var isAnimating = false
 
-    // simulated bar chart data
-    private var barData: [(label: String, value: Double, isShock: Bool)] {
-        [
-            ("CC Tuition", 3000, false),
-            ("CC Rent", 600, false),
-            ("CC Total", 3600, false),
-            ("Uni Tuition", 12000, true),
-            ("Uni Rent", livingCost * 12, true),
-            ("Uni Total", 12000 + livingCost * 12, true),
-        ]
-    }
-
-    private var monthlyCost: Int { Int(livingCost + 1000) } // rent + tuition/mo estimate
     private var yearlyShock: Int { Int((livingCost * 12 + 12000) - 3600) }
 
     var body: some View {
@@ -302,60 +278,42 @@ struct InteractiveDemoPage: View {
                     .font(.callout)
                     .foregroundStyle(.gray)
 
-                // interactive cost chart
                 VStack(spacing: 16) {
-                    // mini bar visualization
                     HStack(alignment: .bottom, spacing: 6) {
-                        // CC costs
                         VStack(spacing: 4) {
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(Color.green.opacity(0.6))
                                 .frame(width: 36, height: 40)
-                            Text("CC")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                            Text("CC").font(.caption2).foregroundStyle(.secondary)
                         }
 
-                        // arrow
                         Image(systemName: "arrow.right")
-                            .font(.caption)
-                            .foregroundStyle(.gray)
-                            .padding(.bottom, 16)
+                            .font(.caption).foregroundStyle(.gray).padding(.bottom, 16)
 
-                        // uni tuition (fixed spike)
                         VStack(spacing: 4) {
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(Color.red.opacity(0.7))
                                 .frame(width: 36, height: isAnimating ? 80 : 40)
-                            Text("Tuition")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                            Text("Tuition").font(.caption2).foregroundStyle(.secondary)
                         }
 
-                        // Uni rent
                         VStack(spacing: 4) {
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(Color.orange)
                                 .frame(width: 36, height: max(20, CGFloat(livingCost) / 15))
-                            Text("Rent")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                            Text("Rent").font(.caption2).foregroundStyle(.secondary)
                         }
 
-                        // total shock bar
                         VStack(spacing: 4) {
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(Color.red)
                                 .frame(width: 36, height: max(30, CGFloat(livingCost) / 12 + 80))
-                            Text("Total")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                            Text("Total").font(.caption2).foregroundStyle(.secondary)
                         }
                     }
                     .frame(height: 140)
                     .padding(.top, 8)
 
-                    // the shock number
                     VStack(spacing: 4) {
                         Text("+$\(yearlyShock.formatted())")
                             .font(.system(.title, design: .rounded).weight(.black))
@@ -363,35 +321,26 @@ struct InteractiveDemoPage: View {
                             .contentTransition(.numericText())
                             .animation(.spring(response: 0.3), value: yearlyShock)
                         Text("yearly cost increase")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(.caption).foregroundStyle(.secondary)
                     }
 
                     Divider().padding(.horizontal)
 
-                    // interactive slider
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text("Your Monthly Rent")
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(.white)
+                                .font(.subheadline.weight(.medium)).foregroundStyle(.white)
                             Spacer()
                             Text("$\(Int(livingCost))/mo")
-                                .font(.subheadline.weight(.bold))
-                                .foregroundStyle(.orange)
+                                .font(.subheadline.weight(.bold)).foregroundStyle(.orange)
                         }
 
-                        Slider(value: $livingCost, in: 400...2500, step: 50)
-                            .tint(.orange)
+                        Slider(value: $livingCost, in: 400...2500, step: 50).tint(.orange)
 
                         HStack {
-                            Text("$400")
-                                .font(.caption2)
-                                .foregroundStyle(.gray)
+                            Text("$400").font(.caption2).foregroundStyle(.gray)
                             Spacer()
-                            Text("$2,500")
-                                .font(.caption2)
-                                .foregroundStyle(.gray)
+                            Text("$2,500").font(.caption2).foregroundStyle(.gray)
                         }
                     }
                     .padding(.horizontal, 4)
@@ -399,10 +348,7 @@ struct InteractiveDemoPage: View {
                 .padding(20)
                 .background(.ultraThinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24)
-                        .stroke(.white.opacity(0.1), lineWidth: 1)
-                )
+                .overlay(RoundedRectangle(cornerRadius: 24).stroke(.white.opacity(0.1), lineWidth: 1))
                 .padding(.horizontal, 24)
 
                 Text("This is why TransferTrack exists.\nLet's make sure this doesn't happen to you.")
@@ -437,7 +383,8 @@ struct InteractiveDemoPage: View {
     }
 }
 
-// mark -- personalization
+// MARK: - personalization page
+
 @available(iOS 17.0, *)
 struct PersonalizationPage: View {
     @Binding var isOnboardingComplete: Bool
@@ -474,11 +421,9 @@ struct PersonalizationPage: View {
                     .font(.callout)
                     .foregroundStyle(.gray)
 
-                // name
                 OnboardingSection(icon: "person.fill", title: "Your Name", color: .cyan) {
                     TextField("What should we call you?", text: $userName)
-                        .font(.body)
-                        .foregroundStyle(.white)
+                        .font(.body).foregroundStyle(.white)
                         .padding(14)
                         .background(Color.white.opacity(0.08))
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -487,20 +432,17 @@ struct PersonalizationPage: View {
                         .autocorrectionDisabled()
                 }
 
-                // state
                 OnboardingSection(icon: "map.fill", title: "Your State", color: .blue) {
                     Picker("State", selection: $selectedState) {
                         ForEach(SchoolDatabase.states, id: \.self) { Text($0).tag($0) }
                     }
-                    .pickerStyle(.menu)
-                    .tint(.blue)
+                    .pickerStyle(.menu).tint(.blue)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.white.opacity(0.08))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
 
-                // transfer path
                 OnboardingSection(icon: "arrow.triangle.swap", title: "Transfer Path", color: .purple) {
                     HStack(spacing: 0) {
                         VStack(spacing: 6) {
@@ -515,9 +457,7 @@ struct PersonalizationPage: View {
                         .background(Color.blue.opacity(0.12))
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
-                        Image(systemName: "arrow.right")
-                            .foregroundStyle(.gray)
-                            .padding(.horizontal, 8)
+                        Image(systemName: "arrow.right").foregroundStyle(.gray).padding(.horizontal, 8)
 
                         VStack(spacing: 6) {
                             Text("To").font(.caption).foregroundStyle(.gray)
@@ -533,23 +473,19 @@ struct PersonalizationPage: View {
                     }
                 }
 
-                // academics
                 OnboardingSection(icon: "book.closed.fill", title: "Academics", color: .green) {
                     SliderRow(label: "GPA", value: $gpa, range: 0...4.0, step: 0.01, format: "%.2f", color: .green, width: 55)
                     SliderRow(label: "Credits", value: $credits, range: 0...120, step: 1, format: "%.0f", color: .green, width: 55)
                 }
 
-                // finances
                 OnboardingSection(icon: "dollarsign.circle.fill", title: "Financial Snapshot", color: .orange) {
                     SliderRow(label: "Savings", value: $savings, range: 0...50000, step: 100, format: "$%.0f", color: .orange, width: 80, isDollar: true)
                     SliderRow(label: "Rent", value: $rent, range: 0...3000, step: 50, format: "$%.0f", color: .orange, width: 80, isDollar: true)
                 }
 
-                // generate button
                 Button(action: generateForecast) {
                     HStack(spacing: 8) {
-                        Text("Generate My Forecast")
-                            .font(.headline)
+                        Text("Generate My Forecast").font(.headline)
                         Image(systemName: "arrow.right.circle.fill")
                     }
                     .foregroundStyle(.black)
@@ -588,7 +524,8 @@ struct PersonalizationPage: View {
     }
 }
 
-// mark -- onboarding 
+// MARK: - onboarding section
+
 struct OnboardingSection<Content: View>: View {
     let icon: String
     let title: String
@@ -606,15 +543,13 @@ struct OnboardingSection<Content: View>: View {
         .padding(20)
         .background(Color.white.opacity(0.06))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(Color.white.opacity(0.06), lineWidth: 1)
-        )
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.06), lineWidth: 1))
         .padding(.horizontal, 24)
     }
 }
 
-// mark -- slider row
+// MARK: - slider row
+
 struct SliderRow: View {
     let label: String
     @Binding var value: Double
@@ -633,10 +568,8 @@ struct SliderRow: View {
                     .font(.title3.weight(.bold))
                     .foregroundStyle(color)
                     .frame(width: width, alignment: .leading)
-                Slider(value: $value, in: range, step: step)
-                    .tint(color)
+                Slider(value: $value, in: range, step: step).tint(color)
             }
         }
     }
 }
-

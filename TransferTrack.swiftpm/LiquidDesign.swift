@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - design
+// MARK: - design tokens
 
 enum TTColors {
     static let background = Color(uiColor: .systemBackground)
@@ -10,16 +10,18 @@ enum TTColors {
     static let secondaryLabel = Color(uiColor: .secondaryLabel)
     static let separator = Color(uiColor: .separator)
 
-
     static let accent = Color.blue
     static let success = Color.green
     static let warning = Color.orange
     static let danger = Color.red
     static let purple = Color.purple
+
+    // points currency — one consistent color for Solutions tab
+    static let points = Color(red: 0.2, green: 0.7, blue: 0.3)
 }
 
-// mark - college logo component
-// renders logos from asset catalog with circular clip + fallback
+// MARK: - college logo
+
 struct CollegeLogo: View {
     let schoolName: String
     var size: CGFloat = 40
@@ -35,7 +37,6 @@ struct CollegeLogo: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
             } else {
-                // Fallback: initials on colored circle
                 ZStack {
                     Circle()
                         .fill(Color.blue.opacity(0.12))
@@ -59,7 +60,7 @@ struct CollegeLogo: View {
 }
 
 // MARK: - odds badge
-// color coded approval odds tag
+
 struct OddsBadge: View {
     let odds: String
     let detail: String
@@ -84,7 +85,8 @@ struct OddsBadge: View {
     }
 }
 
-// mark -- viability score ring
+// MARK: - viability score ring
+
 struct ViabilityRing: View {
     let score: Int
     let animated: CGFloat
@@ -107,9 +109,14 @@ struct ViabilityRing: View {
                 .rotationEffect(.degrees(-90))
 
             VStack(spacing: 2) {
-                Text("\(Int(animated))")
-                    .font(.system(.largeTitle, design: .rounded).weight(.bold))
-                    .contentTransition(.numericText())
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    Text("\(Int(animated))")
+                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
+                        .contentTransition(.numericText())
+                    Text("/100")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.secondary)
+                }
                 Text("Viability Score")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -119,13 +126,15 @@ struct ViabilityRing: View {
     }
 }
 
-//  mark -- stat card
+// MARK: - stat card
+
 struct StatCard: View {
     let icon: String
     let iconColor: Color
     let title: String
     let value: String
     let valueColor: Color
+    var subtitle: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -143,6 +152,14 @@ struct StatCard: View {
             Text(value)
                 .font(.title2.weight(.bold))
                 .foregroundStyle(valueColor)
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
+
+            if let sub = subtitle {
+                Text(sub)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
@@ -151,7 +168,8 @@ struct StatCard: View {
     }
 }
 
-// mark -- section header
+// MARK: - section header
+
 struct SectionHeader: View {
     let title: String
     var subtitle: String? = nil
@@ -170,41 +188,56 @@ struct SectionHeader: View {
     }
 }
 
-// mark -- bottom tab bar
+// MARK: - floating capsule tab bar
+
 @available(iOS 17.0, *)
-struct BottomTabBar: View {
+struct FloatingTabBar: View {
     @Binding var selectedTab: Int
     let tabs: [(icon: String, label: String)]
+    @Namespace private var tabNamespace
 
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 4) {
             ForEach(Array(tabs.enumerated()), id: \.offset) { index, tab in
                 Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
                         selectedTab = index
                     }
                     let impact = UIImpactFeedbackGenerator(style: .light)
                     impact.impactOccurred()
                 } label: {
-                    VStack(spacing: 4) {
+                    HStack(spacing: 6) {
                         Image(systemName: tab.icon)
-                            .font(.title3)
+                            .font(.subheadline)
                             .symbolVariant(selectedTab == index ? .fill : .none)
-                        Text(tab.label)
-                            .font(.caption2.weight(.medium))
+
+                        if selectedTab == index {
+                            Text(tab.label)
+                                .font(.caption.weight(.semibold))
+                                .lineLimit(1)
+                        }
                     }
-                    .foregroundStyle(selectedTab == index ? .blue : .secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
+                    .foregroundStyle(selectedTab == index ? .white : .secondary)
+                    .padding(.horizontal, selectedTab == index ? 16 : 14)
+                    .padding(.vertical, 10)
+                    .background {
+                        if selectedTab == index {
+                            Capsule()
+                                .fill(TTColors.accent)
+                                .matchedGeometryEffect(id: "activeTab", in: tabNamespace)
+                        }
+                    }
                 }
+                .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.top, 8)
-        .padding(.bottom, 4)
-        .background(.ultraThinMaterial) // Real Liquid Glass
-        .overlay(alignment: .top) {
-            Divider()
-        }
+        .padding(6)
+        .background(.ultraThinMaterial)
+        .clipShape(Capsule())
+        .overlay(
+            Capsule()
+                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.15), radius: 10, y: 5)
     }
 }

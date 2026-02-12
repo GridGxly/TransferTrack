@@ -2,7 +2,6 @@ import SwiftUI
 
 // MARK: - housing tab
 
-
 @available(iOS 17.0, *)
 struct HousingTab: View {
     let currentRent: Double
@@ -21,13 +20,11 @@ struct HousingTab: View {
     }
 
     private var gasSavings: Int {
-        // closer to campus = less gas; estimate
         return apartments.isEmpty ? 0 : 50
     }
 
     var body: some View {
         VStack(spacing: 20) {
-            // MARK: header with rent comparison
             VStack(alignment: .leading, spacing: 8) {
                 SectionHeader(
                     title: "Housing Near \(uniName)",
@@ -36,7 +33,6 @@ struct HousingTab: View {
             }
             .padding(.horizontal, 20)
 
-            // MARK: apartment cards
             ForEach(Array(apartments.enumerated()), id: \.offset) { _, apt in
                 ApartmentCard(apartment: apt)
             }
@@ -45,6 +41,7 @@ struct HousingTab: View {
 }
 
 // MARK: - apartment card
+
 struct ApartmentCard: View {
     let apartment: SchoolDatabase.Apartment
 
@@ -98,7 +95,6 @@ struct ApartmentCard: View {
                 }
             }
 
-            // odds badge
             OddsBadge(odds: apartment.odds, detail: apartment.oddsDetail)
         }
         .padding(16)

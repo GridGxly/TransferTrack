@@ -30,7 +30,7 @@ extension University {
         default: return CLLocationCoordinate2D(latitude: 28.5383, longitude: -81.3792)
         }
     }
-    
+
     var iconName: String {
         switch name {
         case "Valencia College": return "book.fill"

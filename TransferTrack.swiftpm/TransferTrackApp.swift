@@ -10,7 +10,6 @@ struct TransferTrackApp: App {
     var body: some Scene {
         WindowGroup {
             RootView(isOnboardingComplete: $isOnboardingComplete)
-                .preferredColorScheme(.light)
         }
     }
 }
@@ -32,4 +31,3 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.4), value: isOnboardingComplete)
     }
 }
-
