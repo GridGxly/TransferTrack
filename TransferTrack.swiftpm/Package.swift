@@ -16,11 +16,11 @@ let package = Package(
         .iOSApplication(
             name: "TransferTrack",
             targets: ["AppModule"],
-            bundleIdentifier: "com.ralphnoel.unnamed",
+            bundleIdentifier: "com.ralphnoel.TrasnferTrack",
             teamIdentifier: "7H94MDPW2B",
             displayVersion: "17.0",
             bundleVersion: "1",
-            appIcon: .placeholder(icon: .cloud),
+            appIcon: .asset("AppIcon"),
             accentColor: .presetColor(.red),
             supportedDeviceFamilies: [
                 .pad,

@@ -4,13 +4,25 @@ import SwiftData
 @main
 @available(iOS 17.0, *)
 struct TransferTrackApp: App {
-    @State private var isOnboardingComplete: Bool = false
+    @State private var isOnboardingComplete: Bool = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+    
+    // Support both light and dark mode
+    @AppStorage("userColorScheme") private var userColorScheme: String = "system"
 
     var body: some Scene {
         WindowGroup {
             RootView(isOnboardingComplete: $isOnboardingComplete)
+                .preferredColorScheme(colorScheme)
         }
         .modelContainer(DataController.makeContainer())
+    }
+    
+    var colorScheme: ColorScheme? {
+        switch userColorScheme {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil
+        }
     }
 }
 
@@ -23,13 +35,11 @@ struct RootView: View {
             if isOnboardingComplete {
                 DashboardView()
             } else {
-                OnboardingFlowView(isOnboardingComplete: $isOnboardingComplete)
+                EliteOnboardingFlow(isOnboardingComplete: $isOnboardingComplete)
             }
         }
-        .preferredColorScheme(.dark)
     }
 }
-
 
 @available(iOS 17.0, *)
 enum DataController {
@@ -47,3 +57,14 @@ enum DataController {
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
