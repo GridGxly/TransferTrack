@@ -18,7 +18,6 @@ struct DashboardView: View {
         ("lightbulb.fill", "Solutions"),
     ]
 
-
     // MARK: - computed scores
 
     private var viabilityScore: Int {
@@ -77,7 +76,6 @@ struct DashboardView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
                 .padding(.bottom, 12)
-                .background(.ultraThinMaterial) // optional: gives a subtle glass separation for the header
 
                 // MARK: swipeable tab content
                 TabView(selection: $selectedTab) {
@@ -91,7 +89,6 @@ struct DashboardView: View {
                             uniName: selectedUni
                         )
                         .padding(.top, 10)
-                        // add padding at the bottom to ensure content isn't covered by the floating tab bar
                         .padding(.bottom, 100)
                     }
                     .tag(0)
@@ -133,37 +130,16 @@ struct DashboardView: View {
                 .tabViewStyle(.page(indexDisplayMode: .never))
             }
 
-            // MARK: liquid glass tab bar
+            // MARK: tab bar
             if #available(iOS 26.0, *) {
                 LiquidTabBar(selectedTab: $selectedTab, tabs: tabs)
             } else {
-                // fallback for older iOS versions
-                HStack {
-                    ForEach(0..<tabs.count, id: \.self) { index in
-                        Spacer()
-                        VStack(spacing: 4) {
-                            Image(systemName: tabs[index].icon)
-                                .font(.system(size: 24))
-                            Text(tabs[index].label)
-                                .font(.caption2)
-                        }
-                        .foregroundStyle(selectedTab == index ? Color.accentColor : Color.gray)
-                        .onTapGesture {
-                            selectedTab = index
-                        }
-                        Spacer()
-                    }
-                }
-                .frame(height: 60)
-                .background(.ultraThinMaterial)
-                .clipShape(Capsule())
-                .padding(.horizontal, 24)
-                .padding(.bottom, 10)
+                FloatingTabBar(selectedTab: $selectedTab, tabs: tabs)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 28)
             }
         }
         .background(Color(uiColor: .systemGroupedBackground))
         .ignoresSafeArea(edges: .bottom)
-
     }
 }
-

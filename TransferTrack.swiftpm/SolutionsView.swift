@@ -11,6 +11,8 @@ struct SolutionsTab: View {
 
     @State private var completedItems: Set<Int> = []
     @State private var animatedScore: Int
+    @State private var showCelebration = false
+    @State private var previouslyGreen = false
 
     init(score: Int, uniName: String, ccName: String, state: String) {
         self.score = score
@@ -18,6 +20,7 @@ struct SolutionsTab: View {
         self.ccName = ccName
         self.state = state
         self._animatedScore = State(initialValue: score)
+        self._previouslyGreen = State(initialValue: score >= 75)
     }
 
     private var solutions: [SchoolDatabase.Solution] {
@@ -34,90 +37,162 @@ struct SolutionsTab: View {
         }
     }
 
+    private var projectedScore: Int {
+        min(100, score + earnedPoints)
+    }
+
+    private var scoreColor: Color {
+        if projectedScore >= 75 { return .green }
+        else if projectedScore >= 50 { return .orange }
+        else { return .red }
+    }
+
     var body: some View {
-        VStack(spacing: 20) {
-            // MARK: header with progress
-            VStack(alignment: .leading, spacing: 8) {
-                SectionHeader(
-                    title: "Improve Your Score",
-                    subtitle: "Complete actions to boost your Viability Score."
-                )
-
-                HStack(spacing: 12) {
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color.gray.opacity(0.15))
-                                .frame(height: 8)
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(TTColors.points)
-                                .frame(width: totalPoints > 0 ? geo.size.width * CGFloat(earnedPoints) / CGFloat(totalPoints) : 0, height: 8)
-                                .animation(.spring(response: 0.4), value: earnedPoints)
+        ZStack {
+            VStack(spacing: 20) {
+                // MARK: projected score card
+                VStack(spacing: 12) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Improve Your Score")
+                                .font(.title3.weight(.semibold))
+                            Text("Complete actions to boost your Viability Score.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
                         }
+                        Spacer()
+                        // mini viability indicator
+                        ZStack {
+                            Circle()
+                                .stroke(Color.gray.opacity(0.15), lineWidth: 4)
+                                .frame(width: 50, height: 50)
+                            Circle()
+                                .trim(from: 0, to: CGFloat(projectedScore) / 100)
+                                .stroke(scoreColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                                .frame(width: 50, height: 50)
+                                .rotationEffect(.degrees(-90))
+                            Text("\(projectedScore)")
+                                .font(.system(.caption, design: .rounded).weight(.bold))
+                                .foregroundStyle(scoreColor)
+                                .contentTransition(.numericText())
+                        }
+                        .accessibilityLabel("Projected score: \(projectedScore) out of 100")
                     }
-                    .frame(height: 8)
 
-                    Text("\(earnedPoints)/\(totalPoints) pts")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(TTColors.points)
-                        .frame(width: 70, alignment: .trailing)
-                }
-            }
-            .padding(.horizontal, 20)
-
-            // MARK: solution items
-            VStack(spacing: 0) {
-                ForEach(Array(solutions.enumerated()), id: \.offset) { index, solution in
-                    SolutionRow(
-                        title: solution.title,
-                        description: solution.description,
-                        points: solution.points,
-                        icon: solution.icon,
-                        isCompleted: completedItems.contains(index),
-                        onToggle: {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                                if completedItems.contains(index) {
-                                    completedItems.remove(index)
-                                } else {
-                                    completedItems.insert(index)
-                                    let impact = UIImpactFeedbackGenerator(style: .light)
-                                    impact.impactOccurred()
-                                }
-                                let bonus = completedItems.reduce(0) { total, idx in
-                                    idx < solutions.count ? total + solutions[idx].points : total
-                                }
-                                animatedScore = score + bonus
+                    // progress bar
+                    HStack(spacing: 12) {
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.gray.opacity(0.15))
+                                    .frame(height: 8)
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(TTColors.points)
+                                    .frame(width: totalPoints > 0 ? geo.size.width * CGFloat(earnedPoints) / CGFloat(totalPoints) : 0, height: 8)
+                                    .animation(.spring(response: 0.4), value: earnedPoints)
                             }
                         }
-                    )
+                        .frame(height: 8)
 
-                    if index < solutions.count - 1 {
-                        Divider()
-                            .padding(.horizontal, 16)
+                        Text("\(earnedPoints)/\(totalPoints) pts")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(TTColors.points)
+                            .frame(width: 70, alignment: .trailing)
+                            .contentTransition(.numericText())
                     }
                 }
+                .padding(20)
+                .background(TTColors.cardBg)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .padding(.horizontal, 20)
+
+                // MARK: solution items
+                VStack(spacing: 0) {
+                    ForEach(Array(solutions.enumerated()), id: \.offset) { index, solution in
+                        SolutionRow(
+                            title: solution.title,
+                            description: solution.description,
+                            points: solution.points,
+                            icon: solution.icon,
+                            color: solution.color,
+                            isCompleted: completedItems.contains(index),
+                            onToggle: {
+                                toggleItem(index)
+                            }
+                        )
+
+                        if index < solutions.count - 1 {
+                            Divider()
+                                .padding(.horizontal, 16)
+                        }
+                    }
+                }
+                .padding(.vertical, 4)
+                .background(TTColors.cardBg)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .padding(.horizontal, 20)
             }
-            .padding(.vertical, 4)
-            .background(TTColors.cardBg)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .padding(.horizontal, 20)
+
+            // MARK: celebration overlay
+            if showCelebration {
+                CelebrationView()
+                    .allowsHitTesting(false)
+                    .transition(.opacity)
+            }
+        }
+        .sensoryFeedback(.success, trigger: showCelebration)
+    }
+
+    // MARK: - toggle logic
+
+    private func toggleItem(_ index: Int) {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+            if completedItems.contains(index) {
+                completedItems.remove(index)
+            } else {
+                completedItems.insert(index)
+            }
+            animatedScore = projectedScore
+        }
+
+        // check if score just crossed green threshold
+        let newScore = projectedScore
+        if newScore >= 75 && !previouslyGreen {
+            previouslyGreen = true
+            triggerCelebration()
+        } else if newScore < 75 {
+            previouslyGreen = false
+        }
+    }
+
+    private func triggerCelebration() {
+        withAnimation(.easeIn(duration: 0.2)) {
+            showCelebration = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            withAnimation(.easeOut(duration: 0.5)) {
+                showCelebration = false
+            }
         }
     }
 }
 
 // MARK: - solution row
 
+@available(iOS 17.0, *)
 struct SolutionRow: View {
     let title: String
     let description: String
     let points: Int
     let icon: String
+    let color: Color
     let isCompleted: Bool
     let onToggle: () -> Void
 
     var body: some View {
         Button(action: onToggle) {
             HStack(spacing: 14) {
+                // checkbox with checkmark
                 ZStack {
                     Circle()
                         .stroke(isCompleted ? TTColors.points : Color.gray.opacity(0.3), lineWidth: 2)
@@ -133,9 +208,10 @@ struct SolutionRow: View {
                     }
                 }
 
+                // colored icon
                 Image(systemName: icon)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(color)
                     .frame(width: 20)
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -153,11 +229,122 @@ struct SolutionRow: View {
 
                 Text("+\(points) pts")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(TTColors.points)
+                    .foregroundStyle(isCompleted ? .secondary : TTColors.points)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
         .buttonStyle(.plain)
+        .sensoryFeedback(.impact(weight: .light), trigger: isCompleted)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title). \(description). \(points) points. \(isCompleted ? "Completed" : "Not completed")")
+        .accessibilityHint("Double tap to \(isCompleted ? "unmark" : "mark as completed")")
+    }
+}
+
+// MARK: - celebration view
+
+@available(iOS 17.0, *)
+struct CelebrationView: View {
+    @State private var particles: [ConfettiParticle] = []
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                // score milestone banner
+                VStack(spacing: 8) {
+                    if #available(iOS 18.0, *) {
+                        RepeatingBouncyStar()
+                    } else {
+                        BouncyStar()
+                    }
+
+                    Text("Score is Green!")
+                        .font(.title2.weight(.bold))
+                        .foregroundStyle(.white)
+
+                    Text("You're on track for a smooth transfer")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.8))
+                }
+                .padding(24)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+
+                // Confetti particles
+                ForEach(particles) { particle in
+                    Circle()
+                        .fill(particle.color)
+                        .frame(width: particle.size, height: particle.size)
+                        .position(x: particle.x, y: particle.y)
+                        .opacity(particle.opacity)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onAppear {
+                spawnParticles(in: geo.size)
+            }
+        }
+    }
+
+    private func spawnParticles(in size: CGSize) {
+        let colors: [Color] = [.green, .yellow, .blue, .orange, .purple, .cyan]
+        for i in 0..<30 {
+            let particle = ConfettiParticle(
+                x: CGFloat.random(in: 0...size.width),
+                y: -20,
+                size: CGFloat.random(in: 4...10),
+                color: colors[i % colors.count],
+                opacity: 1.0
+            )
+            particles.append(particle)
+
+            // animate each particle falling
+            withAnimation(.easeIn(duration: Double.random(in: 1.0...2.0)).delay(Double(i) * 0.03)) {
+                if let idx = particles.firstIndex(where: { $0.id == particle.id }) {
+                    particles[idx].y = size.height + 20
+                    particles[idx].x += CGFloat.random(in: -50...50)
+                    particles[idx].opacity = 0
+                }
+            }
+        }
+    }
+}
+
+struct ConfettiParticle: Identifiable {
+    let id = UUID()
+    var x: CGFloat
+    var y: CGFloat
+    var size: CGFloat
+    var color: Color
+    var opacity: Double
+}
+
+// MARK: - helper star views for different iOS versions
+
+@available(iOS 18.0, *)
+private struct RepeatingBouncyStar: View {
+    var body: some View {
+        Image(systemName: "star.fill")
+            .font(.largeTitle)
+            .foregroundStyle(.yellow)
+            .symbolEffect(.bounce, options: .repeating.speed(2))
+    }
+}
+
+private struct BouncyStar: View {
+    var body: some View {
+        if #available(iOS 17.0, *) {
+            if #available(iOS 18.0, *) {
+                Image(systemName: "star.fill")
+                    .font(.largeTitle)
+                    .foregroundStyle(.yellow)
+                    .symbolEffect(.bounce)
+            } else {
+                // fallback on earlier versions
+            }
+        } else {
+            // fallback on earlier versions
+        }
     }
 }

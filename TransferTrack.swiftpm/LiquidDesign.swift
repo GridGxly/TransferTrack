@@ -16,7 +16,7 @@ enum TTColors {
     static let danger = Color.red
     static let purple = Color.purple
 
-    // points currency — one consistent color for Solutions tab
+    // points currency
     static let points = Color(red: 0.2, green: 0.7, blue: 0.3)
 }
 
@@ -48,6 +48,7 @@ struct CollegeLogo: View {
         }
         .frame(width: size, height: size)
         .clipShape(Circle())
+        .accessibilityLabel("\(schoolName) logo")
     }
 
     private var initials: String {
@@ -74,14 +75,29 @@ struct OddsBadge: View {
         }
     }
 
+    // secondary shape indicator for color blindness
+    private var shapeIcon: String {
+        switch odds {
+        case "High Odds": return "checkmark.circle.fill"
+        case "Medium Odds": return "minus.circle.fill"
+        case "Low Odds": return "xmark.circle.fill"
+        default: return "questionmark.circle.fill"
+        }
+    }
+
     var body: some View {
-        Text("\(odds) — \(detail)")
-            .font(.caption.weight(.medium))
-            .foregroundStyle(color)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(color.opacity(0.1))
-            .clipShape(Capsule())
+        HStack(spacing: 4) {
+            Image(systemName: shapeIcon)
+                .font(.caption2)
+            Text("\(odds) — \(detail)")
+                .font(.caption.weight(.medium))
+        }
+        .foregroundStyle(color)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .background(color.opacity(0.1))
+        .clipShape(Capsule())
+        .accessibilityLabel("\(odds). \(detail)")
     }
 }
 
@@ -96,6 +112,12 @@ struct ViabilityRing: View {
         if score >= 75 { return .green }
         else if score >= 50 { return .orange }
         else { return .red }
+    }
+
+    private var statusText: String {
+        if score >= 75 { return "Good" }
+        else if score >= 50 { return "At risk" }
+        else { return "Needs work" }
     }
 
     var body: some View {
@@ -123,6 +145,10 @@ struct ViabilityRing: View {
             }
         }
         .frame(width: size, height: size)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Viability Score: \(score) out of 100. \(statusText)")
+        .accessibilityValue("\(score) percent")
+        .accessibilityHint("Higher is better. Check Solutions tab to improve.")
     }
 }
 
@@ -152,7 +178,7 @@ struct StatCard: View {
             Text(value)
                 .font(.title2.weight(.bold))
                 .foregroundStyle(valueColor)
-                .minimumScaleFactor(0.7)
+                .minimumScaleFactor(0.6)
                 .lineLimit(1)
 
             if let sub = subtitle {
@@ -165,6 +191,8 @@ struct StatCard: View {
         .padding(16)
         .background(TTColors.cardBg)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)\(subtitle.map { ". \($0)" } ?? "")")
     }
 }
 
@@ -188,7 +216,7 @@ struct SectionHeader: View {
     }
 }
 
-// MARK: - floating capsule tab bar
+// MARK: - floating capsule tab bar (fallback if user is not on iOS 26)
 
 @available(iOS 17.0, *)
 struct FloatingTabBar: View {
@@ -203,8 +231,7 @@ struct FloatingTabBar: View {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
                         selectedTab = index
                     }
-                    let impact = UIImpactFeedbackGenerator(style: .light)
-                    impact.impactOccurred()
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: tab.icon)
@@ -229,15 +256,14 @@ struct FloatingTabBar: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("\(tab.label) tab")
+                .accessibilityAddTraits(selectedTab == index ? .isSelected : [])
             }
         }
         .padding(6)
         .background(.ultraThinMaterial)
         .clipShape(Capsule())
-        .overlay(
-            Capsule()
-                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-        )
+        .overlay(Capsule().stroke(Color.white.opacity(0.2), lineWidth: 1))
         .shadow(color: .black.opacity(0.15), radius: 10, y: 5)
     }
 }

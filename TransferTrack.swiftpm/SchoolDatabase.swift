@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreLocation
 
 // MARK: - school database
 
@@ -39,88 +40,111 @@ struct SchoolDatabase {
 
     static var states: [String] { Array(stateData.keys).sorted() }
 
-    // MARK: logo asset names
+    // MARK: university coordinate for MapKit
+
+    static let universityCoordinates: [String: CLLocationCoordinate2D] = [
+        // Florida
+        "Valencia College":     CLLocationCoordinate2D(latitude: 28.5218, longitude: -81.4641),
+        "Miami Dade College":   CLLocationCoordinate2D(latitude: 25.7778, longitude: -80.1902),
+        "Seminole State":       CLLocationCoordinate2D(latitude: 28.7472, longitude: -81.3102),
+        "Polk State":           CLLocationCoordinate2D(latitude: 28.0557, longitude: -81.9498),
+        "Santa Fe College":     CLLocationCoordinate2D(latitude: 29.6820, longitude: -82.3710),
+        "UCF":                  CLLocationCoordinate2D(latitude: 28.6024, longitude: -81.2001),
+        "Univ. of Florida":     CLLocationCoordinate2D(latitude: 29.6436, longitude: -82.3549),
+        "FSU":                  CLLocationCoordinate2D(latitude: 30.4415, longitude: -84.2985),
+        "USF":                  CLLocationCoordinate2D(latitude: 28.0587, longitude: -82.4139),
+        "FIU":                  CLLocationCoordinate2D(latitude: 25.7562, longitude: -80.3755),
+        // California
+        "Santa Monica College":     CLLocationCoordinate2D(latitude: 34.0156, longitude: -118.4713),
+        "De Anza College":          CLLocationCoordinate2D(latitude: 37.3197, longitude: -122.0454),
+        "Pasadena City College":    CLLocationCoordinate2D(latitude: 34.1410, longitude: -118.1258),
+        "Diablo Valley College":    CLLocationCoordinate2D(latitude: 37.9686, longitude: -122.0713),
+        "Orange Coast College":     CLLocationCoordinate2D(latitude: 33.6687, longitude: -117.9134),
+        "UCLA":                     CLLocationCoordinate2D(latitude: 34.0689, longitude: -118.4452),
+        "UC Berkeley":              CLLocationCoordinate2D(latitude: 37.8719, longitude: -122.2585),
+        "UC Davis":                 CLLocationCoordinate2D(latitude: 38.5382, longitude: -121.7617),
+        "CSU LA":                   CLLocationCoordinate2D(latitude: 34.0662, longitude: -118.1684),
+        "San Jose State":           CLLocationCoordinate2D(latitude: 37.3352, longitude: -121.8811),
+        // Texas
+        "Austin CC":        CLLocationCoordinate2D(latitude: 30.3900, longitude: -97.7268),
+        "Houston CC":       CLLocationCoordinate2D(latitude: 29.7188, longitude: -95.3431),
+        "Lone Star College": CLLocationCoordinate2D(latitude: 30.0485, longitude: -95.4385),
+        "Dallas College":   CLLocationCoordinate2D(latitude: 32.8198, longitude: -96.8499),
+        "Alamo Colleges":   CLLocationCoordinate2D(latitude: 29.4685, longitude: -98.5254),
+        "UT Austin":        CLLocationCoordinate2D(latitude: 30.2849, longitude: -97.7341),
+        "Texas A&M":        CLLocationCoordinate2D(latitude: 30.6187, longitude: -96.3365),
+        "Univ. of Houston": CLLocationCoordinate2D(latitude: 29.7199, longitude: -95.3422),
+        "UTSA":             CLLocationCoordinate2D(latitude: 29.5831, longitude: -98.6199),
+        "Texas State":      CLLocationCoordinate2D(latitude: 29.8884, longitude: -97.9384),
+        // Virginia
+        "NOVA":                 CLLocationCoordinate2D(latitude: 38.8306, longitude: -77.3056),
+        "Tidewater CC":         CLLocationCoordinate2D(latitude: 36.8373, longitude: -76.1970),
+        "Virginia Western CC":  CLLocationCoordinate2D(latitude: 37.2718, longitude: -79.9706),
+        "Reynolds CC":          CLLocationCoordinate2D(latitude: 37.5927, longitude: -77.5621),
+        "UVA":                  CLLocationCoordinate2D(latitude: 38.0336, longitude: -78.5080),
+        "Virginia Tech":        CLLocationCoordinate2D(latitude: 37.2296, longitude: -80.4139),
+        "JMU":                  CLLocationCoordinate2D(latitude: 38.4341, longitude: -78.8693),
+        "George Mason":         CLLocationCoordinate2D(latitude: 38.8316, longitude: -77.3091),
+        "VCU":                  CLLocationCoordinate2D(latitude: 37.5479, longitude: -77.4529),
+        // Washington
+        "Seattle Central":      CLLocationCoordinate2D(latitude: 47.6164, longitude: -122.3215),
+        "Bellevue College":     CLLocationCoordinate2D(latitude: 47.5979, longitude: -122.1502),
+        "Spokane CC":           CLLocationCoordinate2D(latitude: 47.6716, longitude: -117.3860),
+        "Green River College":  CLLocationCoordinate2D(latitude: 47.3295, longitude: -122.2620),
+        "Univ. of Washington":  CLLocationCoordinate2D(latitude: 47.6553, longitude: -122.3035),
+        "WSU":                  CLLocationCoordinate2D(latitude: 46.7319, longitude: -117.1542),
+        "Central Washington":   CLLocationCoordinate2D(latitude: 46.9965, longitude: -120.5477),
+        "Eastern Washington":   CLLocationCoordinate2D(latitude: 47.4892, longitude: -117.5813),
+        // North Carolina
+        "Central Piedmont CC":  CLLocationCoordinate2D(latitude: 35.2068, longitude: -80.8455),
+        "Wake Tech":            CLLocationCoordinate2D(latitude: 35.7173, longitude: -78.5755),
+        "Guilford Tech":        CLLocationCoordinate2D(latitude: 36.0228, longitude: -79.8862),
+        "Cape Fear CC":         CLLocationCoordinate2D(latitude: 34.2299, longitude: -77.8717),
+        "UNC Chapel Hill":      CLLocationCoordinate2D(latitude: 35.9049, longitude: -79.0469),
+        "NC State":             CLLocationCoordinate2D(latitude: 35.7847, longitude: -78.6821),
+        "App State":            CLLocationCoordinate2D(latitude: 36.2154, longitude: -81.6846),
+        "ECU":                  CLLocationCoordinate2D(latitude: 35.6050, longitude: -77.3714),
+        "UNC Charlotte":        CLLocationCoordinate2D(latitude: 35.3074, longitude: -80.7331),
+        // New Jersey
+        "Bergen CC":            CLLocationCoordinate2D(latitude: 40.9506, longitude: -74.0767),
+        "Middlesex College":    CLLocationCoordinate2D(latitude: 40.4514, longitude: -74.3775),
+        "Camden County College": CLLocationCoordinate2D(latitude: 39.7885, longitude: -74.9656),
+        "Union College":        CLLocationCoordinate2D(latitude: 40.6615, longitude: -74.3057),
+        "Rutgers":              CLLocationCoordinate2D(latitude: 40.5008, longitude: -74.4474),
+        "Rowan Univ.":          CLLocationCoordinate2D(latitude: 39.7092, longitude: -75.1189),
+        "Montclair State":      CLLocationCoordinate2D(latitude: 40.8624, longitude: -74.1998),
+        "NJIT":                 CLLocationCoordinate2D(latitude: 40.7425, longitude: -74.1793),
+        "Stockton Univ.":       CLLocationCoordinate2D(latitude: 39.4785, longitude: -74.5634),
+    ]
+
+    // MARK: logo asset Names
 
     static let logoMap: [String: String] = [
-        // Florida CCs
-        "Valencia College":     "valencia-college",
-        "Miami Dade College":   "miami-dade-college",
-        "Seminole State":       "seminole-state",
-        "Polk State":           "polk-state",
-        "Santa Fe College":     "santa-fe-college",
-        // Florida Unis
-        "UCF":                  "ucf",
-        "Univ. of Florida":     "univ-of-florida",
-        "FSU":                  "fsu",
-        "USF":                  "usf",
-        "FIU":                  "fiu",
-        // California CCs
-        "Santa Monica College":     "santa-monica-college",
-        "De Anza College":          "de-anza-college",
-        "Pasadena City College":    "pasadena-city-college",
-        "Diablo Valley College":    "diablo-valley-college",
-        "Orange Coast College":     "orange-coast-college",
-        // California Unis
-        "UCLA":             "ucla",
-        "UC Berkeley":      "uc-berkeley",
-        "UC Davis":         "uc-davis",
-        "CSU LA":           "csu-la",
-        "San Jose State":   "san-jose-state",
-        // Texas CCs
-        "Austin CC":        "austin-cc",
-        "Houston CC":       "houston-cc",
-        "Lone Star College":"lone-star-college",
-        "Dallas College":   "dallas-college",
-        "Alamo Colleges":   "alamo-colleges",
-        // Texas Unis
-        "UT Austin":        "ut-austin",
-        "Texas A&M":        "texas-am",
-        "Univ. of Houston": "univ-of-houston",
-        "UTSA":             "utsa",
-        "Texas State":      "texas-state",
-        // Virginia CCs
-        "NOVA":                 "nova",
-        "Tidewater CC":         "tidewater-cc",
-        "Virginia Western CC":  "virginia-western-cc",
-        "Reynolds CC":          "reynolds-cc",
-        // Virginia Unis
-        "UVA":              "uva",
-        "Virginia Tech":    "virginia-tech",
-        "JMU":              "jmu",
-        "George Mason":     "george-mason",
-        "VCU":              "vcu",
-        // Washington CCs
-        "Seattle Central":      "seattle-central",
-        "Bellevue College":     "bellevue-college",
-        "Spokane CC":           "spokane-cc",
-        "Green River College":  "green-river-college",
-        // Washington Unis
-        "Univ. of Washington":  "univ-of-washington",
-        "WSU":                  "wsu",
-        "Central Washington":   "central-washington",
-        "Eastern Washington":   "eastern-washington",
-        // North Carolina CCs
-        "Central Piedmont CC":  "central-piedmont-cc",
-        "Wake Tech":            "wake-tech",
-        "Guilford Tech":        "guilford-tech",
-        "Cape Fear CC":         "cape-fear-cc",
-        // North Carolina Unis
-        "UNC Chapel Hill":  "unc-chapel-hill",
-        "NC State":         "nc-state",
-        "App State":        "app-state",
-        "ECU":              "ecu",
-        "UNC Charlotte":    "unc-charlotte",
-        // New Jersey CCs
-        "Bergen CC":            "bergen-cc",
-        "Middlesex College":    "middlesex-college",
-        "Camden County College":"camden-county-college",
-        "Union College":        "union-college",
-        // New Jersey Unis
-        "Rutgers":          "rutgers",
-        "Rowan Univ.":      "rowan-univ",
-        "Montclair State":  "montclair-state",
-        "NJIT":             "njit",
-        "Stockton Univ.":   "stockton-univ",
+        "Valencia College": "valencia-college", "Miami Dade College": "miami-dade-college",
+        "Seminole State": "seminole-state", "Polk State": "polk-state", "Santa Fe College": "santa-fe-college",
+        "UCF": "ucf", "Univ. of Florida": "univ-of-florida", "FSU": "fsu", "USF": "usf", "FIU": "fiu",
+        "Santa Monica College": "santa-monica-college", "De Anza College": "de-anza-college",
+        "Pasadena City College": "pasadena-city-college", "Diablo Valley College": "diablo-valley-college",
+        "Orange Coast College": "orange-coast-college",
+        "UCLA": "ucla", "UC Berkeley": "uc-berkeley", "UC Davis": "uc-davis", "CSU LA": "csu-la", "San Jose State": "san-jose-state",
+        "Austin CC": "austin-cc", "Houston CC": "houston-cc", "Lone Star College": "lone-star-college",
+        "Dallas College": "dallas-college", "Alamo Colleges": "alamo-colleges",
+        "UT Austin": "ut-austin", "Texas A&M": "texas-am", "Univ. of Houston": "univ-of-houston",
+        "UTSA": "utsa", "Texas State": "texas-state",
+        "NOVA": "nova", "Tidewater CC": "tidewater-cc", "Virginia Western CC": "virginia-western-cc", "Reynolds CC": "reynolds-cc",
+        "UVA": "uva", "Virginia Tech": "virginia-tech", "JMU": "jmu", "George Mason": "george-mason", "VCU": "vcu",
+        "Seattle Central": "seattle-central", "Bellevue College": "bellevue-college",
+        "Spokane CC": "spokane-cc", "Green River College": "green-river-college",
+        "Univ. of Washington": "univ-of-washington", "WSU": "wsu",
+        "Central Washington": "central-washington", "Eastern Washington": "eastern-washington",
+        "Central Piedmont CC": "central-piedmont-cc", "Wake Tech": "wake-tech",
+        "Guilford Tech": "guilford-tech", "Cape Fear CC": "cape-fear-cc",
+        "UNC Chapel Hill": "unc-chapel-hill", "NC State": "nc-state", "App State": "app-state",
+        "ECU": "ecu", "UNC Charlotte": "unc-charlotte",
+        "Bergen CC": "bergen-cc", "Middlesex College": "middlesex-college",
+        "Camden County College": "camden-county-college", "Union College": "union-college",
+        "Rutgers": "rutgers", "Rowan Univ.": "rowan-univ", "Montclair State": "montclair-state",
+        "NJIT": "njit", "Stockton Univ.": "stockton-univ",
     ]
 
     // MARK: tuition data

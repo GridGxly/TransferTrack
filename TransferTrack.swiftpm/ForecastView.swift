@@ -1,4 +1,5 @@
 import SwiftUI
+import Charts
 
 // MARK: - forecast tab
 
@@ -12,6 +13,7 @@ struct ForecastTab: View {
     let uniName: String
 
     @State private var animatedScore: CGFloat = 0
+    @State private var showCards = false
 
     private var viabilityDescription: String {
         if score >= 75 {
@@ -42,17 +44,29 @@ struct ForecastTab: View {
     private var tuitionJump: Int { uniTuition - ccTuition }
     private var tuitionJumpMonthly: Int { tuitionJump / 12 }
 
+    private var runwayMonths: Int {
+        if gap >= 0 { return -1 } // stable
+        return max(0, Int(savings / Double(abs(gap))))
+    }
+
     private var runwayText: String {
-        if gap >= 0 { return "Stable" }
-        let months = max(0, Int(savings / Double(abs(gap))))
-        return months == 0 ? "0 months" : "\(months) mo"
+        if runwayMonths == -1 { return "Stable" }
+        return runwayMonths == 0 ? "0 mo" : "\(runwayMonths) mo"
     }
 
     private var runwayIsStable: Bool { gap >= 0 }
 
+    // MARK: - swift charts data model
+    private var tuitionChartData: [TuitionEntry] {
+        [
+            TuitionEntry(school: ccName, amount: ccTuition, color: "green"),
+            TuitionEntry(school: uniName, amount: uniTuition, color: "orange")
+        ]
+    }
+
     var body: some View {
         VStack(spacing: 16) {
-            // MARK: viability score
+            // MARK: Viability Score
             VStack(spacing: 12) {
                 ViabilityRing(score: score, animated: animatedScore, size: 150)
 
@@ -63,7 +77,7 @@ struct ForecastTab: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity)
-                    .background(Color(uiColor: .tertiarySystemGroupedBackground))
+                    .background(TTColors.subtle)
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
             .padding(20)
@@ -75,6 +89,9 @@ struct ForecastTab: View {
                 withAnimation(.spring(response: 1.2, dampingFraction: 0.7).delay(0.3)) {
                     animatedScore = CGFloat(score)
                 }
+                withAnimation(.easeOut(duration: 0.6).delay(0.5)) {
+                    showCards = true
+                }
             }
 
             // MARK: stat cards
@@ -83,7 +100,7 @@ struct ForecastTab: View {
                     icon: "dollarsign.circle.fill",
                     iconColor: gap >= 0 ? .green : .red,
                     title: "Monthly Gap",
-                    value: "$\(gap)/mo",
+                    value: "\(gap >= 0 ? "+" : "")$\(gap)/mo",
                     valueColor: gap >= 0 ? .green : .red
                 )
 
@@ -105,8 +122,10 @@ struct ForecastTab: View {
                 )
             }
             .padding(.horizontal, 20)
+            .opacity(showCards ? 1 : 0)
+            .offset(y: showCards ? 0 : 12)
 
-            // MARK: tuition comparison bar chart
+            // MARK: tuition comparison using swiift charts
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Text("Tuition Jump")
@@ -115,36 +134,31 @@ struct ForecastTab: View {
                     Text("+$\(tuitionJumpMonthly)/mo")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(.primary)
+                        .contentTransition(.numericText())
                 }
 
-                GeometryReader { geo in
-                    let maxVal = CGFloat(max(ccTuition, uniTuition))
-                    let ccWidth = maxVal > 0 ? geo.size.width * CGFloat(ccTuition) / maxVal : 0
-                    let uniWidth = maxVal > 0 ? geo.size.width * CGFloat(uniTuition) / maxVal : 0
-
-                    VStack(spacing: 8) {
-                        HStack(spacing: 8) {
-                            CollegeLogo(schoolName: ccName, size: 20)
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(Color.green.opacity(0.6))
-                                .frame(width: max(40, ccWidth - 80), height: 28)
-                            Text("$\(ccTuition.formatted())")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.primary)
-                        }
-
-                        HStack(spacing: 8) {
-                            CollegeLogo(schoolName: uniName, size: 20)
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(Color.orange.opacity(0.7))
-                                .frame(width: max(40, uniWidth - 80), height: 28)
-                            Text("$\(uniTuition.formatted())")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.primary)
-                        }
+                Chart(tuitionChartData) { entry in
+                    BarMark(
+                        x: .value("Tuition", entry.amount),
+                        y: .value("School", entry.school)
+                    )
+                    .foregroundStyle(entry.school == ccName ? Color.green.opacity(0.7) : Color.orange.opacity(0.8))
+                    .cornerRadius(6)
+                    .annotation(position: .trailing, spacing: 6) {
+                        Text("$\(entry.amount.formatted())")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.primary)
                     }
                 }
-                .frame(height: 68)
+                .chartXAxis(.hidden)
+                .chartYAxis {
+                    AxisMarks { value in
+                        AxisValueLabel()
+                            .font(.caption)
+                    }
+                }
+                .frame(height: 80)
+                .accessibilityLabel("Tuition comparison chart. \(ccName): $\(ccTuition). \(uniName): $\(uniTuition). Jump of $\(tuitionJump) per year.")
 
                 Text("\(ccName) → \(uniName) · per year")
                     .font(.caption2)
@@ -154,8 +168,9 @@ struct ForecastTab: View {
             .background(TTColors.cardBg)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .padding(.horizontal, 20)
+            .opacity(showCards ? 1 : 0)
 
-            // MARK: savings + runway
+            // MARK: savings plus runway
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
@@ -167,15 +182,18 @@ struct ForecastTab: View {
                     }
                     Text("$\(Int(savings).formatted())")
                         .font(.title3.weight(.bold))
+                        .contentTransition(.numericText())
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(16)
                 .background(TTColors.cardBg)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Savings: $\(Int(savings).formatted())")
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Image(systemName: "clock.fill")
+                        Image(systemName: runwayIsStable ? "checkmark.circle.fill" : "clock.fill")
                             .foregroundStyle(runwayIsStable ? .green : (savings <= 0 ? .red : .orange))
                         Text("Runway")
                             .font(.caption)
@@ -187,13 +205,26 @@ struct ForecastTab: View {
                             runwayIsStable ? .green :
                             (savings <= 0 ? .red : .orange)
                         )
+                        .contentTransition(.numericText())
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(16)
                 .background(TTColors.cardBg)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Runway: \(runwayText)\(runwayIsStable ? ". Financially stable." : ". You have \(runwayMonths) months before savings run out.")")
             }
             .padding(.horizontal, 20)
+            .opacity(showCards ? 1 : 0)
         }
     }
+}
+
+// MARK: - chart data model
+
+struct TuitionEntry: Identifiable {
+    let id = UUID()
+    let school: String
+    let amount: Int
+    let color: String
 }
