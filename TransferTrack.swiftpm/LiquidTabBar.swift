@@ -1,5 +1,6 @@
 import SwiftUI
 
+// MARK: - liquid glass tab bar
 @available(iOS 26.0, *)
 struct LiquidTabBar: View {
     @Binding var selectedTab: Int
@@ -76,9 +77,10 @@ struct LiquidTabBar: View {
         let h = max(blobH * 0.5, blobH * ratio)
         let center = (leadingX + trailingX) / 2
 
+
         Capsule()
+            .fill(Color.blue)
             .frame(width: w, height: h)
-            .glassEffect(.regular, in: .capsule)
             .shadow(color: .white.opacity(0.06), radius: 1, y: -1)
             .shadow(color: .black.opacity(0.18), radius: 4, y: 2)
             .position(x: center, y: barHeight / 2)
@@ -137,6 +139,7 @@ struct LiquidTabBar: View {
     }
 }
 
+// MARK: - floating tab bar fallback
 @available(iOS 17.0, *)
 struct FloatingTabBar: View {
     @Binding var selectedTab: Int

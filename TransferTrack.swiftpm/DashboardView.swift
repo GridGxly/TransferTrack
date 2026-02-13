@@ -63,14 +63,16 @@ struct DashboardView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
 
+            // Floating tab bar
             if #available(iOS 26.0, *) {
                 LiquidTabBar(selectedTab: $selectedTab, tabs: tabs)
             } else {
                 FloatingTabBar(selectedTab: $selectedTab, tabs: tabs)
             }
         }
-        .background(Color(uiColor: .systemGroupedBackground))
-        .ignoresSafeArea(edges: .bottom)
+        // Use the system background, not grouped, and do NOT force a black strip at the bottom.
+        .background(Color(uiColor: .systemBackground))
+        .ignoresSafeArea(edges: []) // <‑ important: let RootView’s background show, don’t override bottom
         .sheet(isPresented: $showEditSheet) {
             EditPathSheet(vm: vm, isOnboardingComplete: $isOnboardingComplete)
         }

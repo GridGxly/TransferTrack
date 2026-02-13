@@ -21,6 +21,10 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
+            // fix light mode breaking the freaking app
+            Color(uiColor: .systemBackground)
+                .ignoresSafeArea()
+
             if isOnboardingComplete {
                 DashboardView(isOnboardingComplete: $isOnboardingComplete)
                     .transition(.opacity)

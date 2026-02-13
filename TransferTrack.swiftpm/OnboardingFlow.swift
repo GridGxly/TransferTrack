@@ -1,11 +1,6 @@
 import SwiftUI
 
-extension UIApplication {
-    func dismissKeyboard() {
-        sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
-}
-
+// MARK: - onboarding flow wrapper
 @available(iOS 17.0, *)
 struct OnboardingFlow: View {
     @Binding var isOnboardingComplete: Bool
@@ -56,7 +51,12 @@ struct OnboardingFlow: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("Done") { UIApplication.shared.dismissKeyboard() }
+                Button("Done") {
+                    let _ = UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder),
+                        to: nil, from: nil, for: nil
+                    )
+                }
             }
         }
     }
@@ -64,7 +64,12 @@ struct OnboardingFlow: View {
     private func advance() {
         guard !isTransitioning, currentPage < totalPages - 1 else { return }
         isTransitioning = true
-        UIApplication.shared.dismissKeyboard()
+
+        let _ = UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil, from: nil, for: nil
+        )
+
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         withAnimation(.easeInOut(duration: 0.45)) { currentPage += 1 }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { isTransitioning = false }
@@ -84,6 +89,7 @@ struct OnboardingFlow: View {
     }
 }
 
+// MARK: - hero
 @available(iOS 17.0, *)
 struct OnboardingHero: View {
     var onNext: () -> Void
@@ -106,6 +112,7 @@ struct OnboardingHero: View {
 
                 Text("TransferTrack")
                     .font(.largeTitle.weight(.black))
+                    .foregroundStyle(.primary)
                     .padding(.top, 24)
                     .opacity(appear ? 1 : 0)
 
@@ -137,6 +144,7 @@ struct OnboardingHero: View {
     }
 }
 
+// MARK: -  name
 @available(iOS 17.0, *)
 struct OnboardingName: View {
     @Binding var name: String
@@ -155,11 +163,13 @@ struct OnboardingName: View {
 
                 Text("What should we\ncall you?")
                     .font(.largeTitle.weight(.bold))
+                    .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
                     .padding(.top, 16).opacity(appear ? 1 : 0)
 
                 TextField("Your name", text: $name)
                     .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
                     .padding(.vertical, 20)
                     .submitLabel(.continue)
@@ -183,6 +193,7 @@ struct OnboardingName: View {
     }
 }
 
+// MARK: - path
 @available(iOS 17.0, *)
 struct OnboardingPath: View {
     let name: String
@@ -207,7 +218,9 @@ struct OnboardingPath: View {
                     Image(systemName: "map.fill").font(.system(size: 48)).foregroundStyle(.blue).opacity(appear ? 1 : 0)
 
                     Text("Hey \(name), where\nare you transferring?")
-                        .font(.title.weight(.bold)).multilineTextAlignment(.center)
+                        .font(.title.weight(.bold))
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.center)
                         .padding(.top, 16).opacity(appear ? 1 : 0)
 
                     VStack(spacing: 20) {
@@ -248,15 +261,14 @@ struct OnboardingPath: View {
     }
 }
 
+// MARK: - academics
 @available(iOS 17.0, *)
 struct OnboardingAcademics: View {
     let name: String
     @Binding var gpaText: String
     @Binding var creditsText: String
     var onNext: () -> Void
-
     @State private var appear = false
-    @State private var activeField: Int? = nil
 
     var body: some View {
         ZStack {
@@ -270,7 +282,9 @@ struct OnboardingAcademics: View {
                     .font(.system(size: 48)).foregroundStyle(.green).opacity(appear ? 1 : 0)
 
                 Text("Let's check your\nacademics, \(name).")
-                    .font(.title.weight(.bold)).multilineTextAlignment(.center)
+                    .font(.title.weight(.bold))
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.center)
                     .padding(.top, 16).opacity(appear ? 1 : 0)
 
                 VStack(spacing: 40) {
@@ -293,6 +307,7 @@ struct OnboardingAcademics: View {
     }
 }
 
+// MARK: - finances
 @available(iOS 17.0, *)
 struct OnboardingFinances: View {
     let name: String
@@ -300,7 +315,6 @@ struct OnboardingFinances: View {
     @Binding var rentText: String
     @Binding var transferSemester: String
     var onNext: () -> Void
-
     @State private var appear = false
     private let semesters = ["Fall 2026", "Spring 2027", "Fall 2027", "Spring 2028"]
 
@@ -317,7 +331,9 @@ struct OnboardingFinances: View {
                         .font(.system(size: 48)).foregroundStyle(.orange).opacity(appear ? 1 : 0)
 
                     Text("Almost there, \(name).\nYour financial snapshot.")
-                        .font(.title.weight(.bold)).multilineTextAlignment(.center)
+                        .font(.title.weight(.bold))
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.center)
                         .padding(.top, 16).opacity(appear ? 1 : 0)
 
                     VStack(spacing: 40) {
@@ -351,6 +367,7 @@ struct OnboardingFinances: View {
     }
 }
 
+// MARK: - loading
 @available(iOS 17.0, *)
 struct OnboardingLoading: View {
     let uniName: String
@@ -388,6 +405,7 @@ struct OnboardingLoading: View {
 
                 Text(steps[min(currentStep, steps.count - 1)].text)
                     .font(.title3.weight(.medium))
+                    .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
                     .contentTransition(.opacity)
@@ -437,6 +455,7 @@ struct OnboardingLoading: View {
     }
 }
 
+// MARK: - reusable UI components
 @available(iOS 17.0, *)
 struct BigNumberInput: View {
     let label: String
@@ -456,10 +475,12 @@ struct BigNumberInput: View {
                 if let p = prefix {
                     Text(p)
                         .font(.system(size: 56, weight: .bold, design: .rounded))
+                        // adapts properly based on text
                         .foregroundStyle(text.isEmpty ? Color.secondary.opacity(0.3) : color)
                 }
                 TextField(placeholder, text: $text)
                     .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .foregroundStyle(.primary)
                     .keyboardType(keyboardType)
                     .multilineTextAlignment(.center)
                     .minimumScaleFactor(0.5)
