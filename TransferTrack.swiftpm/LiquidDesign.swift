@@ -16,8 +16,7 @@ struct CollegeLogo: View {
 
     var body: some View {
         Group {
-            if let assetName = SchoolDatabase.logoMap[schoolName],
-               let img = UIImage(named: assetName) {
+            if let img = Self.loadImage(for: schoolName) {
                 Image(uiImage: img)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -39,6 +38,46 @@ struct CollegeLogo: View {
         let words = schoolName.split(separator: " ")
         if words.count >= 2 { return String(words[0].prefix(1)) + String(words[1].prefix(1)) }
         return String(schoolName.prefix(2)).uppercased()
+    }
+
+    static func loadImage(for school: String) -> UIImage? {
+        guard let assetName = SchoolDatabase.logoMap[school] else { return nil }
+        if let img = UIImage(named: assetName) { return img }
+        for ext in ["png", "jpg", "jpeg", "heic", "webp"] {
+            if let path = Bundle.main.path(forResource: assetName, ofType: ext) {
+                if let img = UIImage(contentsOfFile: path) { return img }
+            }
+        }
+        let stateFolder = stateFor(school: school)
+        for ext in ["png", "jpg", "jpeg"] {
+            if let url = Bundle.main.url(forResource: assetName, withExtension: ext, subdirectory: "Collegelogos/\(stateFolder)") {
+                if let img = UIImage(contentsOfFile: url.path) { return img }
+            }
+            if let url = Bundle.main.url(forResource: assetName, withExtension: ext, subdirectory: "Collegelogos") {
+                if let img = UIImage(contentsOfFile: url.path) { return img }
+            }
+        }
+        if let resourcePath = Bundle.main.resourcePath {
+            let fm = FileManager.default
+            if let enumerator = fm.enumerator(atPath: resourcePath) {
+                while let file = enumerator.nextObject() as? String {
+                    let lower = file.lowercased()
+                    let target = assetName.lowercased()
+                    if lower.contains(target) && (lower.hasSuffix(".png") || lower.hasSuffix(".jpg") || lower.hasSuffix(".jpeg")) {
+                        let fullPath = (resourcePath as NSString).appendingPathComponent(file)
+                        if let img = UIImage(contentsOfFile: fullPath) { return img }
+                    }
+                }
+            }
+        }
+        return nil
+    }
+
+    private static func stateFor(school: String) -> String {
+        for (state, data) in SchoolDatabase.stateData {
+            if data.ccs.contains(school) || data.unis.contains(school) { return state }
+        }
+        return ""
     }
 }
 

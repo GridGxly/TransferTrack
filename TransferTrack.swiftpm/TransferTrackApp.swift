@@ -1,11 +1,18 @@
 import SwiftUI
 import SwiftData
+import TipKit
 
 @main
 @available(iOS 17.0, *)
 struct TransferTrackApp: App {
     @State private var isOnboardingComplete: Bool =
         UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+
+    init() {
+        try? Tips.configure([
+            .datastoreLocation(.applicationDefault)
+        ])
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -21,7 +28,6 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
-            // fix light mode breaking the freaking app
             Color(uiColor: .systemBackground)
                 .ignoresSafeArea()
 

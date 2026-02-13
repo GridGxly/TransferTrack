@@ -4,13 +4,11 @@ import SwiftUI
 struct SolutionsTab: View {
     @Bindable var vm: TransferViewModel
 
-    @State private var animatedScore: Int
     @State private var showCelebration = false
     @State private var previouslyGreen: Bool
 
     init(vm: TransferViewModel) {
         self.vm = vm
-        _animatedScore = State(initialValue: vm.viabilityScore)
         _previouslyGreen = State(initialValue: vm.viabilityScore >= 75)
     }
 
@@ -23,8 +21,12 @@ struct SolutionsTab: View {
         vm.completedSolutions.reduce(0) { t, i in i < solutions.count ? t + solutions[i].points : t }
     }
     private var projectedScore: Int { min(100, vm.viabilityScore + earnedPoints) }
-    private var scoreColor: Color {
-        if projectedScore >= 75 { return .green } else if projectedScore >= 50 { return .orange } else { return .red }
+
+    private var activeSolutions: [(offset: Int, element: SchoolDatabase.Solution)] {
+        Array(solutions.enumerated()).filter { !vm.completedSolutions.contains($0.offset) }
+    }
+    private var completedSolutionsList: [(offset: Int, element: SchoolDatabase.Solution)] {
+        Array(solutions.enumerated()).filter { vm.completedSolutions.contains($0.offset) }
     }
 
     var body: some View {
@@ -33,26 +35,18 @@ struct SolutionsTab: View {
                 VStack(spacing: 12) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Improve Your Score").font(.title3.weight(.semibold))
-                            Text("Complete actions to boost your Viability Score.").font(.subheadline).foregroundStyle(.secondary)
+                            Text("Action Plan").font(.title3.weight(.semibold))
+                            Text("Complete actions to boost your transfer readiness.")
+                                .font(.subheadline).foregroundStyle(.secondary)
                         }
                         Spacer()
-                        ZStack {
-                            Circle().stroke(Color.gray.opacity(0.15), lineWidth: 4).frame(width: 50, height: 50)
-                            Circle().trim(from: 0, to: CGFloat(projectedScore) / 100)
-                                .stroke(scoreColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                                .frame(width: 50, height: 50).rotationEffect(.degrees(-90))
-                            Text("\(projectedScore)").font(.system(.caption, design: .rounded).weight(.bold))
-                                .foregroundStyle(scoreColor).contentTransition(.numericText())
-                        }
-                    }
-
-                    HStack(spacing: 12) {
-                        ProgressView(value: Double(earnedPoints), total: Double(max(1, totalPoints))).tint(TTColors.points)
-                        Text("\(earnedPoints)/\(totalPoints) pts").font(.caption.weight(.bold))
-                            .foregroundStyle(TTColors.points).frame(width: 70, alignment: .trailing)
+                        Text("\(earnedPoints)/\(totalPoints)")
+                            .font(.system(.title3, design: .rounded).weight(.bold))
+                            .foregroundStyle(TTColors.points)
                             .contentTransition(.numericText())
                     }
+
+                    ProgressView(value: Double(earnedPoints), total: Double(max(1, totalPoints))).tint(TTColors.points)
 
                     if vm.solutionMonthlyBonus > 0 {
                         HStack(spacing: 6) {
@@ -71,22 +65,55 @@ struct SolutionsTab: View {
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .padding(.horizontal, 20)
 
-                VStack(spacing: 0) {
-                    ForEach(Array(solutions.enumerated()), id: \.element.id) { index, solution in
-                        SolutionRow(
-                            title: solution.title, description: solution.description,
-                            points: solution.points, icon: solution.icon, color: solution.color,
-                            monthlyImpact: solution.monthlyImpact,
-                            isCompleted: vm.completedSolutions.contains(index),
-                            onToggle: { toggleItem(index) }
-                        )
-                        if index < solutions.count - 1 { Divider().padding(.horizontal, 16) }
+                if !activeSolutions.isEmpty {
+                    VStack(spacing: 0) {
+                        HStack {
+                            Text("Active").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                            Spacer()
+                            Text("\(activeSolutions.count) remaining").font(.caption).foregroundStyle(.tertiary)
+                        }
+                        .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 8)
+
+                        ForEach(Array(activeSolutions.enumerated()), id: \.element.offset) { listIndex, item in
+                            SolutionRow(
+                                solution: item.element,
+                                isCompleted: false,
+                                onToggle: { toggleItem(item.offset) }
+                            )
+                            if listIndex < activeSolutions.count - 1 {
+                                Divider().padding(.leading, 54)
+                            }
+                        }
                     }
+                    .background(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .padding(.horizontal, 20)
                 }
-                .padding(.vertical, 4)
-                .background(.regularMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .padding(.horizontal, 20)
+
+                if !completedSolutionsList.isEmpty {
+                    VStack(spacing: 0) {
+                        HStack {
+                            Text("Completed").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                            Spacer()
+                            Text("\(completedSolutionsList.count) done").font(.caption).foregroundStyle(.tertiary)
+                        }
+                        .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 8)
+
+                        ForEach(Array(completedSolutionsList.enumerated()), id: \.element.offset) { listIndex, item in
+                            SolutionRow(
+                                solution: item.element,
+                                isCompleted: true,
+                                onToggle: { toggleItem(item.offset) }
+                            )
+                            if listIndex < completedSolutionsList.count - 1 {
+                                Divider().padding(.leading, 54)
+                            }
+                        }
+                    }
+                    .background(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .padding(.horizontal, 20)
+                }
             }
 
             if showCelebration {
@@ -98,6 +125,7 @@ struct SolutionsTab: View {
         }
         .sensoryFeedback(.success, trigger: showCelebration)
         .animation(.spring(response: 0.4), value: vm.solutionMonthlyBonus)
+        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: vm.completedSolutions)
     }
 
     private func toggleItem(_ index: Int) {
@@ -105,7 +133,6 @@ struct SolutionsTab: View {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
             if vm.completedSolutions.contains(index) { vm.completedSolutions.remove(index) }
             else { vm.completedSolutions.insert(index) }
-            animatedScore = projectedScore
         }
         if projectedScore >= 75 && !previouslyGreen {
             previouslyGreen = true
@@ -123,12 +150,7 @@ struct SolutionsTab: View {
 
 @available(iOS 17.0, *)
 struct SolutionRow: View {
-    let title: String
-    let description: String
-    let points: Int
-    let icon: String
-    let color: Color
-    let monthlyImpact: Int
+    let solution: SchoolDatabase.Solution
     let isCompleted: Bool
     let onToggle: () -> Void
 
@@ -136,23 +158,28 @@ struct SolutionRow: View {
         Button(action: onToggle) {
             HStack(spacing: 14) {
                 ZStack {
-                    Circle().stroke(isCompleted ? TTColors.points : Color.gray.opacity(0.3), lineWidth: 2).frame(width: 24, height: 24)
-                    if isCompleted {
-                        Circle().fill(TTColors.points).frame(width: 24, height: 24)
-                        Image(systemName: "checkmark").font(.caption2.weight(.bold)).foregroundStyle(.white)
-                    }
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(isCompleted ? TTColors.points : solution.color.opacity(0.12))
+                        .frame(width: 32, height: 32)
+                    Image(systemName: isCompleted ? "checkmark" : solution.icon)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(isCompleted ? .white : solution.color)
                 }
-                Image(systemName: icon).font(.caption).foregroundStyle(color).frame(width: 20)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.subheadline.weight(.medium))
-                        .foregroundStyle(isCompleted ? .secondary : .primary).strikethrough(isCompleted)
-                    Text(description).font(.caption).foregroundStyle(.secondary).lineLimit(2)
-                    if monthlyImpact > 0 {
-                        Text("Saves ~$\(monthlyImpact)/mo").font(.caption2.weight(.medium)).foregroundStyle(.green)
+                    Text(solution.title)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(isCompleted ? .secondary : .primary)
+                    Text(solution.description)
+                        .font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                    if solution.monthlyImpact > 0 {
+                        Text("Saves ~$\(solution.monthlyImpact)/mo")
+                            .font(.caption2.weight(.medium)).foregroundStyle(.green)
                     }
                 }
                 Spacer()
-                Text("+\(points) pts").font(.caption.weight(.bold)).foregroundStyle(isCompleted ? .secondary : TTColors.points)
+                Text("+\(solution.points)")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(isCompleted ? .secondary : TTColors.points)
             }
             .padding(.horizontal, 16).padding(.vertical, 12)
         }

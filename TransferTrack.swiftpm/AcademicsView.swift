@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import TipKit
 
 @available(iOS 17.0, *)
 struct AcademicsTab: View {
@@ -8,6 +9,7 @@ struct AcademicsTab: View {
     @Query private var userAddedCourses: [UserCourse]
 
     @State private var showAddCourse = false
+    @State private var showScanner = false
     @State private var wastedInfoCourse: SchoolDatabase.CourseTransfer? = nil
 
     private var courses: [SchoolDatabase.CourseTransfer] { vm.courses }
@@ -22,6 +24,8 @@ struct AcademicsTab: View {
         guard totalCredits > 0 else { return 1.0 }
         return Double(transferableCredits) / Double(totalCredits)
     }
+
+    private let excessCreditTip = ExcessCreditTip()
 
     var body: some View {
         List {
@@ -49,15 +53,19 @@ struct AcademicsTab: View {
                     }
                     .gaugeStyle(.linearCapacity)
                     .tint(Gradient(colors: [.red, .orange, .green]))
-
-                    Text("\(transferableCredits) of \(totalCredits) credits transfer. \(wastedCredits) credits ($\(wastedCost.formatted())) won't count.")
-                        .font(.caption).foregroundStyle(.secondary)
                 }
+            }
+
+            if !wasted.isEmpty {
+                Section {
+                    TipView(excessCreditTip)
+                }
+                .onAppear { ExcessCreditTip.hasWastedCredits = true }
             }
 
             Section {
                 ForEach(transferable) { course in
-                    CourseRow(course: course)
+                    CourseRow(course: course, style: .transferable)
                 }
             } header: {
                 HStack(spacing: 6) {
@@ -98,49 +106,36 @@ struct AcademicsTab: View {
 
             if !wasted.isEmpty {
                 Section {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Total Loss").font(.caption.weight(.medium)).foregroundStyle(.secondary)
-                            HStack(spacing: 4) {
-                                Image(systemName: "arrow.down.circle.fill").foregroundStyle(.red).font(.caption)
-                                Text("$\(wastedCost.formatted())")
-                                    .font(.title3.weight(.bold)).foregroundStyle(.red)
-                                    .contentTransition(.numericText())
-                            }
-                        }
-                        Spacer()
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("Time Wasted").font(.caption.weight(.medium)).foregroundStyle(.secondary)
-                            HStack(spacing: 4) {
-                                Text("\(wastedMonths) months").font(.title3.weight(.bold)).foregroundStyle(.red)
-                                Image(systemName: "hourglass.bottomhalf.filled").foregroundStyle(.red).font(.caption)
-                            }
-                        }
-                    }
-                    .listRowBackground(Color.red.opacity(0.06))
-
                     ForEach(wasted) { course in
-                        HStack(spacing: 10) {
-                            Image(systemName: "xmark.circle.fill").foregroundStyle(.red.opacity(0.5)).font(.caption).frame(width: 24)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(course.name).font(.subheadline.weight(.medium))
-                                Text("\(course.code) · \(course.credits) cr · \(course.grade)")
-                                    .font(.caption).foregroundStyle(.secondary)
+                        Button {
+                            wastedInfoCourse = course
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "xmark.circle.fill").foregroundStyle(.red.opacity(0.5)).font(.caption).frame(width: 24)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(course.name).font(.subheadline.weight(.medium)).foregroundStyle(.primary)
+                                    Text("\(course.code) · \(course.credits) cr · \(course.grade)")
+                                        .font(.caption).foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Text("$\(course.costIfWasted)")
+                                    .font(.caption.weight(.bold)).foregroundStyle(.red)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption2).foregroundStyle(.tertiary)
                             }
-                            Spacer()
-                            Button { wastedInfoCourse = course } label: {
-                                Image(systemName: "info.circle").foregroundStyle(.red)
-                            }
-                            .buttonStyle(.plain)
                         }
+                        .buttonStyle(.plain)
                     }
                 } header: {
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
                         Text("\"Wasted\" Credits")
+                        Spacer()
+                        Text("$\(wastedCost.formatted()) · \(wastedMonths) mo lost")
+                            .font(.caption).foregroundStyle(.red)
                     }
                 } footer: {
-                    Text("These courses won't count toward your \(vm.selectedUni) degree. Tap ⓘ to see why.")
+                    Text("Tap any course to see why it won't transfer to \(vm.selectedUni).")
                 }
             }
 
@@ -150,19 +145,37 @@ struct AcademicsTab: View {
             }
         }
         .listStyle(.insetGrouped)
+        .safeAreaPadding(.bottom, 80)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button { showAddCourse = true } label: {
+                Menu {
+                    Button { showAddCourse = true } label: {
+                        Label("Add Manually", systemImage: "plus.circle")
+                    }
+                    Button { showScanner = true } label: {
+                        Label("Scan Transcript", systemImage: "doc.text.viewfinder")
+                    }
+                } label: {
                     Image(systemName: "plus.circle.fill").font(.title3)
                 }
             }
         }
         .sheet(isPresented: $showAddCourse) { AddCourseSheet() }
-        .popover(item: $wastedInfoCourse) { course in
-            WastedCourseInfoView(course: course, uniName: vm.selectedUni)
-                .presentationCompactAdaptation(.popover)
+        .sheet(isPresented: $showScanner) {
+            TranscriptScannerSheet { code in
+                let parts = code.split(separator: " ")
+                let prefix = parts.first.map(String.init) ?? code
+                let number = parts.count > 1 ? String(parts[1]) : ""
+                modelContext.insert(UserCourse(
+                    code: code,
+                    title: "\(prefix) \(number)",
+                    credits: 3, grade: "B", transfers: true, costIfWasted: 0
+                ))
+            }
         }
-        .padding(.bottom, 80)
+        .sheet(item: $wastedInfoCourse) { course in
+            WastedCourseInfoSheet(course: course, uniName: vm.selectedUni)
+        }
     }
 
     func iconFor(_ code: String) -> String {
@@ -185,18 +198,25 @@ struct AcademicsTab: View {
 @available(iOS 17.0, *)
 struct CourseRow: View {
     let course: SchoolDatabase.CourseTransfer
+    var style: CourseStyle = .transferable
+
+    enum CourseStyle { case transferable, wasted }
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: iconFor(course.code)).font(.caption).foregroundStyle(.green.opacity(0.7)).frame(width: 24)
+            Image(systemName: iconFor(course.code))
+                .font(.caption)
+                .foregroundStyle(style == .transferable ? .green.opacity(0.7) : .red.opacity(0.5))
+                .frame(width: 24)
             VStack(alignment: .leading, spacing: 2) {
                 Text(course.name).font(.subheadline.weight(.medium))
                 Text("\(course.code) · \(course.credits) cr · \(course.grade)").font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
-            Text(course.grade).font(.caption.weight(.bold)).foregroundStyle(.green)
+            Text(course.grade).font(.caption.weight(.bold))
+                .foregroundStyle(style == .transferable ? .green : .red)
                 .padding(.horizontal, 8).padding(.vertical, 3)
-                .background(Color.green.opacity(0.1)).clipShape(Capsule())
+                .background((style == .transferable ? Color.green : Color.red).opacity(0.1)).clipShape(Capsule())
         }
     }
 
@@ -218,29 +238,51 @@ struct CourseRow: View {
 }
 
 @available(iOS 17.0, *)
-struct WastedCourseInfoView: View {
+struct WastedCourseInfoSheet: View {
     let course: SchoolDatabase.CourseTransfer
     let uniName: String
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
-                Text(course.name).font(.headline)
-            }
-            Text("Why it doesn't transfer:").font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
-            Text(course.reason).font(.subheadline).fixedSize(horizontal: false, vertical: true)
-            Divider()
-            HStack {
-                Label("Cost: $\(course.costIfWasted)", systemImage: "dollarsign.circle")
-                    .font(.caption.weight(.medium)).foregroundStyle(.red)
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.red).font(.title2)
+                    Text(course.name).font(.title3.weight(.bold))
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Why it doesn't transfer:")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                    Text(course.reason)
+                        .font(.body)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Divider()
+
+                HStack {
+                    Label("Cost: $\(course.costIfWasted)", systemImage: "dollarsign.circle")
+                        .font(.subheadline.weight(.medium)).foregroundStyle(.red)
+                    Spacer()
+                    Label("\(course.credits) credits", systemImage: "book.closed")
+                        .font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
+                }
+
                 Spacer()
-                Label("\(course.credits) credits", systemImage: "book.closed")
-                    .font(.caption.weight(.medium)).foregroundStyle(.secondary)
+            }
+            .padding(24)
+            .navigationTitle(course.code)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
             }
         }
-        .padding(20)
-        .frame(minWidth: 280, maxWidth: 320)
+        .presentationDetents([.medium])
     }
 }
 

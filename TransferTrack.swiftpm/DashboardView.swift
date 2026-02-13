@@ -19,19 +19,17 @@ struct DashboardView: View {
             TabView(selection: $selectedTab) {
                 NavigationStack {
                     ScrollView(showsIndicators: false) {
-                        ForecastTab(vm: vm)
+                        ForecastTab(vm: vm, showEditSheet: $showEditSheet)
                             .padding(.bottom, 100)
                     }
                     .navigationTitle("Forecast")
+                    .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         ToolbarItem(placement: .primaryAction) {
                             Button { showEditSheet = true } label: {
-                                HStack(spacing: 6) {
-                                    CollegeLogo(schoolName: vm.selectedCC, size: 22)
-                                    Image(systemName: "arrow.right").font(.caption2)
-                                    CollegeLogo(schoolName: vm.selectedUni, size: 22)
-                                    Image(systemName: "pencil.circle.fill").font(.body).foregroundStyle(.secondary)
-                                }
+                                Image(systemName: "slider.horizontal.3")
+                                    .font(.body)
+                                    .foregroundStyle(.primary)
                             }
                             .accessibilityLabel("Edit transfer path")
                         }
@@ -58,24 +56,25 @@ struct DashboardView: View {
                             .padding(.bottom, 100)
                     }
                     .navigationTitle("Solutions")
+                    .navigationBarTitleDisplayMode(.inline)
                 }
                 .tag(3)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
 
-            // Floating tab bar
             if #available(iOS 26.0, *) {
                 LiquidTabBar(selectedTab: $selectedTab, tabs: tabs)
             } else {
                 FloatingTabBar(selectedTab: $selectedTab, tabs: tabs)
             }
         }
-        // Use the system background, not grouped, and do NOT force a black strip at the bottom.
         .background(Color(uiColor: .systemBackground))
-        .ignoresSafeArea(edges: []) // <‑ important: let RootView’s background show, don’t override bottom
+        .ignoresSafeArea(edges: [])
         .sheet(isPresented: $showEditSheet) {
             EditPathSheet(vm: vm, isOnboardingComplete: $isOnboardingComplete)
         }
+        .onAppear { vm.cacheForSiri() }
+        .onChange(of: vm.monthlyGap) { _, _ in vm.cacheForSiri() }
     }
 }
 
@@ -200,6 +199,7 @@ struct EditPathSheet: View {
         vm.userCredits = Double(creditsText) ?? vm.userCredits
         vm.userSavings = Double(savingsText) ?? vm.userSavings
         vm.userRent = Double(rentText) ?? vm.userRent
+        vm.cacheForSiri()
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         dismiss()
     }

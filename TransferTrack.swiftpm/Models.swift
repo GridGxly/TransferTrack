@@ -3,6 +3,9 @@ import Foundation
 import CoreLocation
 import SwiftUI
 import Observation
+import TipKit
+import AppIntents
+import CoreML
 
 @available(iOS 17.0, *)
 @Model
@@ -23,6 +26,22 @@ final class UserCourse {
         self.transfers = transfers
         self.costIfWasted = costIfWasted
         self.dateAdded = Date()
+    }
+}
+
+@available(iOS 17.0, *)
+struct ExcessCreditTip: Tip {
+    var title: Text { Text("Florida Excess Credit Surcharge") }
+    var message: Text? {
+        Text("Florida charges 50% more per credit hour once you exceed 120% of your degree's required credits. Wasted credits count toward that limit.")
+    }
+    var image: Image? { Image(systemName: "exclamationmark.triangle.fill") }
+
+    @Parameter
+    static var hasWastedCredits: Bool = false
+
+    var rules: [Rule] {
+        [#Rule(Self.$hasWastedCredits) { $0 == true }]
     }
 }
 
@@ -59,13 +78,40 @@ final class TransferViewModel {
         UserDefaults.standard.set(value, forKey: key)
     }
 
+    func cacheForSiri() {
+        let d = UserDefaults.standard
+        d.set(monthlyGap, forKey: "cachedMonthlyGap")
+        d.set(selectedUni, forKey: "cachedUni")
+        d.set(viabilityScore, forKey: "cachedViability")
+    }
+
     var viabilityScore: Int {
+        if let mlScore = predictViabilityWithML() { return mlScore }
+        return fallbackViabilityScore
+    }
+
+    private var fallbackViabilityScore: Int {
         var score = 50
         if userGPA >= 3.5 { score += 20 } else if userGPA >= 3.0 { score += 12 } else if userGPA >= 2.5 { score += 5 }
         if userCredits >= 60 { score += 15 } else if userCredits >= 45 { score += 10 } else if userCredits >= 30 { score += 5 }
         if userSavings >= 10000 { score += 15 } else if userSavings >= 5000 { score += 8 } else { score -= 5 }
         if userRent > 1500 { score -= 10 } else if userRent > 1000 { score -= 5 }
         return min(100, max(0, score))
+    }
+
+    private func predictViabilityWithML() -> Int? {
+        guard let modelURL = Bundle.main.url(forResource: "TransferRiskModel", withExtension: "mlmodelc"),
+              let model = try? MLModel(contentsOf: modelURL) else { return nil }
+        let input: [String: NSNumber] = [
+            "GPA": NSNumber(value: userGPA),
+            "Credits": NSNumber(value: userCredits),
+            "Savings": NSNumber(value: userSavings),
+            "Rent": NSNumber(value: userRent)
+        ]
+        guard let provider = try? MLDictionaryFeatureProvider(dictionary: input),
+              let prediction = try? model.prediction(from: provider),
+              let score = prediction.featureValue(for: "ViabilityScore")?.doubleValue else { return nil }
+        return min(100, max(0, Int(score)))
     }
 
     var transportCost: Int {
@@ -81,7 +127,10 @@ final class TransferViewModel {
         let income = 1800.0
         let tuitionMonthly = Double(SchoolDatabase.uniTuition[selectedUni] ?? 7000) / 12.0
         let expenses = userRent + tuitionMonthly + 400 + Double(transportCost)
-        return Int(income - expenses) + solutionMonthlyBonus
+        let gap = Int(income - expenses) + solutionMonthlyBonus
+        UserDefaults.standard.set(gap, forKey: "cachedMonthlyGap")
+        UserDefaults.standard.set(selectedUni, forKey: "cachedUni")
+        return gap
     }
 
     var solutionMonthlyBonus: Int {
@@ -107,4 +156,39 @@ final class TransferViewModel {
     var creditsAtRiskCost: Int { wasted.reduce(0) { $0 + $1.costIfWasted } }
     var communityColleges: [String] { SchoolDatabase.stateData[selectedState]?.ccs ?? [] }
     var universities: [String] { SchoolDatabase.stateData[selectedState]?.unis ?? [] }
+}
+
+@available(iOS 17.0, *)
+struct CheckTransferPlanIntent: AppIntent {
+    static let title: LocalizedStringResource = "Check Transfer Plan"
+    static let description = IntentDescription("Check your transfer budget and viability score.")
+    static let openAppWhenRun: Bool = false
+
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        let gap = UserDefaults.standard.integer(forKey: "cachedMonthlyGap")
+        let uni = UserDefaults.standard.string(forKey: "cachedUni") ?? "your university"
+        let score = UserDefaults.standard.integer(forKey: "cachedViability")
+
+        if gap < 0 {
+            return .result(dialog: "Your plan to \(uni) has a deficit of $\(abs(gap)) per month with a viability score of \(score). Open TransferTrack to find solutions.")
+        } else {
+            return .result(dialog: "Great news! Your plan to \(uni) has a surplus of $\(gap) per month with a viability score of \(score). You're on track for a smooth transfer.")
+        }
+    }
+}
+
+@available(iOS 17.0, *)
+struct TransferTrackShortcuts: AppShortcutsProvider {
+    static var appShortcuts: [AppShortcut] {
+        AppShortcut(
+            intent: CheckTransferPlanIntent(),
+            phrases: [
+                "Check my transfer plan in \(.applicationName)",
+                "How's my transfer budget in \(.applicationName)",
+                "What's my monthly gap in \(.applicationName)"
+            ],
+            shortTitle: "Check Transfer Plan",
+            systemImageName: "graduationcap.fill"
+        )
+    }
 }

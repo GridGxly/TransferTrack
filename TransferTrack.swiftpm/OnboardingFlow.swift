@@ -1,6 +1,5 @@
 import SwiftUI
 
-// MARK: - onboarding flow wrapper
 @available(iOS 17.0, *)
 struct OnboardingFlow: View {
     @Binding var isOnboardingComplete: Bool
@@ -89,7 +88,6 @@ struct OnboardingFlow: View {
     }
 }
 
-// MARK: - hero
 @available(iOS 17.0, *)
 struct OnboardingHero: View {
     var onNext: () -> Void
@@ -125,26 +123,16 @@ struct OnboardingHero: View {
                     .opacity(appear ? 1 : 0)
 
                 Spacer()
+                Spacer()
 
-                Button(action: onNext) {
-                    HStack(spacing: 8) {
-                        Text("Start Your Journey").font(.headline)
-                        Image(systemName: "arrow.right")
-                    }
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity).frame(height: 56)
-                    .background(Color.blue)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-                .padding(.horizontal, 24).padding(.bottom, 50)
-                .opacity(appear ? 1 : 0)
+                OnboardingButton(title: "Start Your Journey", icon: "arrow.right", action: onNext)
+                    .opacity(appear ? 1 : 0)
             }
         }
         .onAppear { withAnimation(.spring(response: 0.8, dampingFraction: 0.65).delay(0.2)) { appear = true } }
     }
 }
 
-// MARK: -  name
 @available(iOS 17.0, *)
 struct OnboardingName: View {
     @Binding var name: String
@@ -178,22 +166,17 @@ struct OnboardingName: View {
                     .opacity(appear ? 1 : 0)
 
                 Spacer()
+                Spacer()
 
-                Button(action: onNext) {
-                    Text("Continue").font(.headline).foregroundStyle(.white)
-                        .frame(maxWidth: .infinity).frame(height: 56)
-                        .background(name.isEmpty ? Color.gray : Color.blue)
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-                .disabled(name.isEmpty)
-                .padding(.horizontal, 24).padding(.bottom, 50)
+                OnboardingButton(title: "Continue", action: onNext)
+                    .disabled(name.isEmpty)
+                    .opacity(name.isEmpty ? 0.5 : 1.0)
             }
         }
         .onAppear { withAnimation(.easeOut(duration: 0.5).delay(0.2)) { appear = true } }
     }
 }
 
-// MARK: - path
 @available(iOS 17.0, *)
 struct OnboardingPath: View {
     let name: String
@@ -211,57 +194,53 @@ struct OnboardingPath: View {
             RadialGradient(colors: [Color.blue.opacity(0.12), Color.clear], center: .center, startRadius: 20, endRadius: 350)
                 .ignoresSafeArea()
 
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    Spacer().frame(height: 60)
+            VStack(spacing: 0) {
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: 40)
 
-                    Image(systemName: "map.fill").font(.system(size: 48)).foregroundStyle(.blue).opacity(appear ? 1 : 0)
+                        Image(systemName: "map.fill").font(.system(size: 48)).foregroundStyle(.blue).opacity(appear ? 1 : 0)
 
-                    Text("Hey \(name), where\nare you transferring?")
-                        .font(.title.weight(.bold))
-                        .foregroundStyle(.primary)
-                        .multilineTextAlignment(.center)
-                        .padding(.top, 16).opacity(appear ? 1 : 0)
+                        Text("Hey \(name), where\nare you transferring?")
+                            .font(.title.weight(.bold))
+                            .foregroundStyle(.primary)
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 16).opacity(appear ? 1 : 0)
 
-                    VStack(spacing: 20) {
-                        PathPickerRow(label: "Your State", icon: "mappin.and.ellipse", color: .purple) {
-                            Picker("State", selection: $selectedState) {
-                                ForEach(SchoolDatabase.states, id: \.self) { Text($0) }
-                            }.pickerStyle(.menu).tint(.primary)
+                        VStack(spacing: 20) {
+                            PathPickerRow(label: "Your State", icon: "mappin.and.ellipse", color: .purple) {
+                                Picker("State", selection: $selectedState) {
+                                    ForEach(SchoolDatabase.states, id: \.self) { Text($0) }
+                                }.pickerStyle(.menu).tint(.primary)
+                            }
+
+                            PathPickerWithLogo(label: "Transferring From", icon: "building.columns.fill", color: .blue, schoolName: selectedCC) {
+                                Picker("CC", selection: $selectedCC) {
+                                    ForEach(ccs, id: \.self) { Text($0) }
+                                }.pickerStyle(.menu).tint(.primary)
+                            }
+
+                            PathPickerWithLogo(label: "Dream School", icon: "graduationcap.fill", color: .green, schoolName: selectedUni) {
+                                Picker("Uni", selection: $selectedUni) {
+                                    ForEach(unis, id: \.self) { Text($0) }
+                                }.pickerStyle(.menu).tint(.primary)
+                            }
                         }
+                        .padding(.top, 32).padding(.horizontal, 24).opacity(appear ? 1 : 0)
 
-                        PathPickerWithLogo(label: "Transferring From", icon: "building.columns.fill", color: .blue, schoolName: selectedCC) {
-                            Picker("CC", selection: $selectedCC) {
-                                ForEach(ccs, id: \.self) { Text($0) }
-                            }.pickerStyle(.menu).tint(.primary)
-                        }
-
-                        PathPickerWithLogo(label: "Dream School", icon: "graduationcap.fill", color: .green, schoolName: selectedUni) {
-                            Picker("Uni", selection: $selectedUni) {
-                                ForEach(unis, id: \.self) { Text($0) }
-                            }.pickerStyle(.menu).tint(.primary)
-                        }
+                        Spacer().frame(height: 100)
                     }
-                    .padding(.top, 32).padding(.horizontal, 24).opacity(appear ? 1 : 0)
-
-                    Spacer().frame(height: 60)
-
-                    Button(action: onNext) {
-                        HStack(spacing: 8) { Text("Next").font(.headline); Image(systemName: "arrow.right") }
-                            .foregroundStyle(.white).frame(maxWidth: .infinity).frame(height: 56)
-                            .background(Color.blue).clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    }
-                    .padding(.horizontal, 24).padding(.bottom, 50)
                 }
+                .scrollDismissesKeyboard(.interactively)
+
+                OnboardingButton(title: "Next", icon: "arrow.right", action: onNext)
             }
-            .scrollDismissesKeyboard(.interactively)
         }
         .onChange(of: selectedState) { _, _ in selectedCC = ccs.first ?? ""; selectedUni = unis.first ?? "" }
         .onAppear { withAnimation(.easeOut(duration: 0.5).delay(0.2)) { appear = true } }
     }
 }
 
-// MARK: - academics
 @available(iOS 17.0, *)
 struct OnboardingAcademics: View {
     let name: String
@@ -294,20 +273,15 @@ struct OnboardingAcademics: View {
                 .padding(.top, 40).padding(.horizontal, 24).opacity(appear ? 1 : 0)
 
                 Spacer()
+                Spacer()
 
-                Button(action: onNext) {
-                    HStack(spacing: 8) { Text("Next").font(.headline); Image(systemName: "arrow.right") }
-                        .foregroundStyle(.white).frame(maxWidth: .infinity).frame(height: 56)
-                        .background(Color.blue).clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-                .padding(.horizontal, 24).padding(.bottom, 50)
+                OnboardingButton(title: "Next", icon: "arrow.right", action: onNext)
             }
         }
         .onAppear { withAnimation(.easeOut(duration: 0.5).delay(0.2)) { appear = true } }
     }
 }
 
-// MARK: - finances
 @available(iOS 17.0, *)
 struct OnboardingFinances: View {
     let name: String
@@ -323,51 +297,44 @@ struct OnboardingFinances: View {
             RadialGradient(colors: [Color.orange.opacity(0.12), Color.clear], center: .center, startRadius: 40, endRadius: 400)
                 .ignoresSafeArea()
 
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    Spacer().frame(height: 60)
+            VStack(spacing: 0) {
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: 40)
 
-                    Image(systemName: "dollarsign.circle.fill")
-                        .font(.system(size: 48)).foregroundStyle(.orange).opacity(appear ? 1 : 0)
+                        Image(systemName: "dollarsign.circle.fill")
+                            .font(.system(size: 48)).foregroundStyle(.orange).opacity(appear ? 1 : 0)
 
-                    Text("Almost there, \(name).\nYour financial snapshot.")
-                        .font(.title.weight(.bold))
-                        .foregroundStyle(.primary)
-                        .multilineTextAlignment(.center)
-                        .padding(.top, 16).opacity(appear ? 1 : 0)
+                        Text("Almost there, \(name).\nYour financial snapshot.")
+                            .font(.title.weight(.bold))
+                            .foregroundStyle(.primary)
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 16).opacity(appear ? 1 : 0)
 
-                    VStack(spacing: 40) {
-                        BigNumberInput(label: "Current Savings", placeholder: "2500", text: $savingsText, color: .orange, keyboardType: .numberPad, prefix: "$")
-                        BigNumberInput(label: "Monthly Rent", placeholder: "1200", text: $rentText, color: .orange, keyboardType: .numberPad, prefix: "$")
+                        VStack(spacing: 40) {
+                            BigNumberInput(label: "Current Savings", placeholder: "2500", text: $savingsText, color: .orange, keyboardType: .numberPad, prefix: "$")
+                            BigNumberInput(label: "Monthly Rent", placeholder: "1200", text: $rentText, color: .orange, keyboardType: .numberPad, prefix: "$")
 
-                        PathPickerRow(label: "When do you plan to transfer?", icon: "calendar", color: .cyan) {
-                            Picker("Semester", selection: $transferSemester) {
-                                ForEach(semesters, id: \.self) { Text($0) }
-                            }.pickerStyle(.menu).tint(.primary)
+                            PathPickerRow(label: "When do you plan to transfer?", icon: "calendar", color: .cyan) {
+                                Picker("Semester", selection: $transferSemester) {
+                                    ForEach(semesters, id: \.self) { Text($0) }
+                                }.pickerStyle(.menu).tint(.primary)
+                            }
                         }
-                    }
-                    .padding(.top, 40).padding(.horizontal, 24).opacity(appear ? 1 : 0)
+                        .padding(.top, 40).padding(.horizontal, 24).opacity(appear ? 1 : 0)
 
-                    Spacer().frame(height: 60)
-
-                    Button(action: onNext) {
-                        HStack(spacing: 8) {
-                            Text("Generate My Forecast").font(.headline)
-                            Image(systemName: "arrow.right.circle.fill")
-                        }
-                        .foregroundStyle(.white).frame(maxWidth: .infinity).frame(height: 56)
-                        .background(Color.blue).clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        Spacer().frame(height: 100)
                     }
-                    .padding(.horizontal, 24).padding(.bottom, 60)
                 }
+                .scrollDismissesKeyboard(.interactively)
+
+                OnboardingButton(title: "Generate My Forecast", icon: "arrow.right.circle.fill", action: onNext)
             }
-            .scrollDismissesKeyboard(.interactively)
         }
         .onAppear { withAnimation(.easeOut(duration: 0.5).delay(0.2)) { appear = true } }
     }
 }
 
-// MARK: - loading
 @available(iOS 17.0, *)
 struct OnboardingLoading: View {
     let uniName: String
@@ -420,16 +387,8 @@ struct OnboardingLoading: View {
                 Spacer()
 
                 if showButton {
-                    Button(action: onComplete) {
-                        HStack(spacing: 8) {
-                            Text("View Your Plan").font(.headline)
-                            Image(systemName: "arrow.right")
-                        }
-                        .foregroundStyle(.white).frame(maxWidth: .infinity).frame(height: 56)
-                        .background(Color.blue).clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    }
-                    .padding(.horizontal, 24).padding(.bottom, 50)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    OnboardingButton(title: "View Your Plan", icon: "arrow.right", action: onComplete)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
         }
@@ -455,7 +414,30 @@ struct OnboardingLoading: View {
     }
 }
 
-// MARK: - reusable UI components
+struct OnboardingButton: View {
+    let title: String
+    var icon: String? = nil
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Text(title).font(.headline)
+                if let icon {
+                    Image(systemName: icon)
+                }
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 56)
+            .background(Color.blue)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 32)
+    }
+}
+
 @available(iOS 17.0, *)
 struct BigNumberInput: View {
     let label: String
@@ -475,7 +457,6 @@ struct BigNumberInput: View {
                 if let p = prefix {
                     Text(p)
                         .font(.system(size: 56, weight: .bold, design: .rounded))
-                        // adapts properly based on text
                         .foregroundStyle(text.isEmpty ? Color.secondary.opacity(0.3) : color)
                 }
                 TextField(placeholder, text: $text)

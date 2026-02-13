@@ -32,6 +32,9 @@ let package = Package(
                 .landscapeLeft,
                 .portraitUpsideDown(.when(deviceFamilies: [.pad]))
             ],
+            capabilities: [
+                .camera(purposeString: "TransferTrack needs camera access to scan your college transcript.")
+            ],
             appCategory: .education
         )
     ],

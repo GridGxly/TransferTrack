@@ -66,7 +66,7 @@ struct HousingTab: View {
                             .stroke(.blue.opacity(0.6), lineWidth: 3)
                     }
                 }
-                .mapStyle(.standard(elevation: .flat))
+                .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
                 .ignoresSafeArea(edges: .top)
                 .onAppear {
                     mapPosition = .region(MKCoordinateRegion(center: uniCoord, span: MKCoordinateSpan(latitudeDelta: 0.06, longitudeDelta: 0.06)))
@@ -75,34 +75,37 @@ struct HousingTab: View {
                 }
 
                 VStack(spacing: 0) {
-                    Capsule().fill(Color.secondary.opacity(0.4)).frame(width: 36, height: 5).padding(.top, 8).padding(.bottom, 8)
+                    VStack(spacing: 0) {
+                        Capsule().fill(Color.secondary.opacity(0.4)).frame(width: 36, height: 5).padding(.top, 8).padding(.bottom, 8)
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Housing Near \(vm.selectedUni)").font(.title3.weight(.semibold))
-                        Text("Rent \(rentDiff >= 0 ? "+" : "")$\(rentDiff)/mo vs. current · \(apartments.count) listings")
-                            .font(.subheadline).foregroundStyle(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 20).padding(.bottom, 12)
-
-                    if let idx = selectedApartment, idx < apartments.count {
-                        let apt = apartments[idx]
-                        HStack(spacing: 12) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(apt.name).font(.headline)
-                                Text("\(apt.distance) · \(apt.beds)bd/\(apt.baths)ba").font(.caption).foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            VStack(alignment: .trailing, spacing: 2) {
-                                Text("$\(apt.rent)/mo").font(.title3.weight(.bold))
-                                OddsBadge(odds: apt.odds, detail: apt.oddsDetail)
-                            }
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Housing Near \(vm.selectedUni)").font(.title3.weight(.semibold))
+                            Text("Rent \(rentDiff >= 0 ? "+" : "")$\(rentDiff)/mo vs. current · \(apartments.count) listings")
+                                .font(.subheadline).foregroundStyle(.secondary)
                         }
-                        .padding(16)
-                        .background(Color.blue.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .padding(.horizontal, 20).padding(.bottom, 8)
-                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 20).padding(.bottom, 12)
+
+                        if let idx = selectedApartment, idx < apartments.count {
+                            let apt = apartments[idx]
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(apt.name).font(.headline)
+                                    Text("\(apt.distance) · \(apt.beds)bd/\(apt.baths)ba").font(.caption).foregroundStyle(.secondary)
+                                    OddsBadge(odds: apt.odds, detail: apt.oddsDetail)
+                                }
+                                Spacer()
+                                VStack(alignment: .trailing, spacing: 2) {
+                                    Text("$\(apt.rent)").font(.title2.weight(.bold))
+                                    Text("/mo").font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                            .padding(16)
+                            .background(Color(uiColor: .secondarySystemGroupedBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .padding(.horizontal, 20).padding(.bottom, 8)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                        }
                     }
 
                     ScrollView(showsIndicators: false) {
@@ -152,6 +155,7 @@ struct HousingTab: View {
                 .onChange(of: sheetOffset) { _, newVal in dragStartOffset = newVal }
             }
         }
+        .toolbarBackground(.visible, for: .navigationBar)
     }
 
     private func snapToNearest(totalHeight: CGFloat, velocity: CGFloat) {
@@ -230,12 +234,20 @@ struct ApartmentCardView: View {
             HStack(spacing: 16) {
                 Label("\(apartment.beds) bed", systemImage: "bed.double.fill").font(.caption).foregroundStyle(.secondary)
                 Label("\(apartment.baths) bath", systemImage: "shower.fill").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                OddsBadge(odds: apartment.odds, detail: apartment.oddsDetail)
             }
-            OddsBadge(odds: apartment.odds, detail: apartment.oddsDetail)
         }
         .padding(16)
-        .background(isSelected ? Color.blue.opacity(0.08) : Color(uiColor: .secondarySystemGroupedBackground))
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(isSelected ? RoundedRectangle(cornerRadius: 16).stroke(Color.blue.opacity(0.3), lineWidth: 2) : nil)
+        .overlay(
+            isSelected
+            ? RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.blue, lineWidth: 2)
+            : nil
+        )
+        .scaleEffect(isSelected ? 1.02 : 1.0)
+        .animation(.spring(response: 0.25), value: isSelected)
     }
 }
+
