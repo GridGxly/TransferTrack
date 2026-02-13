@@ -1,65 +1,44 @@
 import SwiftUI
 
-// MARK: - liquid glass tab bar
-
 @available(iOS 26.0, *)
 struct LiquidTabBar: View {
     @Binding var selectedTab: Int
     let tabs: [(icon: String, label: String)]
 
-    //  two edges of the liquid blob
     @State private var leadingX: CGFloat = 0
     @State private var trailingX: CGFloat = 0
-
-    // tracking for first layout
+    @State private var iconScales: [CGFloat] = [1, 1, 1, 1]
     @State private var hasAppeared = false
-    @State private var tabWidth: CGFloat = 0
 
-    // dimensions
     private let barHeight: CGFloat = 60
-    private let blobBaseWidth: CGFloat = 56
-    private let blobBaseHeight: CGFloat = 48
-    private let iconSize: CGFloat = 20
-
-    // physics springs
-    private let leadingSpring = Animation.spring(response: 0.38, dampingFraction: 0.68, blendDuration: 0.1)
-    private let trailingSpring = Animation.spring(response: 0.55, dampingFraction: 0.78, blendDuration: 0.1)
+    private let blobW: CGFloat = 58
+    private let blobH: CGFloat = 48
 
     var body: some View {
         GeometryReader { geo in
             let tw = geo.size.width / CGFloat(tabs.count)
-            let barWidth = geo.size.width
 
             ZStack {
-                // glass track background
                 Capsule()
                     .frame(height: barHeight)
                     .glassEffect(.regular, in: .capsule)
 
-                // MARK: the liquid blob
-                liquidBlob(tabWidth: tw)
+                blobView(tw: tw)
+                rimLightView(tw: tw)
 
-                // MARK: rim light
-                rimLight(tabWidth: tw)
-
-                // MARK: icons and labels
                 HStack(spacing: 0) {
                     ForEach(Array(tabs.enumerated()), id: \.offset) { index, tab in
-                        let isActive = selectedTab == index
-
-                        Button {
-                            moveToTab(index, tabWidth: tw)
-                        } label: {
+                        let active = selectedTab == index
+                        Button { moveToTab(index, tw: tw) } label: {
                             VStack(spacing: 2) {
                                 Image(systemName: tab.icon)
-                                    .font(.system(size: iconSize, weight: isActive ? .bold : .medium))
-                                    .symbolVariant(isActive ? .fill : .none)
-                                    .foregroundStyle(isActive ? .white : .secondary)
-                                    .scaleEffect(isActive ? 1.12 : 1.0)
-
+                                    .font(.system(size: 20, weight: active ? .bold : .medium))
+                                    .symbolVariant(active ? .fill : .none)
+                                    .foregroundStyle(active ? .white : .secondary)
+                                    .scaleEffect(iconScales[min(index, iconScales.count - 1)])
                                 Text(tab.label)
-                                    .font(.system(size: 10, weight: isActive ? .semibold : .regular))
-                                    .foregroundStyle(isActive ? .white.opacity(0.9) : .secondary)
+                                    .font(.system(size: 10, weight: active ? .semibold : .regular))
+                                    .foregroundStyle(active ? .white.opacity(0.9) : .secondary)
                             }
                             .frame(maxWidth: .infinity)
                             .frame(height: barHeight)
@@ -67,126 +46,96 @@ struct LiquidTabBar: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("\(tab.label) tab")
-                        .accessibilityAddTraits(isActive ? .isSelected : [])
+                        .accessibilityAddTraits(active ? .isSelected : [])
                     }
                 }
             }
             .frame(height: barHeight)
             .onAppear {
-                tabWidth = tw
                 if !hasAppeared {
-                    let center = tabCenter(for: selectedTab, tabWidth: tw)
-                    leadingX = center
-                    trailingX = center
-                    hasAppeared = true
+                    let c = cx(selectedTab, tw: tw)
+                    leadingX = c; trailingX = c; hasAppeared = true
                 }
             }
             .onChange(of: geo.size.width) { _, _ in
-                tabWidth = tw
-                let center = tabCenter(for: selectedTab, tabWidth: tw)
-                leadingX = center
-                trailingX = center
+                let c = cx(selectedTab, tw: tw)
+                leadingX = c; trailingX = c
             }
         }
         .frame(height: barHeight)
         .padding(.horizontal, 20)
         .padding(.bottom, 16)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Tab bar")
     }
 
-    // MARK: - the liquid blob shape
-
-    @ViewBuilder
-    private func liquidBlob(tabWidth: CGFloat) -> some View {
-        // calculate blob geometry from the two edge positions
-        let minX = min(leadingX, trailingX)
-        let maxX = max(leadingX, trailingX)
-        let stretch = maxX - minX
-        let currentWidth = max(blobBaseWidth, stretch + blobBaseWidth)
-
-        
-        let volumeRatio = blobBaseWidth / currentWidth
-        let currentHeight = max(blobBaseHeight * 0.5, blobBaseHeight * volumeRatio)
-
-        let centerX = (leadingX + trailingX) / 2
+    @ViewBuilder private func blobView(tw: CGFloat) -> some View {
+        let minE = min(leadingX, trailingX)
+        let maxE = max(leadingX, trailingX)
+        let stretch = maxE - minE
+        let w = max(blobW, stretch + blobW)
+        let ratio = blobW / w
+        let h = max(blobH * 0.5, blobH * ratio)
+        let center = (leadingX + trailingX) / 2
 
         Capsule()
-            .frame(width: currentWidth, height: currentHeight)
+            .frame(width: w, height: h)
             .glassEffect(.regular, in: .capsule)
-            .shadow(color: .white.opacity(0.08), radius: 1, y: -1) // subtle top glow
-            .shadow(color: .black.opacity(0.18), radius: 4, y: 2)  // bottom shadow
-            .position(x: centerX, y: barHeight / 2)
+            .shadow(color: .white.opacity(0.06), radius: 1, y: -1)
+            .shadow(color: .black.opacity(0.18), radius: 4, y: 2)
+            .position(x: center, y: barHeight / 2)
     }
 
-    // MARK: - rim light
+    @ViewBuilder private func rimLightView(tw: CGFloat) -> some View {
+        let minE = min(leadingX, trailingX)
+        let maxE = max(leadingX, trailingX)
+        let stretch = maxE - minE
+        let w = max(blobW, stretch + blobW)
+        let ratio = blobW / w
+        let h = max(blobH * 0.5, blobH * ratio)
+        let center = (leadingX + trailingX) / 2
 
-    @ViewBuilder
-    private func rimLight(tabWidth: CGFloat) -> some View {
-        let minX = min(leadingX, trailingX)
-        let maxX = max(leadingX, trailingX)
-        let stretch = maxX - minX
-        let currentWidth = max(blobBaseWidth, stretch + blobBaseWidth)
-        let volumeRatio = blobBaseWidth / currentWidth
-        let currentHeight = max(blobBaseHeight * 0.5, blobBaseHeight * volumeRatio)
-        let centerX = (leadingX + trailingX) / 2
-
-        // thin white arc along the top
         Capsule()
             .stroke(
-                LinearGradient(
-                    colors: [.white.opacity(0.35), .white.opacity(0.05)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                ),
-                lineWidth: 1.5
+                LinearGradient(colors: [.white.opacity(0.3), .white.opacity(0.03)], startPoint: .top, endPoint: .bottom),
+                lineWidth: 1.2
             )
-            .frame(width: currentWidth - 4, height: currentHeight - 4)
-            .position(x: centerX, y: barHeight / 2)
+            .frame(width: w - 4, height: h - 4)
+            .position(x: center, y: barHeight / 2)
             .allowsHitTesting(false)
     }
 
-    // MARK: - movement
+    private func cx(_ idx: Int, tw: CGFloat) -> CGFloat {
+        CGFloat(idx) * tw + tw / 2
+    }
 
-    private func moveToTab(_ index: Int, tabWidth: CGFloat) {
+    private func moveToTab(_ index: Int, tw: CGFloat) {
         guard index != selectedTab else { return }
-
-        let oldCenter = tabCenter(for: selectedTab, tabWidth: tabWidth)
-        let newCenter = tabCenter(for: index, tabWidth: tabWidth)
-        let movingRight = newCenter > oldCenter
+        let oldC = cx(selectedTab, tw: tw)
+        let newC = cx(index, tw: tw)
+        let right = newC > oldC
 
         selectedTab = index
-
-        
-        withAnimation(leadingSpring) {
-            if movingRight {
-                leadingX = newCenter
-            } else {
-                trailingX = newCenter
-            }
-        }
-
-        
-        withAnimation(trailingSpring.delay(0.06)) {
-            if movingRight {
-                trailingX = newCenter
-            } else {
-                leadingX = newCenter
-            }
-        }
-
-        // Haptic
         UIImpactFeedbackGenerator(style: .medium).impactOccurred(intensity: 0.7)
-    }
 
-    // MARK: - helpers
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.65)) {
+            if right { leadingX = newC } else { trailingX = newC }
+        }
 
-    private func tabCenter(for index: Int, tabWidth: CGFloat) -> CGFloat {
-        (CGFloat(index) * tabWidth) + (tabWidth / 2)
+        withAnimation(.spring(response: 0.58, dampingFraction: 0.75).delay(0.08)) {
+            if right { trailingX = newC } else { leadingX = newC }
+        }
+
+        let i = index
+        withAnimation(.spring(response: 0.2, dampingFraction: 0.4).delay(0.18)) {
+            iconScales[i] = 0.82
+        }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.5).delay(0.32)) {
+            iconScales[i] = 1.15
+        }
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.7).delay(0.48)) {
+            iconScales[i] = 1.0
+        }
     }
 }
-
-// MARK: - pre-iOS 26 fallback with similar physics but using ultraThinMaterial
 
 @available(iOS 17.0, *)
 struct FloatingTabBar: View {
@@ -195,91 +144,72 @@ struct FloatingTabBar: View {
 
     @State private var leadingX: CGFloat = 0
     @State private var trailingX: CGFloat = 0
+    @State private var iconScales: [CGFloat] = [1, 1, 1, 1]
     @State private var hasAppeared = false
 
     private let barHeight: CGFloat = 56
-    private let blobBaseWidth: CGFloat = 52
-    private let blobBaseHeight: CGFloat = 44
-
-    private let leadingSpring = Animation.spring(response: 0.38, dampingFraction: 0.68)
-    private let trailingSpring = Animation.spring(response: 0.55, dampingFraction: 0.78)
+    private let blobW: CGFloat = 52
+    private let blobH: CGFloat = 44
 
     var body: some View {
         GeometryReader { geo in
             let tw = geo.size.width / CGFloat(tabs.count)
 
             ZStack {
-                // bar background
                 Capsule()
                     .fill(.ultraThinMaterial)
                     .frame(height: barHeight)
                     .shadow(color: .black.opacity(0.15), radius: 10, y: 5)
 
-                // liquid blob
-                let minX = min(leadingX, trailingX)
-                let maxX = max(leadingX, trailingX)
-                let stretch = maxX - minX
-                let currentWidth = max(blobBaseWidth, stretch + blobBaseWidth)
-                let volumeRatio = blobBaseWidth / currentWidth
-                let currentHeight = max(blobBaseHeight * 0.5, blobBaseHeight * volumeRatio)
-                let centerX = (leadingX + trailingX) / 2
+                let minE = min(leadingX, trailingX)
+                let maxE = max(leadingX, trailingX)
+                let stretch = maxE - minE
+                let w = max(blobW, stretch + blobW)
+                let ratio = blobW / w
+                let h = max(blobH * 0.5, blobH * ratio)
+                let center = (leadingX + trailingX) / 2
 
                 Capsule()
-                    .fill(TTColors.accent)
-                    .frame(width: currentWidth, height: currentHeight)
-                    .shadow(color: TTColors.accent.opacity(0.3), radius: 6, y: 2)
-                    .position(x: centerX, y: barHeight / 2)
+                    .fill(Color.blue)
+                    .frame(width: w, height: h)
+                    .shadow(color: Color.blue.opacity(0.3), radius: 6, y: 2)
+                    .position(x: center, y: barHeight / 2)
 
-                // rim light
                 Capsule()
-                    .stroke(
-                        LinearGradient(
-                            colors: [.white.opacity(0.4), .white.opacity(0.0)],
-                            startPoint: .top,
-                            endPoint: .center
-                        ),
-                        lineWidth: 1
-                    )
-                    .frame(width: currentWidth - 2, height: currentHeight - 2)
-                    .position(x: centerX, y: barHeight / 2)
+                    .stroke(LinearGradient(colors: [.white.opacity(0.4), .clear], startPoint: .top, endPoint: .center), lineWidth: 1)
+                    .frame(width: w - 2, height: h - 2)
+                    .position(x: center, y: barHeight / 2)
                     .allowsHitTesting(false)
 
-                // icons
                 HStack(spacing: 0) {
                     ForEach(Array(tabs.enumerated()), id: \.offset) { index, tab in
-                        let isActive = selectedTab == index
-
-                        Button {
-                            moveToTab(index, tabWidth: tw)
-                        } label: {
-                            HStack(spacing: 6) {
+                        let active = selectedTab == index
+                        Button { moveToTab(index, tw: tw) } label: {
+                            VStack(spacing: 2) {
                                 Image(systemName: tab.icon)
-                                    .font(.subheadline)
-                                    .symbolVariant(isActive ? .fill : .none)
-                                if isActive {
-                                    Text(tab.label)
-                                        .font(.caption.weight(.semibold))
-                                        .lineLimit(1)
-                                }
+                                    .font(.system(size: 18, weight: active ? .bold : .medium))
+                                    .symbolVariant(active ? .fill : .none)
+                                    .scaleEffect(iconScales[min(index, iconScales.count - 1)])
+                                Text(tab.label)
+                                    .font(.system(size: 9, weight: active ? .semibold : .regular))
+                                    .lineLimit(1)
                             }
-                            .foregroundStyle(isActive ? .white : .secondary)
+                            .foregroundStyle(active ? .white : .secondary)
                             .frame(maxWidth: .infinity)
                             .frame(height: barHeight)
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("\(tab.label) tab")
-                        .accessibilityAddTraits(isActive ? .isSelected : [])
+                        .accessibilityAddTraits(active ? .isSelected : [])
                     }
                 }
             }
             .frame(height: barHeight)
             .onAppear {
                 if !hasAppeared {
-                    let center = (CGFloat(selectedTab) * tw) + (tw / 2)
-                    leadingX = center
-                    trailingX = center
-                    hasAppeared = true
+                    let c = CGFloat(selectedTab) * tw + tw / 2
+                    leadingX = c; trailingX = c; hasAppeared = true
                 }
             }
         }
@@ -288,22 +218,24 @@ struct FloatingTabBar: View {
         .padding(.bottom, 28)
     }
 
-    private func moveToTab(_ index: Int, tabWidth: CGFloat) {
+    private func moveToTab(_ index: Int, tw: CGFloat) {
         guard index != selectedTab else { return }
-
-        let oldCenter = (CGFloat(selectedTab) * tabWidth) + (tabWidth / 2)
-        let newCenter = (CGFloat(index) * tabWidth) + (tabWidth / 2)
-        let movingRight = newCenter > oldCenter
-
+        let oldC = CGFloat(selectedTab) * tw + tw / 2
+        let newC = CGFloat(index) * tw + tw / 2
+        let right = newC > oldC
         selectedTab = index
-
-        withAnimation(leadingSpring) {
-            if movingRight { leadingX = newCenter } else { trailingX = newCenter }
-        }
-        withAnimation(trailingSpring.delay(0.06)) {
-            if movingRight { trailingX = newCenter } else { leadingX = newCenter }
-        }
-
         UIImpactFeedbackGenerator(style: .medium).impactOccurred(intensity: 0.7)
+
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.65)) {
+            if right { leadingX = newC } else { trailingX = newC }
+        }
+        withAnimation(.spring(response: 0.58, dampingFraction: 0.75).delay(0.08)) {
+            if right { trailingX = newC } else { leadingX = newC }
+        }
+
+        let i = index
+        withAnimation(.spring(response: 0.2, dampingFraction: 0.4).delay(0.18)) { iconScales[i] = 0.82 }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.5).delay(0.32)) { iconScales[i] = 1.15 }
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.7).delay(0.48)) { iconScales[i] = 1.0 }
     }
 }

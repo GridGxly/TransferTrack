@@ -36,11 +36,11 @@
             landmarkType = "13">
             <Locations>
                <Location
-                  uuid = "1EAD7CC2-EA9C-414D-A2E5-E30D1A8C5C2E - a3ad57ee470d5f7b"
+                  uuid = "1EAD7CC2-EA9C-414D-A2E5-E30D1A8C5C2E - f0ec27e80e5be5e2"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
-                  symbolName = "one-time initialization function for accent"
+                  symbolName = "one-time initialization function for warning"
                   moduleName = "TransferTrack.debug.dylib"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/gridgxly/Documents/projects/swiftchallenge/TransferTrack.swiftpm/LiquidDesign.swift"
@@ -50,11 +50,11 @@
                   endingLineNumber = "8">
                </Location>
                <Location
-                  uuid = "1EAD7CC2-EA9C-414D-A2E5-E30D1A8C5C2E - c694e9a6955f5992"
+                  uuid = "1EAD7CC2-EA9C-414D-A2E5-E30D1A8C5C2E - 70e8174be72848a9"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
-                  symbolName = "TransferTrack.TTColors.accent.unsafeMutableAddressor : SwiftUI.Color"
+                  symbolName = "TransferTrack.TTColors.warning.unsafeMutableAddressor : SwiftUI.Color"
                   moduleName = "TransferTrack.debug.dylib"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/gridgxly/Documents/projects/swiftchallenge/TransferTrack.swiftpm/LiquidDesign.swift"

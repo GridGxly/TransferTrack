@@ -1,11 +1,7 @@
 import SwiftUI
 import CoreLocation
 
-// MARK: - school database
-
 struct SchoolDatabase {
-
-    // MARK: state to school mapping
 
     static let stateData: [String: (ccs: [String], unis: [String])] = [
         "Florida": (
@@ -40,77 +36,73 @@ struct SchoolDatabase {
 
     static var states: [String] { Array(stateData.keys).sorted() }
 
-    // MARK: university coordinates for MapKit
-
     static let universityCoordinates: [String: CLLocationCoordinate2D] = [
-        "Valencia College":     CLLocationCoordinate2D(latitude: 28.5218, longitude: -81.4641),
-        "Miami Dade College":   CLLocationCoordinate2D(latitude: 25.7778, longitude: -80.1902),
-        "Seminole State":       CLLocationCoordinate2D(latitude: 28.7472, longitude: -81.3102),
-        "Polk State":           CLLocationCoordinate2D(latitude: 28.0557, longitude: -81.9498),
-        "Santa Fe College":     CLLocationCoordinate2D(latitude: 29.6820, longitude: -82.3710),
-        "UCF":                  CLLocationCoordinate2D(latitude: 28.6024, longitude: -81.2001),
-        "Univ. of Florida":     CLLocationCoordinate2D(latitude: 29.6436, longitude: -82.3549),
-        "FSU":                  CLLocationCoordinate2D(latitude: 30.4415, longitude: -84.2985),
-        "USF":                  CLLocationCoordinate2D(latitude: 28.0587, longitude: -82.4139),
-        "FIU":                  CLLocationCoordinate2D(latitude: 25.7562, longitude: -80.3755),
-        "Santa Monica College":     CLLocationCoordinate2D(latitude: 34.0156, longitude: -118.4713),
-        "De Anza College":          CLLocationCoordinate2D(latitude: 37.3197, longitude: -122.0454),
-        "Pasadena City College":    CLLocationCoordinate2D(latitude: 34.1410, longitude: -118.1258),
-        "Diablo Valley College":    CLLocationCoordinate2D(latitude: 37.9686, longitude: -122.0713),
-        "Orange Coast College":     CLLocationCoordinate2D(latitude: 33.6687, longitude: -117.9134),
-        "UCLA":                     CLLocationCoordinate2D(latitude: 34.0689, longitude: -118.4452),
-        "UC Berkeley":              CLLocationCoordinate2D(latitude: 37.8719, longitude: -122.2585),
-        "UC Davis":                 CLLocationCoordinate2D(latitude: 38.5382, longitude: -121.7617),
-        "CSU LA":                   CLLocationCoordinate2D(latitude: 34.0662, longitude: -118.1684),
-        "San Jose State":           CLLocationCoordinate2D(latitude: 37.3352, longitude: -121.8811),
-        "Austin CC":        CLLocationCoordinate2D(latitude: 30.3900, longitude: -97.7268),
-        "Houston CC":       CLLocationCoordinate2D(latitude: 29.7188, longitude: -95.3431),
+        "Valencia College": CLLocationCoordinate2D(latitude: 28.5218, longitude: -81.4641),
+        "Miami Dade College": CLLocationCoordinate2D(latitude: 25.7778, longitude: -80.1902),
+        "Seminole State": CLLocationCoordinate2D(latitude: 28.7472, longitude: -81.3102),
+        "Polk State": CLLocationCoordinate2D(latitude: 28.0557, longitude: -81.9498),
+        "Santa Fe College": CLLocationCoordinate2D(latitude: 29.6820, longitude: -82.3710),
+        "UCF": CLLocationCoordinate2D(latitude: 28.6024, longitude: -81.2001),
+        "Univ. of Florida": CLLocationCoordinate2D(latitude: 29.6436, longitude: -82.3549),
+        "FSU": CLLocationCoordinate2D(latitude: 30.4415, longitude: -84.2985),
+        "USF": CLLocationCoordinate2D(latitude: 28.0587, longitude: -82.4139),
+        "FIU": CLLocationCoordinate2D(latitude: 25.7562, longitude: -80.3755),
+        "Santa Monica College": CLLocationCoordinate2D(latitude: 34.0156, longitude: -118.4713),
+        "De Anza College": CLLocationCoordinate2D(latitude: 37.3197, longitude: -122.0454),
+        "Pasadena City College": CLLocationCoordinate2D(latitude: 34.1410, longitude: -118.1258),
+        "Diablo Valley College": CLLocationCoordinate2D(latitude: 37.9686, longitude: -122.0713),
+        "Orange Coast College": CLLocationCoordinate2D(latitude: 33.6687, longitude: -117.9134),
+        "UCLA": CLLocationCoordinate2D(latitude: 34.0689, longitude: -118.4452),
+        "UC Berkeley": CLLocationCoordinate2D(latitude: 37.8719, longitude: -122.2585),
+        "UC Davis": CLLocationCoordinate2D(latitude: 38.5382, longitude: -121.7617),
+        "CSU LA": CLLocationCoordinate2D(latitude: 34.0662, longitude: -118.1684),
+        "San Jose State": CLLocationCoordinate2D(latitude: 37.3352, longitude: -121.8811),
+        "Austin CC": CLLocationCoordinate2D(latitude: 30.3900, longitude: -97.7268),
+        "Houston CC": CLLocationCoordinate2D(latitude: 29.7188, longitude: -95.3431),
         "Lone Star College": CLLocationCoordinate2D(latitude: 30.0485, longitude: -95.4385),
-        "Dallas College":   CLLocationCoordinate2D(latitude: 32.8198, longitude: -96.8499),
-        "Alamo Colleges":   CLLocationCoordinate2D(latitude: 29.4685, longitude: -98.5254),
-        "UT Austin":        CLLocationCoordinate2D(latitude: 30.2849, longitude: -97.7341),
-        "Texas A&M":        CLLocationCoordinate2D(latitude: 30.6187, longitude: -96.3365),
+        "Dallas College": CLLocationCoordinate2D(latitude: 32.8198, longitude: -96.8499),
+        "Alamo Colleges": CLLocationCoordinate2D(latitude: 29.4685, longitude: -98.5254),
+        "UT Austin": CLLocationCoordinate2D(latitude: 30.2849, longitude: -97.7341),
+        "Texas A&M": CLLocationCoordinate2D(latitude: 30.6187, longitude: -96.3365),
         "Univ. of Houston": CLLocationCoordinate2D(latitude: 29.7199, longitude: -95.3422),
-        "UTSA":             CLLocationCoordinate2D(latitude: 29.5831, longitude: -98.6199),
-        "Texas State":      CLLocationCoordinate2D(latitude: 29.8884, longitude: -97.9384),
-        "NOVA":                 CLLocationCoordinate2D(latitude: 38.8306, longitude: -77.3056),
-        "Tidewater CC":         CLLocationCoordinate2D(latitude: 36.8373, longitude: -76.1970),
-        "Virginia Western CC":  CLLocationCoordinate2D(latitude: 37.2718, longitude: -79.9706),
-        "Reynolds CC":          CLLocationCoordinate2D(latitude: 37.5927, longitude: -77.5621),
-        "UVA":                  CLLocationCoordinate2D(latitude: 38.0336, longitude: -78.5080),
-        "Virginia Tech":        CLLocationCoordinate2D(latitude: 37.2296, longitude: -80.4139),
-        "JMU":                  CLLocationCoordinate2D(latitude: 38.4341, longitude: -78.8693),
-        "George Mason":         CLLocationCoordinate2D(latitude: 38.8316, longitude: -77.3091),
-        "VCU":                  CLLocationCoordinate2D(latitude: 37.5479, longitude: -77.4529),
-        "Seattle Central":      CLLocationCoordinate2D(latitude: 47.6164, longitude: -122.3215),
-        "Bellevue College":     CLLocationCoordinate2D(latitude: 47.5979, longitude: -122.1502),
-        "Spokane CC":           CLLocationCoordinate2D(latitude: 47.6716, longitude: -117.3860),
-        "Green River College":  CLLocationCoordinate2D(latitude: 47.3295, longitude: -122.2620),
-        "Univ. of Washington":  CLLocationCoordinate2D(latitude: 47.6553, longitude: -122.3035),
-        "WSU":                  CLLocationCoordinate2D(latitude: 46.7319, longitude: -117.1542),
-        "Central Washington":   CLLocationCoordinate2D(latitude: 46.9965, longitude: -120.5477),
-        "Eastern Washington":   CLLocationCoordinate2D(latitude: 47.4892, longitude: -117.5813),
-        "Central Piedmont CC":  CLLocationCoordinate2D(latitude: 35.2068, longitude: -80.8455),
-        "Wake Tech":            CLLocationCoordinate2D(latitude: 35.7173, longitude: -78.5755),
-        "Guilford Tech":        CLLocationCoordinate2D(latitude: 36.0228, longitude: -79.8862),
-        "Cape Fear CC":         CLLocationCoordinate2D(latitude: 34.2299, longitude: -77.8717),
-        "UNC Chapel Hill":      CLLocationCoordinate2D(latitude: 35.9049, longitude: -79.0469),
-        "NC State":             CLLocationCoordinate2D(latitude: 35.7847, longitude: -78.6821),
-        "App State":            CLLocationCoordinate2D(latitude: 36.2154, longitude: -81.6846),
-        "ECU":                  CLLocationCoordinate2D(latitude: 35.6050, longitude: -77.3714),
-        "UNC Charlotte":        CLLocationCoordinate2D(latitude: 35.3074, longitude: -80.7331),
-        "Bergen CC":            CLLocationCoordinate2D(latitude: 40.9506, longitude: -74.0767),
-        "Middlesex College":    CLLocationCoordinate2D(latitude: 40.4514, longitude: -74.3775),
+        "UTSA": CLLocationCoordinate2D(latitude: 29.5831, longitude: -98.6199),
+        "Texas State": CLLocationCoordinate2D(latitude: 29.8884, longitude: -97.9384),
+        "NOVA": CLLocationCoordinate2D(latitude: 38.8306, longitude: -77.3056),
+        "Tidewater CC": CLLocationCoordinate2D(latitude: 36.8373, longitude: -76.1970),
+        "Virginia Western CC": CLLocationCoordinate2D(latitude: 37.2718, longitude: -79.9706),
+        "Reynolds CC": CLLocationCoordinate2D(latitude: 37.5927, longitude: -77.5621),
+        "UVA": CLLocationCoordinate2D(latitude: 38.0336, longitude: -78.5080),
+        "Virginia Tech": CLLocationCoordinate2D(latitude: 37.2296, longitude: -80.4139),
+        "JMU": CLLocationCoordinate2D(latitude: 38.4341, longitude: -78.8693),
+        "George Mason": CLLocationCoordinate2D(latitude: 38.8316, longitude: -77.3091),
+        "VCU": CLLocationCoordinate2D(latitude: 37.5479, longitude: -77.4529),
+        "Seattle Central": CLLocationCoordinate2D(latitude: 47.6164, longitude: -122.3215),
+        "Bellevue College": CLLocationCoordinate2D(latitude: 47.5979, longitude: -122.1502),
+        "Spokane CC": CLLocationCoordinate2D(latitude: 47.6716, longitude: -117.3860),
+        "Green River College": CLLocationCoordinate2D(latitude: 47.3295, longitude: -122.2620),
+        "Univ. of Washington": CLLocationCoordinate2D(latitude: 47.6553, longitude: -122.3035),
+        "WSU": CLLocationCoordinate2D(latitude: 46.7319, longitude: -117.1542),
+        "Central Washington": CLLocationCoordinate2D(latitude: 46.9965, longitude: -120.5477),
+        "Eastern Washington": CLLocationCoordinate2D(latitude: 47.4892, longitude: -117.5813),
+        "Central Piedmont CC": CLLocationCoordinate2D(latitude: 35.2068, longitude: -80.8455),
+        "Wake Tech": CLLocationCoordinate2D(latitude: 35.7173, longitude: -78.5755),
+        "Guilford Tech": CLLocationCoordinate2D(latitude: 36.0228, longitude: -79.8862),
+        "Cape Fear CC": CLLocationCoordinate2D(latitude: 34.2299, longitude: -77.8717),
+        "UNC Chapel Hill": CLLocationCoordinate2D(latitude: 35.9049, longitude: -79.0469),
+        "NC State": CLLocationCoordinate2D(latitude: 35.7847, longitude: -78.6821),
+        "App State": CLLocationCoordinate2D(latitude: 36.2154, longitude: -81.6846),
+        "ECU": CLLocationCoordinate2D(latitude: 35.6050, longitude: -77.3714),
+        "UNC Charlotte": CLLocationCoordinate2D(latitude: 35.3074, longitude: -80.7331),
+        "Bergen CC": CLLocationCoordinate2D(latitude: 40.9506, longitude: -74.0767),
+        "Middlesex College": CLLocationCoordinate2D(latitude: 40.4514, longitude: -74.3775),
         "Camden County College": CLLocationCoordinate2D(latitude: 39.7885, longitude: -74.9656),
-        "Union College":        CLLocationCoordinate2D(latitude: 40.6615, longitude: -74.3057),
-        "Rutgers":              CLLocationCoordinate2D(latitude: 40.5008, longitude: -74.4474),
-        "Rowan Univ.":          CLLocationCoordinate2D(latitude: 39.7092, longitude: -75.1189),
-        "Montclair State":      CLLocationCoordinate2D(latitude: 40.8624, longitude: -74.1998),
-        "NJIT":                 CLLocationCoordinate2D(latitude: 40.7425, longitude: -74.1793),
-        "Stockton Univ.":       CLLocationCoordinate2D(latitude: 39.4785, longitude: -74.5634),
+        "Union College": CLLocationCoordinate2D(latitude: 40.6615, longitude: -74.3057),
+        "Rutgers": CLLocationCoordinate2D(latitude: 40.5008, longitude: -74.4474),
+        "Rowan Univ.": CLLocationCoordinate2D(latitude: 39.7092, longitude: -75.1189),
+        "Montclair State": CLLocationCoordinate2D(latitude: 40.8624, longitude: -74.1998),
+        "NJIT": CLLocationCoordinate2D(latitude: 40.7425, longitude: -74.1793),
+        "Stockton Univ.": CLLocationCoordinate2D(latitude: 39.4785, longitude: -74.5634),
     ]
-
-    // MARK: logo asset names
 
     static let logoMap: [String: String] = [
         "Valencia College": "valencia-college", "Miami Dade College": "miami-dade-college",
@@ -140,8 +132,6 @@ struct SchoolDatabase {
         "NJIT": "njit", "Stockton Univ.": "stockton-univ",
     ]
 
-    // MARK: tuition data
-
     static let ccTuition: [String: Int] = [
         "Valencia College": 3120, "Miami Dade College": 3400, "Seminole State": 3100,
         "Polk State": 2900, "Santa Fe College": 2800,
@@ -164,8 +154,6 @@ struct SchoolDatabase {
         "UNC Chapel Hill": 8998, "NC State": 9101, "App State": 7296, "ECU": 7287, "UNC Charlotte": 7108,
         "Rutgers": 15804, "Rowan Univ.": 13880, "Montclair State": 13288, "NJIT": 18096, "Stockton Univ.": 13558,
     ]
-
-    // MARK: - housing
 
     struct Apartment: Identifiable {
         let id = UUID()
@@ -241,20 +229,6 @@ struct SchoolDatabase {
                 Apartment(name: "Aggie Square", distance: "1.0 mi", beds: 2, baths: 1, rent: 1400, odds: "High Odds", oddsDetail: "No Credit Check"),
                 Apartment(name: "Tandem Properties", distance: "0.8 mi", beds: 1, baths: 1, rent: 1100, odds: "High Odds", oddsDetail: "Student-Friendly"),
             ]
-        case "CSU LA":
-            return [
-                Apartment(name: "Cal State Village", distance: "0.1 mi", beds: 2, baths: 2, rent: 1200, odds: "High Odds", oddsDetail: "Student Housing"),
-                Apartment(name: "El Sereno Flats", distance: "1.5 mi", beds: 1, baths: 1, rent: 1050, odds: "High Odds", oddsDetail: "No Credit Check"),
-                Apartment(name: "Alhambra Court", distance: "2.0 mi", beds: 2, baths: 1, rent: 1350, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
-                Apartment(name: "University Village", distance: "0.3 mi", beds: 1, baths: 1, rent: 950, odds: "High Odds", oddsDetail: "Student-Friendly"),
-            ]
-        case "San Jose State":
-            return [
-                Apartment(name: "South Campus", distance: "0.3 mi", beds: 2, baths: 2, rent: 1800, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
-                Apartment(name: "Spartan Village", distance: "0.5 mi", beds: 1, baths: 1, rent: 1500, odds: "High Odds", oddsDetail: "Student-Friendly"),
-                Apartment(name: "CVA Apartments", distance: "0.8 mi", beds: 2, baths: 1, rent: 1650, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
-                Apartment(name: "The Grad", distance: "0.2 mi", beds: 1, baths: 1, rent: 1900, odds: "Low Odds", oddsDetail: "Guarantor Required"),
-            ]
         case "UT Austin":
             return [
                 Apartment(name: "West Campus Lofts", distance: "0.4 mi", beds: 2, baths: 2, rent: 1500, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
@@ -294,8 +268,6 @@ struct SchoolDatabase {
         return apts.reduce(0) { $0 + $1.rent } / apts.count
     }
 
-    // MARK: - course transfer data
-
     struct CourseTransfer: Identifiable {
         let id = UUID()
         let name: String
@@ -304,7 +276,7 @@ struct SchoolDatabase {
         let grade: String
         let transfers: Bool
         let costIfWasted: Int
-        let reason: String  
+        let reason: String
     }
 
     static func courses(from cc: String, to uni: String) -> [CourseTransfer] {
@@ -339,8 +311,6 @@ struct SchoolDatabase {
         return transferable + wasted
     }
 
-    // MARK: - solutions
-
     struct Solution: Identifiable {
         let id = UUID()
         let title: String
@@ -348,7 +318,7 @@ struct SchoolDatabase {
         let points: Int
         let icon: String
         let color: Color
-        let monthlyImpact: Int  // how much this affects monthly gap
+        let monthlyImpact: Int
     }
 
     static func solutions(for uni: String, from cc: String, state: String) -> [Solution] {
@@ -378,7 +348,7 @@ struct SchoolDatabase {
         items.append(contentsOf: [
             Solution(title: "Submit FAFSA Renewal", description: "Financial aid must be renewed for \(uni)", points: 10, icon: "doc.text.fill", color: .green, monthlyImpact: 250),
             Solution(title: "Appeal Credit Transfer", description: "Contest at-risk credits with syllabus docs", points: 5, icon: "arrow.uturn.backward", color: .red, monthlyImpact: 0),
-            Solution(title: "Find a Roommate", description: "Split rent costs to reduce monthly gap", points: 6, icon: "person.2.fill", color: .purple, monthlyImpact: 0), // calculated dynamically
+            Solution(title: "Find a Roommate", description: "Split rent costs to reduce monthly gap", points: 6, icon: "person.2.fill", color: .purple, monthlyImpact: 0),
             Solution(title: "Apply for Transfer Scholarships", description: "\(uni) offers transfer-specific awards", points: 7, icon: "dollarsign.circle.fill", color: .orange, monthlyImpact: 150),
             Solution(title: "Set Up Emergency Fund", description: "Save 3 months of projected gap before transfer", points: 3, icon: "banknote.fill", color: .cyan, monthlyImpact: 0),
             Solution(title: "Get a Campus Job", description: "\(uni) Federal Work-Study covers ~$200/mo", points: 4, icon: "briefcase.fill", color: .brown, monthlyImpact: 200),

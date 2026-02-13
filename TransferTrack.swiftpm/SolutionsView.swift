@@ -1,7 +1,5 @@
 import SwiftUI
 
-// MARK: - solutions tab (connected to forecast via ViewModel)
-
 @available(iOS 17.0, *)
 struct SolutionsTab: View {
     @Bindable var vm: TransferViewModel
@@ -20,120 +18,80 @@ struct SolutionsTab: View {
         SchoolDatabase.solutions(for: vm.selectedUni, from: vm.selectedCC, state: vm.selectedState)
     }
 
-    private var totalPoints: Int {
-        solutions.reduce(0) { $0 + $1.points }
-    }
-
+    private var totalPoints: Int { solutions.reduce(0) { $0 + $1.points } }
     private var earnedPoints: Int {
-        vm.completedSolutions.reduce(0) { total, idx in
-            idx < solutions.count ? total + solutions[idx].points : total
-        }
+        vm.completedSolutions.reduce(0) { t, i in i < solutions.count ? t + solutions[i].points : t }
     }
-
-    private var projectedScore: Int {
-        min(100, vm.viabilityScore + earnedPoints)
-    }
-
+    private var projectedScore: Int { min(100, vm.viabilityScore + earnedPoints) }
     private var scoreColor: Color {
-        if projectedScore >= 75 { return .green }
-        else if projectedScore >= 50 { return .orange }
-        else { return .red }
+        if projectedScore >= 75 { return .green } else if projectedScore >= 50 { return .orange } else { return .red }
     }
 
     var body: some View {
         ZStack {
             VStack(spacing: 20) {
-                // MARK: projected score card
                 VStack(spacing: 12) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Improve Your Score")
-                                .font(.title3.weight(.semibold))
-                            Text("Complete actions to boost your Viability Score.")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                            Text("Improve Your Score").font(.title3.weight(.semibold))
+                            Text("Complete actions to boost your Viability Score.").font(.subheadline).foregroundStyle(.secondary)
                         }
                         Spacer()
-
-                        // mini viability ring
                         ZStack {
-                            Circle()
-                                .stroke(Color.gray.opacity(0.15), lineWidth: 4)
-                                .frame(width: 50, height: 50)
-                            Circle()
-                                .trim(from: 0, to: CGFloat(projectedScore) / 100)
+                            Circle().stroke(Color.gray.opacity(0.15), lineWidth: 4).frame(width: 50, height: 50)
+                            Circle().trim(from: 0, to: CGFloat(projectedScore) / 100)
                                 .stroke(scoreColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                                .frame(width: 50, height: 50)
-                                .rotationEffect(.degrees(-90))
-                            Text("\(projectedScore)")
-                                .font(.system(.caption, design: .rounded).weight(.bold))
-                                .foregroundStyle(scoreColor)
-                                .contentTransition(.numericText())
+                                .frame(width: 50, height: 50).rotationEffect(.degrees(-90))
+                            Text("\(projectedScore)").font(.system(.caption, design: .rounded).weight(.bold))
+                                .foregroundStyle(scoreColor).contentTransition(.numericText())
                         }
                     }
 
-                    // progress bar
                     HStack(spacing: 12) {
-                        ProgressView(value: Double(earnedPoints), total: Double(max(1, totalPoints)))
-                            .tint(TTColors.points)
-
-                        Text("\(earnedPoints)/\(totalPoints) pts")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(TTColors.points)
-                            .frame(width: 70, alignment: .trailing)
+                        ProgressView(value: Double(earnedPoints), total: Double(max(1, totalPoints))).tint(TTColors.points)
+                        Text("\(earnedPoints)/\(totalPoints) pts").font(.caption.weight(.bold))
+                            .foregroundStyle(TTColors.points).frame(width: 70, alignment: .trailing)
                             .contentTransition(.numericText())
                     }
 
-                    // monthly impact banner
                     if vm.solutionMonthlyBonus > 0 {
                         HStack(spacing: 6) {
-                            Image(systemName: "chart.line.uptrend.xyaxis")
-                                .foregroundStyle(.green)
+                            Image(systemName: "chart.line.uptrend.xyaxis").foregroundStyle(.green)
                             Text("Saving +$\(vm.solutionMonthlyBonus)/mo from completed actions")
-                                .font(.caption.weight(.medium))
-                                .foregroundStyle(.green)
+                                .font(.caption.weight(.medium)).foregroundStyle(.green)
                         }
-                        .padding(8)
-                        .frame(maxWidth: .infinity)
+                        .padding(8).frame(maxWidth: .infinity)
                         .background(Color.green.opacity(0.08))
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                         .transition(.move(edge: .top).combined(with: .opacity))
                     }
                 }
                 .padding(20)
-                .background(TTColors.cardBg)
+                .background(.regularMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .padding(.horizontal, 20)
 
-                // MARK: solution items
                 VStack(spacing: 0) {
                     ForEach(Array(solutions.enumerated()), id: \.element.id) { index, solution in
                         SolutionRow(
-                            title: solution.title,
-                            description: solution.description,
-                            points: solution.points,
-                            icon: solution.icon,
-                            color: solution.color,
+                            title: solution.title, description: solution.description,
+                            points: solution.points, icon: solution.icon, color: solution.color,
                             monthlyImpact: solution.monthlyImpact,
                             isCompleted: vm.completedSolutions.contains(index),
                             onToggle: { toggleItem(index) }
                         )
-
-                        if index < solutions.count - 1 {
-                            Divider().padding(.horizontal, 16)
-                        }
+                        if index < solutions.count - 1 { Divider().padding(.horizontal, 16) }
                     }
                 }
                 .padding(.vertical, 4)
-                .background(TTColors.cardBg)
+                .background(.regularMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .padding(.horizontal, 20)
             }
 
-            // MARK: celebration overlay (GPU-rendered)
             if showCelebration {
                 CelebrationView()
-                    .drawingGroup(opaque: false, colorMode: .linear) // Metal GPU rendering
+                    .drawingGroup(opaque: false, colorMode: .linear)
                     .allowsHitTesting(false)
                     .transition(.opacity)
             }
@@ -142,25 +100,17 @@ struct SolutionsTab: View {
         .animation(.spring(response: 0.4), value: vm.solutionMonthlyBonus)
     }
 
-    // MARK: - toggle
-
     private func toggleItem(_ index: Int) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-            if vm.completedSolutions.contains(index) {
-                vm.completedSolutions.remove(index)
-            } else {
-                vm.completedSolutions.insert(index)
-            }
+            if vm.completedSolutions.contains(index) { vm.completedSolutions.remove(index) }
+            else { vm.completedSolutions.insert(index) }
             animatedScore = projectedScore
         }
-
-        let newScore = projectedScore
-        if newScore >= 75 && !previouslyGreen {
+        if projectedScore >= 75 && !previouslyGreen {
             previouslyGreen = true
             triggerCelebration()
-        } else if newScore < 75 {
-            previouslyGreen = false
-        }
+        } else if projectedScore < 75 { previouslyGreen = false }
     }
 
     private func triggerCelebration() {
@@ -170,8 +120,6 @@ struct SolutionsTab: View {
         }
     }
 }
-
-// MARK: - solution row
 
 @available(iOS 17.0, *)
 struct SolutionRow: View {
@@ -188,56 +136,29 @@ struct SolutionRow: View {
         Button(action: onToggle) {
             HStack(spacing: 14) {
                 ZStack {
-                    Circle()
-                        .stroke(isCompleted ? TTColors.points : Color.gray.opacity(0.3), lineWidth: 2)
-                        .frame(width: 24, height: 24)
+                    Circle().stroke(isCompleted ? TTColors.points : Color.gray.opacity(0.3), lineWidth: 2).frame(width: 24, height: 24)
                     if isCompleted {
                         Circle().fill(TTColors.points).frame(width: 24, height: 24)
-                        Image(systemName: "checkmark")
-                            .font(.caption2.weight(.bold))
-                            .foregroundStyle(.white)
+                        Image(systemName: "checkmark").font(.caption2.weight(.bold)).foregroundStyle(.white)
                     }
                 }
-
-                Image(systemName: icon)
-                    .font(.caption)
-                    .foregroundStyle(color)
-                    .frame(width: 20)
-
+                Image(systemName: icon).font(.caption).foregroundStyle(color).frame(width: 20)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(isCompleted ? .secondary : .primary)
-                        .strikethrough(isCompleted)
-                    Text(description)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
+                    Text(title).font(.subheadline.weight(.medium))
+                        .foregroundStyle(isCompleted ? .secondary : .primary).strikethrough(isCompleted)
+                    Text(description).font(.caption).foregroundStyle(.secondary).lineLimit(2)
                     if monthlyImpact > 0 {
-                        Text("Saves ~$\(monthlyImpact)/mo")
-                            .font(.caption2.weight(.medium))
-                            .foregroundStyle(.green)
+                        Text("Saves ~$\(monthlyImpact)/mo").font(.caption2.weight(.medium)).foregroundStyle(.green)
                     }
                 }
-
                 Spacer()
-
-                Text("+\(points) pts")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(isCompleted ? .secondary : TTColors.points)
+                Text("+\(points) pts").font(.caption.weight(.bold)).foregroundStyle(isCompleted ? .secondary : TTColors.points)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 16).padding(.vertical, 12)
         }
         .buttonStyle(.plain)
-        .sensoryFeedback(.impact(weight: .light), trigger: isCompleted)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title). \(points) points. \(isCompleted ? "Completed" : "Not completed")")
-        .accessibilityHint("Double tap to \(isCompleted ? "unmark" : "mark as completed")")
     }
 }
-
-// MARK: - optimized celebration view
 
 @available(iOS 17.0, *)
 struct CelebrationView: View {
@@ -247,56 +168,29 @@ struct CelebrationView: View {
         GeometryReader { geo in
             ZStack {
                 VStack(spacing: 8) {
-                    if #available(iOS 18.0, *) {
-                        Image(systemName: "star.fill")
-                            .font(.largeTitle)
-                            .foregroundStyle(.yellow)
-                            .symbolEffect(.bounce)
-                    } else {
-                        // Fallback for iOS 17: simple scaling effect
-                        Image(systemName: "star.fill")
-                            .font(.largeTitle)
-                            .foregroundStyle(.yellow)
-                            .scaleEffect(1.1)
-                            .animation(
-                                .easeInOut(duration: 0.6)
-                                    .repeatForever(autoreverses: true),
-                                value: particles.count // ties animation to something that changes once
-                            )
-                    }
-
-                    Text("Score is Green!")
-                        .font(.title2.weight(.bold))
-                        .foregroundStyle(.white)
-                    Text("You're on track for a smooth transfer")
-                        .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.8))
+                    Image(systemName: "star.fill").font(.largeTitle).foregroundStyle(.yellow)
+                    Text("Score is Green!").font(.title2.weight(.bold)).foregroundStyle(.primary)
+                    Text("You're on track for a smooth transfer").font(.subheadline).foregroundStyle(.secondary)
                 }
                 .padding(24)
                 .background(.ultraThinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
 
                 ForEach(particles) { p in
-                    Circle()
-                        .fill(p.color)
-                        .frame(width: p.size, height: p.size)
-                        .position(x: p.x, y: p.y)
-                        .opacity(p.opacity)
+                    Circle().fill(p.color).frame(width: p.size, height: p.size)
+                        .position(x: p.x, y: p.y).opacity(p.opacity)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .onAppear { spawnParticles(in: geo.size) }
+            .onAppear { spawn(in: geo.size) }
         }
     }
 
-    private func spawnParticles(in size: CGSize) {
+    private func spawn(in size: CGSize) {
         let colors: [Color] = [.green, .yellow, .blue, .orange, .purple, .cyan]
         for i in 0..<30 {
-            let p = ConfettiParticle(
-                x: CGFloat.random(in: 0...size.width), y: -20,
-                size: CGFloat.random(in: 4...10),
-                color: colors[i % colors.count], opacity: 1.0
-            )
+            let p = ConfettiParticle(x: CGFloat.random(in: 0...size.width), y: -20,
+                size: CGFloat.random(in: 4...10), color: colors[i % colors.count], opacity: 1.0)
             particles.append(p)
             withAnimation(.easeIn(duration: Double.random(in: 1.0...2.0)).delay(Double(i) * 0.03)) {
                 if let idx = particles.firstIndex(where: { $0.id == p.id }) {
@@ -311,9 +205,5 @@ struct CelebrationView: View {
 
 struct ConfettiParticle: Identifiable {
     let id = UUID()
-    var x: CGFloat
-    var y: CGFloat
-    var size: CGFloat
-    var color: Color
-    var opacity: Double
+    var x: CGFloat; var y: CGFloat; var size: CGFloat; var color: Color; var opacity: Double
 }
