@@ -11,6 +11,7 @@ struct TransferTrackApp: App {
         WindowGroup {
             RootView(isOnboardingComplete: $isOnboardingComplete)
         }
+        .modelContainer(for: [UserCourse.self])
     }
 }
 
@@ -21,7 +22,7 @@ struct RootView: View {
     var body: some View {
         ZStack {
             if isOnboardingComplete {
-                DashboardView()
+                DashboardView(isOnboardingComplete: $isOnboardingComplete)
                     .transition(.opacity)
             } else {
                 OnboardingFlow(isOnboardingComplete: $isOnboardingComplete)

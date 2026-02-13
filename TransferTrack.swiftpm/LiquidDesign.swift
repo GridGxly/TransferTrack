@@ -3,20 +3,12 @@ import SwiftUI
 // MARK: - design tokens
 
 enum TTColors {
-    static let background = Color(uiColor: .systemBackground)
     static let cardBg = Color(uiColor: .secondarySystemGroupedBackground)
     static let subtle = Color(uiColor: .tertiarySystemGroupedBackground)
-    static let label = Color(uiColor: .label)
-    static let secondaryLabel = Color(uiColor: .secondaryLabel)
-    static let separator = Color(uiColor: .separator)
-
     static let accent = Color.blue
     static let success = Color.green
     static let warning = Color.orange
     static let danger = Color.red
-    static let purple = Color.purple
-
-    // points currency
     static let points = Color(red: 0.2, green: 0.7, blue: 0.3)
 }
 
@@ -26,22 +18,18 @@ struct CollegeLogo: View {
     let schoolName: String
     var size: CGFloat = 40
 
-    private var assetName: String? {
-        SchoolDatabase.logoMap[schoolName]
-    }
-
     var body: some View {
         Group {
-            if let name = assetName, UIImage(named: name) != nil {
-                Image(name)
+            if let assetName = SchoolDatabase.logoMap[schoolName],
+               let img = UIImage(named: assetName) {
+                Image(uiImage: img)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
             } else {
                 ZStack {
-                    Circle()
-                        .fill(Color.blue.opacity(0.12))
+                    Circle().fill(Color.blue.opacity(0.12))
                     Text(initials)
-                        .font(.caption2.weight(.bold))
+                        .font(.system(size: size * 0.35, weight: .bold, design: .rounded))
                         .foregroundStyle(.blue)
                 }
             }
@@ -75,7 +63,6 @@ struct OddsBadge: View {
         }
     }
 
-    // secondary shape indicator for color blindness
     private var shapeIcon: String {
         switch odds {
         case "High Odds": return "checkmark.circle.fill"
@@ -87,8 +74,7 @@ struct OddsBadge: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            Image(systemName: shapeIcon)
-                .font(.caption2)
+            Image(systemName: shapeIcon).font(.caption2)
             Text("\(odds) — \(detail)")
                 .font(.caption.weight(.medium))
         }
@@ -114,22 +100,14 @@ struct ViabilityRing: View {
         else { return .red }
     }
 
-    private var statusText: String {
-        if score >= 75 { return "Good" }
-        else if score >= 50 { return "At risk" }
-        else { return "Needs work" }
-    }
-
     var body: some View {
         ZStack {
             Circle()
                 .stroke(Color.gray.opacity(0.15), lineWidth: 14)
-
             Circle()
                 .trim(from: 0, to: animated / 100)
                 .stroke(color, style: StrokeStyle(lineWidth: 14, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-
             VStack(spacing: 2) {
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
                     Text("\(Int(animated))")
@@ -146,9 +124,8 @@ struct ViabilityRing: View {
         }
         .frame(width: size, height: size)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Viability Score: \(score) out of 100. \(statusText)")
+        .accessibilityLabel("Viability Score: \(score) out of 100")
         .accessibilityValue("\(score) percent")
-        .accessibilityHint("Higher is better. Check Solutions tab to improve.")
     }
 }
 
@@ -170,17 +147,14 @@ struct StatCard: View {
                 .padding(8)
                 .background(iconColor.opacity(0.1))
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-
             Text(title)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-
             Text(value)
                 .font(.title2.weight(.bold))
                 .foregroundStyle(valueColor)
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
-
             if let sub = subtitle {
                 Text(sub)
                     .font(.caption2)
@@ -192,78 +166,5 @@ struct StatCard: View {
         .background(TTColors.cardBg)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title): \(value)\(subtitle.map { ". \($0)" } ?? "")")
-    }
-}
-
-// MARK: - section header
-
-struct SectionHeader: View {
-    let title: String
-    var subtitle: String? = nil
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.title3.weight(.semibold))
-            if let sub = subtitle {
-                Text(sub)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-// MARK: - floating capsule tab bar (fallback if user is not on iOS 26)
-
-@available(iOS 17.0, *)
-struct FloatingTabBar: View {
-    @Binding var selectedTab: Int
-    let tabs: [(icon: String, label: String)]
-    @Namespace private var tabNamespace
-
-    var body: some View {
-        HStack(spacing: 4) {
-            ForEach(Array(tabs.enumerated()), id: \.offset) { index, tab in
-                Button {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-                        selectedTab = index
-                    }
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: tab.icon)
-                            .font(.subheadline)
-                            .symbolVariant(selectedTab == index ? .fill : .none)
-
-                        if selectedTab == index {
-                            Text(tab.label)
-                                .font(.caption.weight(.semibold))
-                                .lineLimit(1)
-                        }
-                    }
-                    .foregroundStyle(selectedTab == index ? .white : .secondary)
-                    .padding(.horizontal, selectedTab == index ? 16 : 14)
-                    .padding(.vertical, 10)
-                    .background {
-                        if selectedTab == index {
-                            Capsule()
-                                .fill(TTColors.accent)
-                                .matchedGeometryEffect(id: "activeTab", in: tabNamespace)
-                        }
-                    }
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\(tab.label) tab")
-                .accessibilityAddTraits(selectedTab == index ? .isSelected : [])
-            }
-        }
-        .padding(6)
-        .background(.ultraThinMaterial)
-        .clipShape(Capsule())
-        .overlay(Capsule().stroke(Color.white.opacity(0.2), lineWidth: 1))
-        .shadow(color: .black.opacity(0.15), radius: 10, y: 5)
     }
 }

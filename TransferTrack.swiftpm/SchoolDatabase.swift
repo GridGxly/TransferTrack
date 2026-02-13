@@ -40,10 +40,9 @@ struct SchoolDatabase {
 
     static var states: [String] { Array(stateData.keys).sorted() }
 
-    // MARK: university coordinate for MapKit
+    // MARK: university coordinates for MapKit
 
     static let universityCoordinates: [String: CLLocationCoordinate2D] = [
-        // Florida
         "Valencia College":     CLLocationCoordinate2D(latitude: 28.5218, longitude: -81.4641),
         "Miami Dade College":   CLLocationCoordinate2D(latitude: 25.7778, longitude: -80.1902),
         "Seminole State":       CLLocationCoordinate2D(latitude: 28.7472, longitude: -81.3102),
@@ -54,7 +53,6 @@ struct SchoolDatabase {
         "FSU":                  CLLocationCoordinate2D(latitude: 30.4415, longitude: -84.2985),
         "USF":                  CLLocationCoordinate2D(latitude: 28.0587, longitude: -82.4139),
         "FIU":                  CLLocationCoordinate2D(latitude: 25.7562, longitude: -80.3755),
-        // California
         "Santa Monica College":     CLLocationCoordinate2D(latitude: 34.0156, longitude: -118.4713),
         "De Anza College":          CLLocationCoordinate2D(latitude: 37.3197, longitude: -122.0454),
         "Pasadena City College":    CLLocationCoordinate2D(latitude: 34.1410, longitude: -118.1258),
@@ -65,7 +63,6 @@ struct SchoolDatabase {
         "UC Davis":                 CLLocationCoordinate2D(latitude: 38.5382, longitude: -121.7617),
         "CSU LA":                   CLLocationCoordinate2D(latitude: 34.0662, longitude: -118.1684),
         "San Jose State":           CLLocationCoordinate2D(latitude: 37.3352, longitude: -121.8811),
-        // Texas
         "Austin CC":        CLLocationCoordinate2D(latitude: 30.3900, longitude: -97.7268),
         "Houston CC":       CLLocationCoordinate2D(latitude: 29.7188, longitude: -95.3431),
         "Lone Star College": CLLocationCoordinate2D(latitude: 30.0485, longitude: -95.4385),
@@ -76,7 +73,6 @@ struct SchoolDatabase {
         "Univ. of Houston": CLLocationCoordinate2D(latitude: 29.7199, longitude: -95.3422),
         "UTSA":             CLLocationCoordinate2D(latitude: 29.5831, longitude: -98.6199),
         "Texas State":      CLLocationCoordinate2D(latitude: 29.8884, longitude: -97.9384),
-        // Virginia
         "NOVA":                 CLLocationCoordinate2D(latitude: 38.8306, longitude: -77.3056),
         "Tidewater CC":         CLLocationCoordinate2D(latitude: 36.8373, longitude: -76.1970),
         "Virginia Western CC":  CLLocationCoordinate2D(latitude: 37.2718, longitude: -79.9706),
@@ -86,7 +82,6 @@ struct SchoolDatabase {
         "JMU":                  CLLocationCoordinate2D(latitude: 38.4341, longitude: -78.8693),
         "George Mason":         CLLocationCoordinate2D(latitude: 38.8316, longitude: -77.3091),
         "VCU":                  CLLocationCoordinate2D(latitude: 37.5479, longitude: -77.4529),
-        // Washington
         "Seattle Central":      CLLocationCoordinate2D(latitude: 47.6164, longitude: -122.3215),
         "Bellevue College":     CLLocationCoordinate2D(latitude: 47.5979, longitude: -122.1502),
         "Spokane CC":           CLLocationCoordinate2D(latitude: 47.6716, longitude: -117.3860),
@@ -95,7 +90,6 @@ struct SchoolDatabase {
         "WSU":                  CLLocationCoordinate2D(latitude: 46.7319, longitude: -117.1542),
         "Central Washington":   CLLocationCoordinate2D(latitude: 46.9965, longitude: -120.5477),
         "Eastern Washington":   CLLocationCoordinate2D(latitude: 47.4892, longitude: -117.5813),
-        // North Carolina
         "Central Piedmont CC":  CLLocationCoordinate2D(latitude: 35.2068, longitude: -80.8455),
         "Wake Tech":            CLLocationCoordinate2D(latitude: 35.7173, longitude: -78.5755),
         "Guilford Tech":        CLLocationCoordinate2D(latitude: 36.0228, longitude: -79.8862),
@@ -105,7 +99,6 @@ struct SchoolDatabase {
         "App State":            CLLocationCoordinate2D(latitude: 36.2154, longitude: -81.6846),
         "ECU":                  CLLocationCoordinate2D(latitude: 35.6050, longitude: -77.3714),
         "UNC Charlotte":        CLLocationCoordinate2D(latitude: 35.3074, longitude: -80.7331),
-        // New Jersey
         "Bergen CC":            CLLocationCoordinate2D(latitude: 40.9506, longitude: -74.0767),
         "Middlesex College":    CLLocationCoordinate2D(latitude: 40.4514, longitude: -74.3775),
         "Camden County College": CLLocationCoordinate2D(latitude: 39.7885, longitude: -74.9656),
@@ -117,12 +110,12 @@ struct SchoolDatabase {
         "Stockton Univ.":       CLLocationCoordinate2D(latitude: 39.4785, longitude: -74.5634),
     ]
 
-    // MARK: logo asset Names
+    // MARK: logo asset names
 
     static let logoMap: [String: String] = [
         "Valencia College": "valencia-college", "Miami Dade College": "miami-dade-college",
         "Seminole State": "seminole-state", "Polk State": "polk-state", "Santa Fe College": "santa-fe-college",
-        "UCF": "ucf", "Univ. of Florida": "univ-of-florida", "FSU": "fsu", "USF": "usf", "FIU": "fiu",
+        "UCF": "ucf", "Univ. of Florida": "univ-of-florida", "FSU": "FSU", "USF": "usf", "FIU": "fiu",
         "Santa Monica College": "santa-monica-college", "De Anza College": "de-anza-college",
         "Pasadena City College": "pasadena-city-college", "Diablo Valley College": "diablo-valley-college",
         "Orange Coast College": "orange-coast-college",
@@ -172,9 +165,10 @@ struct SchoolDatabase {
         "Rutgers": 15804, "Rowan Univ.": 13880, "Montclair State": 13288, "NJIT": 18096, "Stockton Univ.": 13558,
     ]
 
-    // MARK: housing
+    // MARK: - housing
 
-    struct Apartment {
+    struct Apartment: Identifiable {
+        let id = UUID()
         let name: String
         let distance: String
         let beds: Int
@@ -201,24 +195,28 @@ struct SchoolDatabase {
                 Apartment(name: "The Estates", distance: "1.3 mi", beds: 1, baths: 1, rent: 1100, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
                 Apartment(name: "Lexington Crossing", distance: "0.5 mi", beds: 4, baths: 4, rent: 650, odds: "High Odds", oddsDetail: "Per-bed Lease"),
                 Apartment(name: "Campus Lodge", distance: "1.8 mi", beds: 2, baths: 2, rent: 880, odds: "High Odds", oddsDetail: "No Credit Check"),
+                Apartment(name: "Windsor Park", distance: "2.0 mi", beds: 3, baths: 2, rent: 750, odds: "High Odds", oddsDetail: "Student-Friendly"),
             ]
         case "FSU":
             return [
                 Apartment(name: "Stadium Centre", distance: "0.4 mi", beds: 2, baths: 2, rent: 1050, odds: "High Odds", oddsDetail: "Student-Friendly"),
                 Apartment(name: "The Osceola", distance: "1.0 mi", beds: 1, baths: 1, rent: 900, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
                 Apartment(name: "College Town", distance: "0.2 mi", beds: 3, baths: 3, rent: 750, odds: "High Odds", oddsDetail: "Per-bed Lease"),
+                Apartment(name: "Seminole Flatts", distance: "1.5 mi", beds: 2, baths: 1, rent: 820, odds: "High Odds", oddsDetail: "No Credit Check"),
             ]
         case "USF":
             return [
                 Apartment(name: "The Venue", distance: "0.5 mi", beds: 2, baths: 2, rent: 1100, odds: "High Odds", oddsDetail: "Student-Friendly"),
                 Apartment(name: "Avalon Heights", distance: "1.4 mi", beds: 1, baths: 1, rent: 850, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
                 Apartment(name: "42 North", distance: "0.3 mi", beds: 4, baths: 2, rent: 720, odds: "High Odds", oddsDetail: "Per-bed Lease"),
+                Apartment(name: "Province Tampa", distance: "0.8 mi", beds: 2, baths: 2, rent: 980, odds: "High Odds", oddsDetail: "Student-Friendly"),
             ]
         case "FIU":
             return [
                 Apartment(name: "109 Tower", distance: "0.6 mi", beds: 2, baths: 2, rent: 1350, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
-                Apartment(name: "Student Housing FIU", distance: "Adjacent", beds: 1, baths: 1, rent: 1100, odds: "High Odds", oddsDetail: "Student-Friendly"),
+                Apartment(name: "Student Housing FIU", distance: "0.1 mi", beds: 1, baths: 1, rent: 1100, odds: "High Odds", oddsDetail: "Student-Friendly"),
                 Apartment(name: "The Flats at CityPlace", distance: "2.0 mi", beds: 2, baths: 2, rent: 1600, odds: "Low Odds", oddsDetail: "Guarantor Required"),
+                Apartment(name: "Bayview Student Living", distance: "1.2 mi", beds: 3, baths: 2, rent: 900, odds: "High Odds", oddsDetail: "Per-bed Lease"),
             ]
         case "UCLA":
             return [
@@ -226,28 +224,36 @@ struct SchoolDatabase {
                 Apartment(name: "Kelton Towers", distance: "0.5 mi", beds: 1, baths: 1, rent: 2200, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
                 Apartment(name: "Weyburn Terrace", distance: "0.3 mi", beds: 2, baths: 1, rent: 2400, odds: "Medium Odds", oddsDetail: "UCLA Housing"),
                 Apartment(name: "Gayley Heights", distance: "0.4 mi", beds: 1, baths: 1, rent: 1900, odds: "High Odds", oddsDetail: "Student-Friendly"),
+                Apartment(name: "Levering Terrace", distance: "0.2 mi", beds: 2, baths: 2, rent: 2600, odds: "Medium Odds", oddsDetail: "UCLA Housing"),
             ]
         case "UC Berkeley":
             return [
                 Apartment(name: "Hillside Village", distance: "0.6 mi", beds: 2, baths: 1, rent: 2600, odds: "Low Odds", oddsDetail: "Guarantor Required"),
                 Apartment(name: "Durant Square", distance: "0.3 mi", beds: 1, baths: 1, rent: 2100, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
                 Apartment(name: "Panoramic", distance: "0.2 mi", beds: 1, baths: 1, rent: 1800, odds: "High Odds", oddsDetail: "Student-Friendly"),
+                Apartment(name: "Channing Bowditch", distance: "0.4 mi", beds: 2, baths: 2, rent: 2350, odds: "Medium Odds", oddsDetail: "UC Housing"),
+                Apartment(name: "Northside Cooperative", distance: "0.5 mi", beds: 1, baths: 1, rent: 1200, odds: "High Odds", oddsDetail: "Co-op Housing"),
             ]
         case "UC Davis":
             return [
                 Apartment(name: "The Ramble", distance: "0.7 mi", beds: 2, baths: 2, rent: 1600, odds: "High Odds", oddsDetail: "Student-Friendly"),
-                Apartment(name: "West Village", distance: "Adjacent", beds: 1, baths: 1, rent: 1350, odds: "High Odds", oddsDetail: "UC Housing"),
+                Apartment(name: "West Village", distance: "0.1 mi", beds: 1, baths: 1, rent: 1350, odds: "High Odds", oddsDetail: "UC Housing"),
                 Apartment(name: "Aggie Square", distance: "1.0 mi", beds: 2, baths: 1, rent: 1400, odds: "High Odds", oddsDetail: "No Credit Check"),
+                Apartment(name: "Tandem Properties", distance: "0.8 mi", beds: 1, baths: 1, rent: 1100, odds: "High Odds", oddsDetail: "Student-Friendly"),
             ]
         case "CSU LA":
             return [
-                Apartment(name: "Cal State Village", distance: "Adjacent", beds: 2, baths: 2, rent: 1200, odds: "High Odds", oddsDetail: "Student Housing"),
+                Apartment(name: "Cal State Village", distance: "0.1 mi", beds: 2, baths: 2, rent: 1200, odds: "High Odds", oddsDetail: "Student Housing"),
                 Apartment(name: "El Sereno Flats", distance: "1.5 mi", beds: 1, baths: 1, rent: 1050, odds: "High Odds", oddsDetail: "No Credit Check"),
+                Apartment(name: "Alhambra Court", distance: "2.0 mi", beds: 2, baths: 1, rent: 1350, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
+                Apartment(name: "University Village", distance: "0.3 mi", beds: 1, baths: 1, rent: 950, odds: "High Odds", oddsDetail: "Student-Friendly"),
             ]
         case "San Jose State":
             return [
                 Apartment(name: "South Campus", distance: "0.3 mi", beds: 2, baths: 2, rent: 1800, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
                 Apartment(name: "Spartan Village", distance: "0.5 mi", beds: 1, baths: 1, rent: 1500, odds: "High Odds", oddsDetail: "Student-Friendly"),
+                Apartment(name: "CVA Apartments", distance: "0.8 mi", beds: 2, baths: 1, rent: 1650, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
+                Apartment(name: "The Grad", distance: "0.2 mi", beds: 1, baths: 1, rent: 1900, odds: "Low Odds", oddsDetail: "Guarantor Required"),
             ]
         case "UT Austin":
             return [
@@ -255,19 +261,29 @@ struct SchoolDatabase {
                 Apartment(name: "The Callaway", distance: "0.6 mi", beds: 1, baths: 1, rent: 1200, odds: "High Odds", oddsDetail: "Student-Friendly"),
                 Apartment(name: "Riverside Terrace", distance: "1.5 mi", beds: 2, baths: 1, rent: 1050, odds: "High Odds", oddsDetail: "No Credit Check"),
                 Apartment(name: "26 West", distance: "0.3 mi", beds: 4, baths: 4, rent: 950, odds: "High Odds", oddsDetail: "Per-bed Lease"),
+                Apartment(name: "Dobie Center", distance: "0.1 mi", beds: 1, baths: 1, rent: 1350, odds: "High Odds", oddsDetail: "Student Housing"),
             ]
         case "Texas A&M":
             return [
                 Apartment(name: "The Stack", distance: "0.5 mi", beds: 2, baths: 2, rent: 1100, odds: "High Odds", oddsDetail: "Student-Friendly"),
                 Apartment(name: "College Station Crossing", distance: "1.2 mi", beds: 1, baths: 1, rent: 850, odds: "High Odds", oddsDetail: "No Credit Check"),
                 Apartment(name: "Park West", distance: "0.8 mi", beds: 4, baths: 4, rent: 650, odds: "High Odds", oddsDetail: "Per-bed Lease"),
+                Apartment(name: "The Junction", distance: "0.3 mi", beds: 2, baths: 2, rent: 1000, odds: "High Odds", oddsDetail: "Student-Friendly"),
+            ]
+        case "Univ. of Houston":
+            return [
+                Apartment(name: "Cougar Place", distance: "0.2 mi", beds: 2, baths: 2, rent: 1050, odds: "High Odds", oddsDetail: "Student Housing"),
+                Apartment(name: "Bayou Oaks", distance: "0.5 mi", beds: 1, baths: 1, rent: 900, odds: "High Odds", oddsDetail: "Student-Friendly"),
+                Apartment(name: "Cambridge Oaks", distance: "1.5 mi", beds: 2, baths: 1, rent: 850, odds: "High Odds", oddsDetail: "No Credit Check"),
+                Apartment(name: "Wheeler Transit", distance: "0.8 mi", beds: 1, baths: 1, rent: 780, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
             ]
         default:
             return [
-                Apartment(name: "Campus View Apartments", distance: "0.5 mi", beds: 2, baths: 2, rent: 1100, odds: "High Odds", oddsDetail: "Student-Friendly"),
+                Apartment(name: "Campus View", distance: "0.5 mi", beds: 2, baths: 2, rent: 1100, odds: "High Odds", oddsDetail: "Student-Friendly"),
                 Apartment(name: "University Commons", distance: "1.0 mi", beds: 1, baths: 1, rent: 900, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
                 Apartment(name: "College Park", distance: "1.5 mi", beds: 2, baths: 1, rent: 800, odds: "High Odds", oddsDetail: "No Credit Check"),
                 Apartment(name: "Student Living", distance: "0.3 mi", beds: 4, baths: 4, rent: 650, odds: "High Odds", oddsDetail: "Per-bed Lease"),
+                Apartment(name: "Downtown Lofts", distance: "2.0 mi", beds: 1, baths: 1, rent: 750, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
             ]
         }
     }
@@ -278,57 +294,61 @@ struct SchoolDatabase {
         return apts.reduce(0) { $0 + $1.rent } / apts.count
     }
 
-    // MARK: course transfer
+    // MARK: - course transfer data
 
-    struct CourseTransfer {
+    struct CourseTransfer: Identifiable {
+        let id = UUID()
         let name: String
         let code: String
         let credits: Int
         let grade: String
         let transfers: Bool
         let costIfWasted: Int
+        let reason: String  
     }
 
     static func courses(from cc: String, to uni: String) -> [CourseTransfer] {
         var transferable: [CourseTransfer] = [
-            CourseTransfer(name: "English Composition I", code: "ENC 1101", credits: 3, grade: "A-", transfers: true, costIfWasted: 0),
-            CourseTransfer(name: "College Algebra", code: "MAC 1105", credits: 3, grade: "B+", transfers: true, costIfWasted: 0),
-            CourseTransfer(name: "General Psychology", code: "PSY 2012", credits: 3, grade: "B", transfers: true, costIfWasted: 0),
-            CourseTransfer(name: "Statistics", code: "STA 2023", credits: 3, grade: "A", transfers: true, costIfWasted: 0),
-            CourseTransfer(name: "Microeconomics", code: "ECO 2023", credits: 3, grade: "B+", transfers: true, costIfWasted: 0),
+            CourseTransfer(name: "English Composition I", code: "ENC 1101", credits: 3, grade: "A-", transfers: true, costIfWasted: 0, reason: "Satisfies general education writing requirement"),
+            CourseTransfer(name: "College Algebra", code: "MAC 1105", credits: 3, grade: "B+", transfers: true, costIfWasted: 0, reason: "Core math requirement fulfilled"),
+            CourseTransfer(name: "General Psychology", code: "PSY 2012", credits: 3, grade: "B", transfers: true, costIfWasted: 0, reason: "Counts toward social science elective"),
+            CourseTransfer(name: "Statistics", code: "STA 2023", credits: 3, grade: "A", transfers: true, costIfWasted: 0, reason: "Required for most STEM and business majors"),
+            CourseTransfer(name: "Microeconomics", code: "ECO 2023", credits: 3, grade: "B+", transfers: true, costIfWasted: 0, reason: "Accepted as equivalent to \(uni) ECO requirement"),
         ]
 
-        if ["UCF", "UT Austin", "UCLA", "UC Berkeley", "Georgia Tech", "Virginia Tech"].contains(uni) {
+        if ["UCF", "UT Austin", "UCLA", "UC Berkeley", "Virginia Tech", "NC State", "NJIT", "Rutgers"].contains(uni) {
             transferable.append(contentsOf: [
-                CourseTransfer(name: "Intro to Programming", code: "COP 2000", credits: 3, grade: "A", transfers: true, costIfWasted: 0),
-                CourseTransfer(name: "Calculus I", code: "MAC 2311", credits: 4, grade: "B+", transfers: true, costIfWasted: 0),
-                CourseTransfer(name: "Data Structures", code: "COP 3530", credits: 3, grade: "A-", transfers: true, costIfWasted: 0),
-                CourseTransfer(name: "Physics I", code: "PHY 2048", credits: 4, grade: "B", transfers: true, costIfWasted: 0),
+                CourseTransfer(name: "Intro to Programming", code: "COP 2000", credits: 3, grade: "A", transfers: true, costIfWasted: 0, reason: "Maps to \(uni) intro CS course"),
+                CourseTransfer(name: "Calculus I", code: "MAC 2311", credits: 4, grade: "B+", transfers: true, costIfWasted: 0, reason: "Direct equivalent accepted"),
+                CourseTransfer(name: "Data Structures", code: "COP 3530", credits: 3, grade: "A-", transfers: true, costIfWasted: 0, reason: "Accepted with syllabus review"),
+                CourseTransfer(name: "Physics I", code: "PHY 2048", credits: 4, grade: "B", transfers: true, costIfWasted: 0, reason: "Lab credit included in transfer"),
             ])
         } else {
             transferable.append(contentsOf: [
-                CourseTransfer(name: "Biology I", code: "BSC 1010", credits: 4, grade: "B", transfers: true, costIfWasted: 0),
-                CourseTransfer(name: "Public Speaking", code: "SPC 1608", credits: 3, grade: "A", transfers: true, costIfWasted: 0),
+                CourseTransfer(name: "Biology I", code: "BSC 1010", credits: 4, grade: "B", transfers: true, costIfWasted: 0, reason: "Satisfies lab science requirement"),
+                CourseTransfer(name: "Public Speaking", code: "SPC 1608", credits: 3, grade: "A", transfers: true, costIfWasted: 0, reason: "Oral communication requirement met"),
             ])
         }
 
         let wasted: [CourseTransfer] = [
-            CourseTransfer(name: "Art Appreciation", code: "ARH 1000", credits: 3, grade: "A", transfers: false, costIfWasted: 600),
-            CourseTransfer(name: "Music of the World", code: "MUH 2012", credits: 3, grade: "B+", transfers: false, costIfWasted: 600),
-            CourseTransfer(name: "Humanities Elective", code: "HUM 2230", credits: 3, grade: "B", transfers: false, costIfWasted: 600),
+            CourseTransfer(name: "Art Appreciation", code: "ARH 1000", credits: 3, grade: "A", transfers: false, costIfWasted: 600, reason: "Fulfills humanities at CC, but \(uni) requires upper-level arts for this major"),
+            CourseTransfer(name: "Music of the World", code: "MUH 2012", credits: 3, grade: "B+", transfers: false, costIfWasted: 600, reason: "No equivalent course exists at \(uni); elective credit only, doesn't count toward degree"),
+            CourseTransfer(name: "Humanities Elective", code: "HUM 2230", credits: 3, grade: "B", transfers: false, costIfWasted: 600, reason: "\(uni) requires HUM 3000+ level; this lower-level course is not accepted"),
         ]
 
         return transferable + wasted
     }
 
-    // MARK: solutions
+    // MARK: - solutions
 
-    struct Solution {
+    struct Solution: Identifiable {
+        let id = UUID()
         let title: String
         let description: String
         let points: Int
         let icon: String
         let color: Color
+        let monthlyImpact: Int  // how much this affects monthly gap
     }
 
     static func solutions(for uni: String, from cc: String, state: String) -> [Solution] {
@@ -336,33 +356,32 @@ struct SchoolDatabase {
 
         switch state {
         case "Florida":
-            items.append(Solution(title: "Apply for DirectConnect", description: "Guaranteed admission from \(cc) to \(uni) with 2.0+ GPA", points: 8, icon: "link", color: .blue))
-            items.append(Solution(title: "Apply for Bright Futures", description: "State scholarship covering up to 100% tuition", points: 7, icon: "star.fill", color: .yellow))
+            items.append(Solution(title: "Apply for DirectConnect", description: "Guaranteed admission from \(cc) to \(uni) with 2.0+ GPA", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
+            items.append(Solution(title: "Apply for Bright Futures", description: "State scholarship covering up to 100% tuition", points: 7, icon: "star.fill", color: .yellow, monthlyImpact: 300))
         case "California":
-            items.append(Solution(title: "Use TAG Agreement", description: "Transfer Admission Guarantee to \(uni)", points: 8, icon: "link", color: .blue))
-            items.append(Solution(title: "Apply for Cal Grant", description: "State financial aid for CA residents", points: 7, icon: "star.fill", color: .yellow))
+            items.append(Solution(title: "Use TAG Agreement", description: "Transfer Admission Guarantee to \(uni)", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
+            items.append(Solution(title: "Apply for Cal Grant", description: "State financial aid for CA residents", points: 7, icon: "star.fill", color: .yellow, monthlyImpact: 400))
         case "Texas":
-            items.append(Solution(title: "Use Texas Core Curriculum", description: "42-credit guaranteed transfer block to \(uni)", points: 8, icon: "link", color: .blue))
-            items.append(Solution(title: "Apply for TEXAS Grant", description: "State need-based financial aid", points: 7, icon: "star.fill", color: .yellow))
+            items.append(Solution(title: "Use Texas Core Curriculum", description: "42-credit guaranteed transfer block to \(uni)", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
+            items.append(Solution(title: "Apply for TEXAS Grant", description: "State need-based financial aid", points: 7, icon: "star.fill", color: .yellow, monthlyImpact: 350))
         case "Virginia":
-            items.append(Solution(title: "Use GAA Transfer", description: "Guaranteed Admission Agreement to \(uni)", points: 8, icon: "link", color: .blue))
+            items.append(Solution(title: "Use GAA Transfer", description: "Guaranteed Admission Agreement to \(uni)", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
         case "Washington":
-            items.append(Solution(title: "Use DTA Degree", description: "Direct Transfer Agreement guarantees junior standing", points: 8, icon: "link", color: .blue))
+            items.append(Solution(title: "Use DTA Degree", description: "Direct Transfer Agreement guarantees junior standing", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
         case "North Carolina":
-            items.append(Solution(title: "Use CAA Transfer", description: "Comprehensive Articulation Agreement to UNC system", points: 8, icon: "link", color: .blue))
+            items.append(Solution(title: "Use CAA Transfer", description: "Comprehensive Articulation Agreement to UNC system", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
         case "New Jersey":
-            items.append(Solution(title: "Use NJ Transfer", description: "Statewide transfer agreement to \(uni)", points: 8, icon: "link", color: .blue))
-        default:
-            break
+            items.append(Solution(title: "Use NJ Transfer", description: "Statewide transfer agreement to \(uni)", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
+        default: break
         }
 
         items.append(contentsOf: [
-            Solution(title: "Submit FAFSA Renewal", description: "Financial aid must be renewed for \(uni)", points: 10, icon: "doc.text.fill", color: .green),
-            Solution(title: "Appeal Credit Transfer", description: "Contest at-risk credits with syllabus docs", points: 5, icon: "arrow.uturn.backward", color: .red),
-            Solution(title: "Find a Roommate", description: "Split rent costs to reduce monthly gap", points: 6, icon: "person.2.fill", color: .purple),
-            Solution(title: "Apply for Transfer Scholarships", description: "\(uni) offers transfer-specific awards", points: 7, icon: "dollarsign.circle.fill", color: .orange),
-            Solution(title: "Set Up Emergency Fund", description: "Save 3 months of projected gap before transfer", points: 3, icon: "banknote.fill", color: .cyan),
-            Solution(title: "Get a Campus Job", description: "\(uni) Federal Work-Study covers ~$200/mo", points: 4, icon: "briefcase.fill", color: .brown),
+            Solution(title: "Submit FAFSA Renewal", description: "Financial aid must be renewed for \(uni)", points: 10, icon: "doc.text.fill", color: .green, monthlyImpact: 250),
+            Solution(title: "Appeal Credit Transfer", description: "Contest at-risk credits with syllabus docs", points: 5, icon: "arrow.uturn.backward", color: .red, monthlyImpact: 0),
+            Solution(title: "Find a Roommate", description: "Split rent costs to reduce monthly gap", points: 6, icon: "person.2.fill", color: .purple, monthlyImpact: 0), // calculated dynamically
+            Solution(title: "Apply for Transfer Scholarships", description: "\(uni) offers transfer-specific awards", points: 7, icon: "dollarsign.circle.fill", color: .orange, monthlyImpact: 150),
+            Solution(title: "Set Up Emergency Fund", description: "Save 3 months of projected gap before transfer", points: 3, icon: "banknote.fill", color: .cyan, monthlyImpact: 0),
+            Solution(title: "Get a Campus Job", description: "\(uni) Federal Work-Study covers ~$200/mo", points: 4, icon: "briefcase.fill", color: .brown, monthlyImpact: 200),
         ])
 
         return items

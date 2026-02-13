@@ -5,48 +5,27 @@ import Charts
 
 @available(iOS 17.0, *)
 struct ForecastTab: View {
-    let score: Int
-    let gap: Int
-    let savings: Double
-    let rent: Double
-    let ccName: String
-    let uniName: String
+    @Bindable var vm: TransferViewModel
 
     @State private var animatedScore: CGFloat = 0
     @State private var showCards = false
+    @State private var selectedChartSchool: String? = nil
 
     private var viabilityDescription: String {
-        if score >= 75 {
+        if vm.viabilityScore >= 75 {
             return "You're academically and financially on track for a smooth transfer."
-        } else if score >= 50 {
+        } else if vm.viabilityScore >= 50 {
             return "Academically ready, but financially at risk. Check Solutions."
         } else {
             return "Your transfer plan needs work. Review Solutions immediately."
         }
     }
 
-    private var creditsAtRisk: Int {
-        let courses = SchoolDatabase.courses(from: ccName, to: uniName)
-        return courses.filter { !$0.transfers }.reduce(0) { $0 + $1.credits }
-    }
-
-    private var creditsAtRiskCost: Int {
-        let courses = SchoolDatabase.courses(from: ccName, to: uniName)
-        return courses.filter { !$0.transfers }.reduce(0) { $0 + $1.costIfWasted }
-    }
-
-    private var commuteCost: Int {
-        return rent > 800 ? 60 : 120
-    }
-
-    private var ccTuition: Int { SchoolDatabase.ccTuition[ccName] ?? 3000 }
-    private var uniTuition: Int { SchoolDatabase.uniTuition[uniName] ?? 8000 }
-    private var tuitionJump: Int { uniTuition - ccTuition }
-    private var tuitionJumpMonthly: Int { tuitionJump / 12 }
+    private var tuitionJumpMonthly: Int { vm.tuitionJump / 12 }
 
     private var runwayMonths: Int {
-        if gap >= 0 { return -1 } // stable
-        return max(0, Int(savings / Double(abs(gap))))
+        if vm.monthlyGap >= 0 { return -1 }
+        return max(0, Int(vm.userSavings / Double(abs(vm.monthlyGap))))
     }
 
     private var runwayText: String {
@@ -54,21 +33,21 @@ struct ForecastTab: View {
         return runwayMonths == 0 ? "0 mo" : "\(runwayMonths) mo"
     }
 
-    private var runwayIsStable: Bool { gap >= 0 }
+    private var transportLabels: [String] { ["Keep Car", "Sell/Swap", "Transit"] }
+    private var transportIcons: [String] { ["car.fill", "car.side.front.open.fill", "bus.fill"] }
 
-    // MARK: - swift charts data model
     private var tuitionChartData: [TuitionEntry] {
         [
-            TuitionEntry(school: ccName, amount: ccTuition, color: "green"),
-            TuitionEntry(school: uniName, amount: uniTuition, color: "orange")
+            TuitionEntry(school: vm.selectedCC, amount: vm.ccTuition, isCC: true),
+            TuitionEntry(school: vm.selectedUni, amount: vm.uniTuition, isCC: false)
         ]
     }
 
     var body: some View {
         VStack(spacing: 16) {
-            // MARK: Viability Score
+            // MARK: viability score
             VStack(spacing: 12) {
-                ViabilityRing(score: score, animated: animatedScore, size: 150)
+                ViabilityRing(score: vm.viabilityScore, animated: animatedScore, size: 150)
 
                 Text(viabilityDescription)
                     .font(.subheadline)
@@ -87,45 +66,80 @@ struct ForecastTab: View {
             .padding(.horizontal, 20)
             .onAppear {
                 withAnimation(.spring(response: 1.2, dampingFraction: 0.7).delay(0.3)) {
-                    animatedScore = CGFloat(score)
+                    animatedScore = CGFloat(vm.viabilityScore)
                 }
-                withAnimation(.easeOut(duration: 0.6).delay(0.5)) {
-                    showCards = true
-                }
+                withAnimation(.easeOut(duration: 0.6).delay(0.5)) { showCards = true }
             }
 
             // MARK: stat cards
             HStack(spacing: 12) {
                 StatCard(
                     icon: "dollarsign.circle.fill",
-                    iconColor: gap >= 0 ? .green : .red,
+                    iconColor: vm.monthlyGap >= 0 ? .green : .red,
                     title: "Monthly Gap",
-                    value: "\(gap >= 0 ? "+" : "")$\(gap)/mo",
-                    valueColor: gap >= 0 ? .green : .red
+                    value: "\(vm.monthlyGap >= 0 ? "+" : "")$\(vm.monthlyGap)/mo",
+                    valueColor: vm.monthlyGap >= 0 ? .green : Color(red: 1, green: 0.3, blue: 0.3)
                 )
 
-                StatCard(
-                    icon: "car.fill",
-                    iconColor: .blue,
-                    title: "Commute",
-                    value: "+$\(commuteCost)/mo",
-                    valueColor: .primary
-                )
+                // MARK: transport mode card
+                VStack(alignment: .leading, spacing: 8) {
+                    Image(systemName: transportIcons[vm.transportMode])
+                        .font(.title3)
+                        .foregroundStyle(.blue)
+                        .padding(8)
+                        .background(Color.blue.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    Text("Transport")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("+$\(vm.transportCost)/mo")
+                        .font(.title3.weight(.bold))
+                        .contentTransition(.numericText())
+                        .animation(.spring(response: 0.3), value: vm.transportCost)
+
+                    // segmented control
+                    HStack(spacing: 2) {
+                        ForEach(0..<3, id: \.self) { mode in
+                            Button {
+                                withAnimation(.spring(response: 0.3)) { vm.transportMode = mode }
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            } label: {
+                                Image(systemName: transportIcons[mode])
+                                    .font(.caption2)
+                                    .foregroundStyle(vm.transportMode == mode ? .white : .secondary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 4)
+                                    .background(vm.transportMode == mode ? Color.blue : Color.clear)
+                                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(transportLabels[mode])
+                            .accessibilityAddTraits(vm.transportMode == mode ? .isSelected : [])
+                        }
+                    }
+                    .padding(2)
+                    .background(Color.gray.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
+                .background(TTColors.cardBg)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
                 StatCard(
                     icon: "book.closed.fill",
-                    iconColor: creditsAtRisk > 0 ? .orange : .green,
+                    iconColor: vm.creditsAtRisk > 0 ? .orange : .green,
                     title: "Credits at Risk",
-                    value: "\(creditsAtRisk) cr",
-                    valueColor: creditsAtRisk > 0 ? .orange : .green,
-                    subtitle: creditsAtRisk > 0 ? "~$\(creditsAtRiskCost.formatted()) loss" : nil
+                    value: "\(vm.creditsAtRisk) cr",
+                    valueColor: vm.creditsAtRisk > 0 ? .orange : .green,
+                    subtitle: vm.creditsAtRisk > 0 ? "~$\(vm.creditsAtRiskCost.formatted()) loss" : nil
                 )
             }
             .padding(.horizontal, 20)
             .opacity(showCards ? 1 : 0)
             .offset(y: showCards ? 0 : 12)
 
-            // MARK: tuition comparison using swiift charts
+            // MARK: tuition chart
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Text("Tuition Jump")
@@ -133,7 +147,6 @@ struct ForecastTab: View {
                     Spacer()
                     Text("+$\(tuitionJumpMonthly)/mo")
                         .font(.subheadline.weight(.bold))
-                        .foregroundStyle(.primary)
                         .contentTransition(.numericText())
                 }
 
@@ -142,25 +155,31 @@ struct ForecastTab: View {
                         x: .value("Tuition", entry.amount),
                         y: .value("School", entry.school)
                     )
-                    .foregroundStyle(entry.school == ccName ? Color.green.opacity(0.7) : Color.orange.opacity(0.8))
+                    .foregroundStyle(entry.isCC ? Color.green.opacity(0.7) : Color.orange.opacity(0.8))
                     .cornerRadius(6)
                     .annotation(position: .trailing, spacing: 6) {
                         Text("$\(entry.amount.formatted())")
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(.primary)
                     }
                 }
                 .chartXAxis(.hidden)
                 .chartYAxis {
-                    AxisMarks { value in
-                        AxisValueLabel()
-                            .font(.caption)
-                    }
+                    AxisMarks { _ in AxisValueLabel().font(.caption) }
                 }
+                .chartYSelection(value: $selectedChartSchool)
                 .frame(height: 80)
-                .accessibilityLabel("Tuition comparison chart. \(ccName): $\(ccTuition). \(uniName): $\(uniTuition). Jump of $\(tuitionJump) per year.")
+                .accessibilityLabel("Tuition comparison. \(vm.selectedCC): $\(vm.ccTuition). \(vm.selectedUni): $\(vm.uniTuition).")
 
-                Text("\(ccName) → \(uniName) · per year")
+                // chart selection detail
+                if let school = selectedChartSchool {
+                    let amount = school == vm.selectedCC ? vm.ccTuition : vm.uniTuition
+                    Text("\(school): $\(amount.formatted())/year")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.blue)
+                        .transition(.opacity)
+                }
+
+                Text("\(vm.selectedCC) → \(vm.selectedUni) · per year")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -170,17 +189,14 @@ struct ForecastTab: View {
             .padding(.horizontal, 20)
             .opacity(showCards ? 1 : 0)
 
-            // MARK: savings plus runway
+            // MARK: savings and runway
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Image(systemName: "banknote.fill")
-                            .foregroundStyle(.blue)
-                        Text("Savings")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        Image(systemName: "banknote.fill").foregroundStyle(.blue)
+                        Text("Savings").font(.caption).foregroundStyle(.secondary)
                     }
-                    Text("$\(Int(savings).formatted())")
+                    Text("$\(Int(vm.userSavings).formatted())")
                         .font(.title3.weight(.bold))
                         .contentTransition(.numericText())
                 }
@@ -188,43 +204,51 @@ struct ForecastTab: View {
                 .padding(16)
                 .background(TTColors.cardBg)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("Savings: $\(Int(savings).formatted())")
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Image(systemName: runwayIsStable ? "checkmark.circle.fill" : "clock.fill")
-                            .foregroundStyle(runwayIsStable ? .green : (savings <= 0 ? .red : .orange))
-                        Text("Runway")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        Image(systemName: vm.monthlyGap >= 0 ? "checkmark.circle.fill" : "clock.fill")
+                            .foregroundStyle(vm.monthlyGap >= 0 ? .green : .orange)
+                        Text("Runway").font(.caption).foregroundStyle(.secondary)
                     }
                     Text(runwayText)
                         .font(.title3.weight(.bold))
-                        .foregroundStyle(
-                            runwayIsStable ? .green :
-                            (savings <= 0 ? .red : .orange)
-                        )
+                        .foregroundStyle(vm.monthlyGap >= 0 ? .green : .orange)
                         .contentTransition(.numericText())
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(16)
                 .background(TTColors.cardBg)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("Runway: \(runwayText)\(runwayIsStable ? ". Financially stable." : ". You have \(runwayMonths) months before savings run out.")")
             }
             .padding(.horizontal, 20)
             .opacity(showCards ? 1 : 0)
+
+            // MARK: solutions impact toast
+            if vm.solutionMonthlyBonus > 0 {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .foregroundStyle(.green)
+                    Text("Solutions saving you +$\(vm.solutionMonthlyBonus)/mo")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.green)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(Color.green.opacity(0.1))
+                .clipShape(Capsule())
+                .padding(.horizontal, 20)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
+        .animation(.spring(response: 0.4), value: vm.solutionMonthlyBonus)
+        .animation(.spring(response: 0.4), value: vm.transportMode)
     }
 }
-
-// MARK: - chart data model
 
 struct TuitionEntry: Identifiable {
     let id = UUID()
     let school: String
     let amount: Int
-    let color: String
+    let isCC: Bool
 }

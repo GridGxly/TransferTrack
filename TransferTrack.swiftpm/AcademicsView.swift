@@ -1,25 +1,20 @@
 import SwiftUI
+import SwiftData
 
 // MARK: - academics tab
 
 @available(iOS 17.0, *)
 struct AcademicsTab: View {
-    let gpa: Double
-    let credits: Int
-    let ccName: String
-    let uniName: String
+    @Bindable var vm: TransferViewModel
+    @Environment(\.modelContext) private var modelContext
+    @Query private var userAddedCourses: [UserCourse]
 
-    private var courses: [SchoolDatabase.CourseTransfer] {
-        SchoolDatabase.courses(from: ccName, to: uniName)
-    }
+    @State private var showAddCourse = false
+    @State private var wastedInfoCourse: SchoolDatabase.CourseTransfer? = nil
 
-    private var transferable: [SchoolDatabase.CourseTransfer] {
-        courses.filter { $0.transfers }
-    }
-
-    private var wasted: [SchoolDatabase.CourseTransfer] {
-        courses.filter { !$0.transfers }
-    }
+    private var courses: [SchoolDatabase.CourseTransfer] { vm.courses }
+    private var transferable: [SchoolDatabase.CourseTransfer] { vm.transferable }
+    private var wasted: [SchoolDatabase.CourseTransfer] { vm.wasted }
 
     private var transferableCredits: Int { transferable.reduce(0) { $0 + $1.credits } }
     private var wastedCredits: Int { wasted.reduce(0) { $0 + $1.credits } }
@@ -33,74 +28,130 @@ struct AcademicsTab: View {
     }
 
     var body: some View {
-        VStack(spacing: 20) {
+        List {
             // MARK: transfer efficiency gauge
-            VStack(spacing: 12) {
-                HStack {
-                    Image(systemName: "gauge.open.with.lines.needle.33percent")
-                        .foregroundStyle(transferEfficiency >= 0.8 ? .green : .orange)
-                        .font(.title3)
-                    Text("Transfer Efficiency")
-                        .font(.headline)
-                    Spacer()
-                    Text("\(Int(transferEfficiency * 100))%")
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(transferEfficiency >= 0.8 ? .green : .orange)
-                        .contentTransition(.numericText())
-                }
-
-                Gauge(value: transferEfficiency) {
-                    EmptyView()
-                } currentValueLabel: {
-                    Text("\(transferableCredits)/\(totalCredits) cr")
-                        .font(.caption2.weight(.medium))
-                } minimumValueLabel: {
-                    Text("0%")
-                        .font(.caption2)
-                        .foregroundStyle(.red)
-                } maximumValueLabel: {
-                    Text("100%")
-                        .font(.caption2)
-                        .foregroundStyle(.green)
-                }
-                .gaugeStyle(.linearCapacity)
-                .tint(Gradient(colors: [.red, .orange, .green]))
-
-                Text("\(transferableCredits) of \(totalCredits) credits transfer. \(wastedCredits) credits (\(wastedCost > 0 ? "$\(wastedCost.formatted())" : "$0")) won't count.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.leading)
-            }
-            .padding(20)
-            .background(TTColors.cardBg)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .padding(.horizontal, 20)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Transfer Efficiency: \(Int(transferEfficiency * 100)) percent. \(transferableCredits) of \(totalCredits) credits transfer to \(uniName).")
-
-            // MARK: degree applicable
-            VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    Image(systemName: "checkmark.seal.fill")
-                        .foregroundStyle(.green)
-                        .font(.title3)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Degree Applicable")
-                            .font(.title3.weight(.semibold))
-                        Text("\(transferable.count) courses · \(transferableCredits) credits transfer to \(uniName)")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+            Section {
+                VStack(spacing: 12) {
+                    HStack {
+                        Image(systemName: "gauge.open.with.lines.needle.33percent")
+                            .foregroundStyle(transferEfficiency >= 0.8 ? .green : .orange)
+                            .font(.title3)
+                        Text("Transfer Efficiency")
+                            .font(.headline)
+                        Spacer()
+                        Text("\(Int(transferEfficiency * 100))%")
+                            .font(.title3.weight(.bold))
+                            .foregroundStyle(transferEfficiency >= 0.8 ? .green : .orange)
+                            .contentTransition(.numericText())
                     }
-                }
 
-                VStack(spacing: 0) {
-                    ForEach(Array(transferable.enumerated()), id: \.offset) { index, course in
-                        HStack(spacing: 10) {
-                            // SF Symbol per course type
+                    Gauge(value: transferEfficiency) {
+                        EmptyView()
+                    } currentValueLabel: {
+                        Text("\(transferableCredits)/\(totalCredits) cr")
+                            .font(.caption2.weight(.medium))
+                    } minimumValueLabel: {
+                        Text("0%").font(.caption2).foregroundStyle(.red)
+                    } maximumValueLabel: {
+                        Text("100%").font(.caption2).foregroundStyle(.green)
+                    }
+                    .gaugeStyle(.linearCapacity)
+                    .tint(Gradient(colors: [.red, .orange, .green]))
+
+                    Text("\(transferableCredits) of \(totalCredits) credits transfer. \(wastedCredits) credits ($\(wastedCost.formatted())) won't count.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Transfer Efficiency: \(Int(transferEfficiency * 100)) percent")
+            }
+
+            // MARK: degree applicable courses
+            Section {
+                ForEach(transferable) { course in
+                    CourseRow(course: course, showTransferIcon: true)
+                }
+            } header: {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.seal.fill").foregroundStyle(.green)
+                    Text("Degree Applicable")
+                    Spacer()
+                    Text("\(transferable.count) courses · \(transferableCredits) cr")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            // MARK: user added courses
+            if !userAddedCourses.isEmpty {
+                Section {
+                    ForEach(userAddedCourses) { course in
+                        HStack {
                             Image(systemName: courseIcon(for: course.code))
                                 .font(.caption)
-                                .foregroundStyle(.green.opacity(0.7))
-                                .frame(width: 20)
+                                .foregroundStyle(.blue)
+                                .frame(width: 24)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(course.title)
+                                    .font(.subheadline.weight(.medium))
+                                Text("\(course.code) · \(course.credits) cr · \(course.grade)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Text(course.grade)
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(.blue)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Color.blue.opacity(0.1))
+                                .clipShape(Capsule())
+                        }
+                    }
+                    .onDelete(perform: deleteUserCourses)
+                } header: {
+                    HStack {
+                        Image(systemName: "plus.circle.fill").foregroundStyle(.blue)
+                        Text("Your Added Courses")
+                    }
+                }
+            }
+
+            // MARK: wasted credits with info popovers
+            if !wasted.isEmpty {
+                Section {
+                    // summary row
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Total Loss").font(.caption.weight(.medium)).foregroundStyle(.secondary)
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.down.circle.fill").foregroundStyle(.red).font(.caption)
+                                Text("$\(wastedCost.formatted())")
+                                    .font(.title3.weight(.bold))
+                                    .foregroundStyle(.red)
+                                    .contentTransition(.numericText())
+                            }
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("Time Wasted").font(.caption.weight(.medium)).foregroundStyle(.secondary)
+                            HStack(spacing: 4) {
+                                Text("\(wastedMonths) months")
+                                    .font(.title3.weight(.bold))
+                                    .foregroundStyle(.red)
+                                Image(systemName: "hourglass.bottomhalf.filled").foregroundStyle(.red).font(.caption)
+                            }
+                        }
+                    }
+                    .listRowBackground(Color.red.opacity(0.06))
+
+                    // each wasted course with info button
+                    ForEach(wasted) { course in
+                        HStack(spacing: 10) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.red.opacity(0.5))
+                                .font(.caption)
+                                .frame(width: 24)
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(course.name)
@@ -111,139 +162,237 @@ struct AcademicsTab: View {
                             }
                             Spacer()
 
-                            // grade badge
-                            Text(course.grade)
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(.green)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(Color.green.opacity(0.1))
-                                .clipShape(Capsule())
-                        }
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 4)
-                        .accessibilityElement(children: .combine)
-                        .accessibilityLabel("\(course.name), \(course.code), \(course.credits) credits, grade \(course.grade). Transfers to \(uniName).")
-
-                        if index < transferable.count - 1 {
-                            Divider()
+                            // info button instead of repetitive -$600
+                            Button {
+                                wastedInfoCourse = course
+                            } label: {
+                                Image(systemName: "info.circle")
+                                    .foregroundStyle(.red)
+                                    .font(.body)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Why \(course.name) didn't transfer")
                         }
                     }
+                } header: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                        Text("\"Wasted\" Credits")
+                    }
+                } footer: {
+                    Text("These courses won't count toward your \(vm.selectedUni) degree. Tap ⓘ to see why.")
                 }
             }
-            .padding(20)
-            .background(TTColors.cardBg)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .padding(.horizontal, 20)
 
-            // MARK: wasted credits
-            if !wasted.isEmpty {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
-                            .font(.title3)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("\"Wasted\" Credits")
-                                .font(.title3.weight(.semibold))
-                            Text("Won't count toward your \(uniName) degree.")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Total Loss")
-                                .font(.caption.weight(.medium))
-                                .foregroundStyle(.secondary)
-                            HStack(spacing: 4) {
-                                Image(systemName: "arrow.down.circle.fill")
-                                    .foregroundStyle(.red)
-                                    .font(.caption)
-                                Text("$\(wastedCost.formatted())")
-                                    .font(.title2.weight(.bold))
-                                    .foregroundStyle(.red)
-                                    .contentTransition(.numericText())
-                            }
-                        }
-                        Spacer()
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("Time Wasted")
-                                .font(.caption.weight(.medium))
-                                .foregroundStyle(.secondary)
-                            HStack(spacing: 4) {
-                                Text("\(wastedMonths) months")
-                                    .font(.title2.weight(.bold))
-                                    .foregroundStyle(.red)
-                                    .contentTransition(.numericText())
-                                Image(systemName: "hourglass.bottomhalf.filled")
-                                    .foregroundStyle(.red)
-                                    .font(.caption)
-                            }
-                        }
-                    }
-                    .padding(14)
-                    .background(Color.red.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Total loss: $\(wastedCost.formatted()). Time wasted: \(wastedMonths) months.")
-
-                    VStack(spacing: 0) {
-                        ForEach(Array(wasted.enumerated()), id: \.offset) { index, course in
-                            HStack(spacing: 10) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.red.opacity(0.5))
-                                    .font(.caption)
-                                    .frame(width: 20)
-
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(course.name)
-                                        .font(.subheadline.weight(.medium))
-                                    Text("\(course.code) · \(course.credits) cr · \(course.grade)")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-
-                                Text("-$\(course.costIfWasted)")
-                                    .font(.caption.weight(.bold))
-                                    .foregroundStyle(.red)
-                            }
-                            .padding(.vertical, 8)
-                            .accessibilityElement(children: .combine)
-                            .accessibilityLabel("\(course.name). Does not transfer. Cost: $\(course.costIfWasted).")
-
-                            if index < wasted.count - 1 {
-                                Divider()
-                                    .padding(.leading, 30)
-                            }
-                        }
-                    }
-                }
-                .padding(20)
-                .background(TTColors.cardBg)
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .padding(.horizontal, 20)
+            // MARK: empty state
+            if courses.isEmpty {
+                ContentUnavailableView(
+                    "No Transfer Data",
+                    systemImage: "graduationcap.fill",
+                    description: Text("Select your colleges in the header to see your credit analysis.")
+                )
             }
+        }
+        .listStyle(.insetGrouped)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showAddCourse = true
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title3)
+                }
+                .accessibilityLabel("Add a course")
+            }
+        }
+        .sheet(isPresented: $showAddCourse) {
+            AddCourseSheet()
+        }
+        .popover(item: $wastedInfoCourse) { course in
+            WastedCourseInfoView(course: course, uniName: vm.selectedUni)
+                .presentationCompactAdaptation(.popover)
+        }
+        .padding(.bottom, 80)
+    }
+
+    private func deleteUserCourses(at offsets: IndexSet) {
+        for index in offsets {
+            modelContext.delete(userAddedCourses[index])
         }
     }
 
-    // MARK: - course type SF symbol mapping
+    // MARK: course icon mapping
 
-    private func courseIcon(for code: String) -> String {
+    func courseIcon(for code: String) -> String {
         let prefix = code.prefix(3).uppercased()
         switch prefix {
-        case "ENC", "HUM", "SPC": return "text.book.closed.fill"   // English/Humanities
-        case "MAC", "STA", "MTH": return "function"                 // Math/Statistics
-        case "PSY", "SOC":        return "brain.head.profile"       // Psychology/Social Science
-        case "ECO", "FIN":        return "chart.line.uptrend.xyaxis"// Economics/Finance
-        case "COP", "CIS", "CAP": return "chevron.left.forwardslash.chevron.right" // CS/Programming
-        case "PHY":               return "atom"                      // Physics
-        case "BSC", "BIO", "CHM": return "flask.fill"               // Science/Biology/Chemistry
-        case "ARH", "ART":        return "paintpalette.fill"         // Art
-        case "MUH", "MUS":        return "music.note"                // Music
-        default:                   return "book.fill"                 // Generic
+        case "ENC", "HUM", "SPC": return "text.book.closed.fill"
+        case "MAC", "STA", "MTH": return "function"
+        case "PSY", "SOC":        return "brain.head.profile"
+        case "ECO", "FIN":        return "chart.line.uptrend.xyaxis"
+        case "COP", "CIS", "CAP": return "chevron.left.forwardslash.chevron.right"
+        case "PHY":               return "atom"
+        case "BSC", "BIO", "CHM": return "flask.fill"
+        case "ARH", "ART":        return "paintpalette.fill"
+        case "MUH", "MUS":        return "music.note"
+        default:                   return "book.fill"
+        }
+    }
+}
+
+// MARK: - course row
+
+@available(iOS 17.0, *)
+struct CourseRow: View {
+    let course: SchoolDatabase.CourseTransfer
+    var showTransferIcon: Bool = false
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: iconForCode(course.code))
+                .font(.caption)
+                .foregroundStyle(.green.opacity(0.7))
+                .frame(width: 24)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(course.name)
+                    .font(.subheadline.weight(.medium))
+                Text("\(course.code) · \(course.credits) cr · \(course.grade)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+
+            Text(course.grade)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.green)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Color.green.opacity(0.1))
+                .clipShape(Capsule())
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(course.name), \(course.credits) credits, grade \(course.grade)")
+    }
+
+    private func iconForCode(_ code: String) -> String {
+        let prefix = code.prefix(3).uppercased()
+        switch prefix {
+        case "ENC", "HUM", "SPC": return "text.book.closed.fill"
+        case "MAC", "STA", "MTH": return "function"
+        case "PSY", "SOC":        return "brain.head.profile"
+        case "ECO", "FIN":        return "chart.line.uptrend.xyaxis"
+        case "COP", "CIS", "CAP": return "chevron.left.forwardslash.chevron.right"
+        case "PHY":               return "atom"
+        case "BSC", "BIO", "CHM": return "flask.fill"
+        case "ARH", "ART":        return "paintpalette.fill"
+        case "MUH", "MUS":        return "music.note"
+        default:                   return "book.fill"
+        }
+    }
+}
+
+// MARK: - wasted course info popover
+
+@available(iOS 17.0, *)
+struct WastedCourseInfoView: View {
+    let course: SchoolDatabase.CourseTransfer
+    let uniName: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(.red)
+                Text(course.name)
+                    .font(.headline)
+            }
+
+            Text("Why it doesn't transfer:")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+
+            Text(course.reason)
+                .font(.subheadline)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Divider()
+
+            HStack {
+                Label("Cost: $\(course.costIfWasted)", systemImage: "dollarsign.circle")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.red)
+                Spacer()
+                Label("\(course.credits) credits", systemImage: "book.closed")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(20)
+        .frame(minWidth: 280, maxWidth: 320)
+    }
+}
+
+// MARK: - add course sheet
+
+@available(iOS 17.0, *)
+struct AddCourseSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+
+    @State private var courseTitle = ""
+    @State private var courseCode = ""
+    @State private var credits = "3"
+    @State private var grade = "A"
+    @FocusState private var titleFocused: Bool
+
+    private let grades = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"]
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Course Info") {
+                    TextField("Course Title", text: $courseTitle)
+                        .focused($titleFocused)
+                    TextField("Course Code (e.g. COP 2000)", text: $courseCode)
+                        .autocorrectionDisabled()
+                    HStack {
+                        Text("Credits")
+                        Spacer()
+                        TextField("3", text: $credits)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 60)
+                    }
+                    Picker("Grade", selection: $grade) {
+                        ForEach(grades, id: \.self) { Text($0) }
+                    }
+                }
+            }
+            .navigationTitle("Add Course")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add") {
+                        let course = UserCourse(
+                            code: courseCode.isEmpty ? "GEN 1000" : courseCode,
+                            title: courseTitle.isEmpty ? "New Course" : courseTitle,
+                            credits: Int(credits) ?? 3,
+                            grade: grade,
+                            transfers: true,
+                            costIfWasted: 0
+                        )
+                        modelContext.insert(course)
+                        dismiss()
+                    }
+                    .fontWeight(.semibold)
+                    .disabled(courseTitle.isEmpty)
+                }
+            }
+            .onAppear { titleFocused = true }
         }
     }
 }
