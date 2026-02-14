@@ -58,7 +58,12 @@ final class TransferViewModel {
     var userRent: Double { didSet { UserDefaults.standard.set(userRent, forKey: "userRent") } }
     var transportMode: Int { didSet { UserDefaults.standard.set(transportMode, forKey: "transportMode") } }
     var transferSemester: String { didSet { save("transferSemester", transferSemester) } }
-    var completedSolutions: Set<Int> = []
+    var completedSolutions: Set<Int> {
+        didSet { persistCompletedSolutions() }
+    }
+
+
+    var updateTrigger: Int = 0
 
     init() {
         let d = UserDefaults.standard
@@ -72,10 +77,21 @@ final class TransferViewModel {
         self.userRent = d.double(forKey: "userRent") == 0 ? 1200 : d.double(forKey: "userRent")
         self.transportMode = d.integer(forKey: "transportMode")
         self.transferSemester = d.string(forKey: "transferSemester") ?? "Fall 2026"
+
+
+        if let stored = d.array(forKey: "completedSolutions") as? [Int] {
+            self.completedSolutions = Set(stored)
+        } else {
+            self.completedSolutions = []
+        }
     }
 
     private func save(_ key: String, _ value: String) {
         UserDefaults.standard.set(value, forKey: key)
+    }
+
+    private func persistCompletedSolutions() {
+        UserDefaults.standard.set(Array(completedSolutions), forKey: "completedSolutions")
     }
 
     func cacheForSiri() {
@@ -86,8 +102,15 @@ final class TransferViewModel {
     }
 
 
+    func forceRecalculate() {
+        updateTrigger += 1
+        cacheForSiri()
+    }
+
 
     var viabilityScore: Int {
+        _ = updateTrigger
+
         let base: Int
         if let mlScore = predictViabilityWithML() {
             base = mlScore
@@ -96,7 +119,6 @@ final class TransferViewModel {
         }
         return min(100, max(0, base + solutionViabilityBonus))
     }
-
 
     var solutionViabilityBonus: Int {
         let solutions = SchoolDatabase.solutions(for: selectedUni, from: selectedCC, state: selectedState)
@@ -110,10 +132,21 @@ final class TransferViewModel {
 
     private var fallbackViabilityScore: Int {
         var score = 50
-        if userGPA >= 3.5 { score += 20 } else if userGPA >= 3.0 { score += 12 } else if userGPA >= 2.5 { score += 5 }
-        if userCredits >= 60 { score += 15 } else if userCredits >= 45 { score += 10 } else if userCredits >= 30 { score += 5 }
-        if userSavings >= 10000 { score += 15 } else if userSavings >= 5000 { score += 8 } else { score -= 5 }
-        if userRent > 1500 { score -= 10 } else if userRent > 1000 { score -= 5 }
+        if userGPA >= 3.5 { score += 20 }
+        else if userGPA >= 3.0 { score += 12 }
+        else if userGPA >= 2.5 { score += 5 }
+
+        if userCredits >= 60 { score += 15 }
+        else if userCredits >= 45 { score += 10 }
+        else if userCredits >= 30 { score += 5 }
+
+        if userSavings >= 10000 { score += 15 }
+        else if userSavings >= 5000 { score += 8 }
+        else { score -= 5 }
+
+        if userRent > 1500 { score -= 10 }
+        else if userRent > 1000 { score -= 5 }
+
         return min(100, max(0, score))
     }
 
@@ -147,6 +180,8 @@ final class TransferViewModel {
     }
 
 
+
+
     var transportCost: Int {
         switch transportMode {
         case 0: return userRent > 800 ? 60 : 120
@@ -157,13 +192,15 @@ final class TransferViewModel {
     }
 
 
+
+
     var monthlyGap: Int {
+        _ = updateTrigger
+
         let income = 1800.0
         let tuitionMonthly = Double(SchoolDatabase.uniTuition[selectedUni] ?? 7000) / 12.0
         let expenses = userRent + tuitionMonthly + 400 + Double(transportCost)
         let gap = Int(income - expenses) + solutionMonthlyBonus
-        UserDefaults.standard.set(gap, forKey: "cachedMonthlyGap")
-        UserDefaults.standard.set(selectedUni, forKey: "cachedUni")
         return gap
     }
 
@@ -173,12 +210,15 @@ final class TransferViewModel {
         for idx in completedSolutions {
             guard idx < solutions.count else { continue }
             let s = solutions[idx]
-            if s.title.contains("Campus Job") { bonus += 200 }
+            if s.monthlyImpact > 0 {
+                bonus += s.monthlyImpact
+            }
+            if s.title.contains("Campus Job") && s.monthlyImpact == 0 { bonus += 200 }
             if s.title.contains("Roommate") { bonus += Int(userRent * 0.3) }
-            if s.title.contains("Scholarships") { bonus += 150 }
         }
         return bonus
     }
+
 
 
 
@@ -193,6 +233,7 @@ final class TransferViewModel {
     var communityColleges: [String] { SchoolDatabase.stateData[selectedState]?.ccs ?? [] }
     var universities: [String] { SchoolDatabase.stateData[selectedState]?.unis ?? [] }
 }
+
 
 
 

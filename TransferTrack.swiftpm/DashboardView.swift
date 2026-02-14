@@ -77,8 +77,12 @@ struct DashboardView: View {
         .sensoryFeedback(.decrease, trigger: vm.monthlyGap) { old, new in new < old }
         .onAppear { vm.cacheForSiri() }
         .onChange(of: vm.monthlyGap) { _, _ in vm.cacheForSiri() }
+        .onChange(of: vm.updateTrigger) { _, _ in }
     }
 }
+
+
+
 
 @available(iOS 17.0, *)
 struct EditPathSheet: View {
@@ -172,7 +176,6 @@ struct EditPathSheet: View {
                     }
                 }
 
-                
                 Section("Appearance") {
                     Picker("Theme", selection: Binding(
                         get: { selectedTheme },
@@ -209,15 +212,25 @@ struct EditPathSheet: View {
     }
 
     private func save() {
-        vm.selectedState = localState
-        vm.selectedCC = localCC
-        vm.selectedUni = localUni
-        vm.userGPA = Double(gpaText) ?? vm.userGPA
-        vm.userCredits = Double(creditsText) ?? vm.userCredits
-        vm.userSavings = Double(savingsText) ?? vm.userSavings
-        vm.userRent = Double(rentText) ?? vm.userRent
-        vm.cacheForSiri()
+        withAnimation(.spring(response: 0.4)) {
+            vm.selectedState = localState
+            vm.selectedCC = localCC
+            vm.selectedUni = localUni
+            vm.userGPA = Double(gpaText) ?? vm.userGPA
+            vm.userCredits = Double(creditsText) ?? vm.userCredits
+            vm.userSavings = Double(savingsText) ?? vm.userSavings
+            vm.userRent = Double(rentText) ?? vm.userRent
+        }
+
+
+        vm.forceRecalculate()
+
+    
         UINotificationFeedbackGenerator().notificationOccurred(.success)
-        dismiss()
+
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            dismiss()
+        }
     }
 }

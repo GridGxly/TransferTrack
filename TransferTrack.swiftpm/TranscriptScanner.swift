@@ -30,10 +30,11 @@ struct TranscriptScannerSheet: View {
                             HStack(spacing: 8) {
                                 ForEach(scannedCodes, id: \.self) { code in
                                     HStack(spacing: 6) {
-                                       
                                         Button {
                                             onCodeFound(code)
-                                            scannedCodes.removeAll { $0 == code }
+                                            withAnimation(.spring(response: 0.25)) {
+                                                scannedCodes.removeAll { $0 == code }
+                                            }
                                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                         } label: {
                                             HStack(spacing: 4) {
@@ -117,7 +118,7 @@ struct TranscriptDataScanner: UIViewControllerRepresentable {
                 let content = text.transcript
                 let matches = content.matches(of: courseCodePattern)
                 for match in matches {
-                    let code = String(match.output).trimmingCharacters(in: .whitespaces)
+                    let code = String(match.output).trimmingCharacters(in: .whitespacesAndNewlines)
                     let normalized = normalizeCode(code)
                     if !parent.scannedCodes.contains(normalized) {
                         DispatchQueue.main.async {
@@ -135,7 +136,7 @@ struct TranscriptDataScanner: UIViewControllerRepresentable {
                     let content = text.transcript
                     let matches = content.matches(of: courseCodePattern)
                     for match in matches {
-                        let code = String(match.output).trimmingCharacters(in: .whitespaces)
+                        let code = String(match.output).trimmingCharacters(in: .whitespacesAndNewlines)
                         let normalized = normalizeCode(code)
                         if !parent.scannedCodes.contains(normalized) {
                             DispatchQueue.main.async {
@@ -147,15 +148,78 @@ struct TranscriptDataScanner: UIViewControllerRepresentable {
             }
         }
 
+
         private func normalizeCode(_ raw: String) -> String {
-            let cleaned = raw.uppercased().trimmingCharacters(in: .whitespaces)
-            if cleaned.contains(" ") { return cleaned }
-            let letters = cleaned.prefix(while: \.isLetter)
-            let rest = cleaned.dropFirst(letters.count)
-            if !letters.isEmpty && !rest.isEmpty {
-                return "\(letters) \(rest)"
-            }
-            return cleaned
+
+            let stripped = raw.uppercased()
+                .components(separatedBy: .whitespacesAndNewlines)
+                .joined()
+
+
+            let letters = stripped.prefix(while: \.isLetter)
+            let rest = stripped.dropFirst(letters.count)
+
+            guard !letters.isEmpty, !rest.isEmpty else { return stripped }
+
+
+            return "\(letters) \(rest)"
         }
+    }
+}
+
+func readableTitleForCode(_ code: String) -> String {
+    let parts = code.split(separator: " ")
+    let prefix = (parts.first.map(String.init) ?? code).uppercased()
+
+    let nameMap: [String: String] = [
+        "ENC": "English Composition", "SPC": "Speech Communication",
+        "LIT": "Literature", "CRW": "Creative Writing", "HUM": "Humanities",
+        "MAC": "Mathematics", "STA": "Statistics", "MAT": "Mathematics",
+        "MTH": "Mathematics", "MGF": "Math for Gen Ed",
+        "BSC": "Biology", "BIO": "Biology", "CHM": "Chemistry",
+        "PHY": "Physics", "AST": "Astronomy",
+        "PSY": "Psychology", "SOC": "Sociology", "ECO": "Economics",
+        "POS": "Political Science", "ANT": "Anthropology", "SYG": "Sociology",
+        "COP": "Computer Science", "CIS": "Computer Info Systems",
+        "CAP": "Computer Applications", "CGS": "Computer Gen Studies",
+        "CEN": "Software Engineering", "CDA": "Computer Architecture",
+        "COT": "Computational Theory",
+        "ACG": "Accounting", "FIN": "Finance", "MAN": "Management",
+        "MAR": "Marketing", "BUL": "Business Law", "GEB": "Intro to Business",
+        "ARH": "Art History", "ART": "Studio Art",
+        "MUH": "Music History", "MUS": "Music", "THE": "Theatre",
+        "PHI": "Philosophy", "REL": "Religion",
+        "AMH": "American History", "EUH": "European History",
+        "WOH": "World History", "HIS": "History",
+        "HSC": "Health Science", "PEM": "Physical Education",
+        "SPN": "Spanish", "FRE": "French", "GER": "German",
+        "ASL": "Sign Language",
+        "EDF": "Education Foundations", "EDG": "Education General",
+        "NUR": "Nursing", "DEP": "Developmental Psych", "HUN": "Nutrition",
+    ]
+
+    let number = parts.count > 1 ? String(parts[1]) : ""
+
+    if let name = nameMap[prefix] {
+        if number.isEmpty { return name }
+        let level = levelSuffix(number)
+        return "\(name)\(level)"
+    }
+
+    return code
+}
+
+
+private func levelSuffix(_ number: String) -> String {
+    guard let first = number.first, first.isNumber else { return "" }
+    let digit = Int(String(first)) ?? 1
+    let last = number.last ?? "0"
+    if last == "C" { return " (w/ Lab)" }
+    switch digit {
+    case 1: return " I"
+    case 2: return " II"
+    case 3: return " III"
+    case 4: return " IV"
+    default: return ""
     }
 }

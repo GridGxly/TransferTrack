@@ -91,6 +91,7 @@ struct SolutionsTab: View {
                             SolutionRow(
                                 solution: item.element,
                                 isCompleted: false,
+                                displaySavings: displaySavings(for: item.element),
                                 onToggle: { toggleItem(item.offset) }
                             )
                             if listIndex < activeSolutions.count - 1 {
@@ -116,6 +117,7 @@ struct SolutionsTab: View {
                             SolutionRow(
                                 solution: item.element,
                                 isCompleted: true,
+                                displaySavings: displaySavings(for: item.element),
                                 onToggle: { toggleItem(item.offset) }
                             )
                             if listIndex < completedSolutionsList.count - 1 {
@@ -141,17 +143,32 @@ struct SolutionsTab: View {
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: vm.completedSolutions)
     }
 
+
+    private func displaySavings(for solution: SchoolDatabase.Solution) -> String? {
+        if solution.title.contains("Roommate") {
+            let split = Int(vm.userRent * 0.3)
+            return split > 0 ? "Saves ~$\(split)/mo" : nil
+        }
+        if solution.monthlyImpact > 0 {
+            return "Saves ~$\(solution.monthlyImpact)/mo"
+        }
+        return nil
+    }
+
     private func toggleItem(_ index: Int) {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
             if vm.completedSolutions.contains(index) { vm.completedSolutions.remove(index) }
             else { vm.completedSolutions.insert(index) }
         }
+
         let newScore = vm.viabilityScore
         if newScore >= 75 && !previouslyGreen {
             previouslyGreen = true
             triggerCelebration()
-        } else if newScore < 75 { previouslyGreen = false }
+        } else if newScore < 75 {
+            previouslyGreen = false
+        }
     }
 
     private func triggerCelebration() {
@@ -164,10 +181,12 @@ struct SolutionsTab: View {
 
 
 
+
 @available(iOS 17.0, *)
 struct SolutionRow: View {
     let solution: SchoolDatabase.Solution
     let isCompleted: Bool
+    var displaySavings: String? = nil
     let onToggle: () -> Void
 
     var body: some View {
@@ -192,8 +211,8 @@ struct SolutionRow: View {
                         .strikethrough(isCompleted, color: .secondary)
                         .foregroundStyle(isCompleted ? .tertiary : .secondary)
                         .lineLimit(2)
-                    if solution.monthlyImpact > 0 {
-                        Text("Saves ~$\(solution.monthlyImpact)/mo")
+                    if let savings = displaySavings {
+                        Text(savings)
                             .font(.caption2.weight(.medium))
                             .foregroundStyle(isCompleted ? .tertiary : .secondary)
                     }
@@ -208,6 +227,7 @@ struct SolutionRow: View {
         .buttonStyle(.plain)
     }
 }
+
 
 
 

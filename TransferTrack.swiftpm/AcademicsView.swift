@@ -12,6 +12,7 @@ struct AcademicsTab: View {
     @State private var showScanner = false
     @State private var wastedInfoCourse: SchoolDatabase.CourseTransfer? = nil
     @State private var showMilestone = false
+    @State private var isEditing = false
 
     private var courses: [SchoolDatabase.CourseTransfer] { vm.courses }
     private var transferable: [SchoolDatabase.CourseTransfer] { vm.transferable }
@@ -79,7 +80,6 @@ struct AcademicsTab: View {
                     .onAppear { ExcessCreditTip.hasWastedCredits = true }
                 }
 
-               
                 Section {
                     ForEach(transferable) { course in
                         CourseRow(course: course, style: .transferable)
@@ -94,7 +94,7 @@ struct AcademicsTab: View {
                     }
                 }
 
-               
+                
                 if !userAddedCourses.isEmpty {
                     Section {
                         ForEach(userAddedCourses) { course in
@@ -106,8 +106,10 @@ struct AcademicsTab: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(course.title)
                                         .font(.subheadline.weight(.medium))
+                                        .lineLimit(1)
                                     Text("\(course.code) · \(course.credits) cr · \(course.grade)")
                                         .font(.caption).foregroundStyle(.secondary)
+                                        .lineLimit(1)
                                 }
                                 Spacer()
                                 Text(course.grade)
@@ -116,6 +118,24 @@ struct AcademicsTab: View {
                                     .padding(.horizontal, 8).padding(.vertical, 3)
                                     .background(Color.blue.opacity(0.1))
                                     .clipShape(Capsule())
+                            }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    withAnimation {
+                                        modelContext.delete(course)
+                                    }
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    withAnimation {
+                                        modelContext.delete(course)
+                                    }
+                                } label: {
+                                    Label("Delete Course", systemImage: "trash")
+                                }
                             }
                         }
                         .onDelete { offsets in
@@ -129,10 +149,12 @@ struct AcademicsTab: View {
                             Text("\(userAddedCourses.count) courses · \(userAddedTotal) cr")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
+                    } footer: {
+                        Text("Swipe left on any course to delete it, or long-press for options.")
                     }
                 }
 
-                
+
                 if !wasted.isEmpty {
                     Section {
                         ForEach(wasted) { course in
@@ -172,8 +194,35 @@ struct AcademicsTab: View {
                     }
                 }
 
-               
+
                 Section {
+                    Button { showAddCourse = true } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title2)
+                                .foregroundStyle(.green)
+                                .frame(width: 44, height: 44)
+                                .background(Color.green.opacity(0.1))
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Add Course Manually")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(.primary)
+                                Text("Type in your course code, title, and grade")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(2)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.plain)
+
+                 
                     Button { showScanner = true } label: {
                         HStack(spacing: 14) {
                             Image(systemName: "doc.text.viewfinder")
@@ -199,6 +248,8 @@ struct AcademicsTab: View {
                         .padding(.vertical, 4)
                     }
                     .buttonStyle(.plain)
+                } header: {
+                    Text("Add Courses")
                 }
 
                 if courses.isEmpty {
@@ -225,15 +276,20 @@ struct AcademicsTab: View {
             .sheet(isPresented: $showAddCourse) { AddCourseSheet() }
             .sheet(isPresented: $showScanner) {
                 TranscriptScannerSheet { code in
+                    let title = readableTitleForCode(code)
                     let parts = code.split(separator: " ")
-                    let prefix = parts.first.map(String.init) ?? code
                     let number = parts.count > 1 ? String(parts[1]) : ""
+                    let credits = number.hasSuffix("C") ? 4 : 3
                     let newCourse = UserCourse(
                         code: code,
-                        title: "\(prefix) \(number)",
-                        credits: 3, grade: "B", transfers: true, costIfWasted: 0
+                        title: title,
+                        credits: credits,
+                        grade: "B",
+                        transfers: true,
+                        costIfWasted: 0
                     )
                     modelContext.insert(newCourse)
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
                     checkMilestone()
                 }
             }
@@ -263,7 +319,7 @@ struct AcademicsTab: View {
         let p = code.prefix(3).uppercased()
         switch p {
         case "ENC", "HUM", "SPC": return "text.book.closed.fill"
-        case "MAC", "STA", "MTH": return "function"
+        case "MAC", "STA", "MTH", "MAT": return "function"
         case "PSY", "SOC": return "brain.head.profile"
         case "ECO", "FIN": return "chart.line.uptrend.xyaxis"
         case "COP", "CIS", "CAP": return "chevron.left.forwardslash.chevron.right"
@@ -271,10 +327,15 @@ struct AcademicsTab: View {
         case "BSC", "BIO", "CHM": return "flask.fill"
         case "ARH", "ART": return "paintpalette.fill"
         case "MUH", "MUS": return "music.note"
+        case "AMH", "HIS", "WOH", "EUH": return "clock.fill"
+        case "SPN", "FRE", "GER", "ASL": return "globe"
         default: return "book.fill"
         }
     }
 }
+
+
+
 
 @available(iOS 17.0, *)
 struct MilestoneOverlay: View {
@@ -338,6 +399,8 @@ struct MilestoneOverlay: View {
 }
 
 
+
+
 @available(iOS 17.0, *)
 struct CourseRow: View {
     let course: SchoolDatabase.CourseTransfer
@@ -383,6 +446,7 @@ struct CourseRow: View {
 
 
 
+
 @available(iOS 17.0, *)
 struct WastedCourseInfoSheet: View {
     let course: SchoolDatabase.CourseTransfer
@@ -402,7 +466,7 @@ struct WastedCourseInfoSheet: View {
                     Text("Why it doesn't transfer:")
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.secondary)
-                    Text(course.reason)
+                    Text(expandedReason)
                         .font(.body)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -415,6 +479,17 @@ struct WastedCourseInfoSheet: View {
                     Spacer()
                     Label("\(course.credits) credits", systemImage: "book.closed")
                         .font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("What you can do:")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                    HStack(spacing: 8) {
+                        Image(systemName: "doc.text.fill").foregroundStyle(.blue).font(.caption)
+                        Text("Appeal with syllabus documentation via the Solutions tab")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
                 }
 
                 Spacer()
@@ -430,7 +505,20 @@ struct WastedCourseInfoSheet: View {
         }
         .presentationDetents([.medium])
     }
+
+
+    private var expandedReason: String {
+        course.reason
+            .replacingOccurrences(of: " CC,", with: " community college,")
+            .replacingOccurrences(of: " CC ", with: " community college ")
+            .replacingOccurrences(of: " CC.", with: " community college.")
+            .replacingOccurrences(of: "at CC", with: "at your community college")
+            .replacingOccurrences(of: "Fulfills humanities at CC",
+                                  with: "Fulfills humanities at your community college")
+    }
 }
+
+
 
 
 @available(iOS 17.0, *)
@@ -450,13 +538,27 @@ struct AddCourseSheet: View {
         NavigationStack {
             Form {
                 Section("Course Info") {
-                    TextField("Course Title", text: $courseTitle).focused($titleFocused)
-                    TextField("Course Code (e.g. COP 2000)", text: $courseCode).autocorrectionDisabled()
+                    TextField("Course Title (e.g. English Composition I)", text: $courseTitle)
+                        .focused($titleFocused)
+                    TextField("Course Code (e.g. ENC 1101)", text: $courseCode)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.characters)
                     HStack {
                         Text("Credits"); Spacer()
-                        TextField("3", text: $credits).keyboardType(.numberPad).multilineTextAlignment(.trailing).frame(width: 60)
+                        TextField("3", text: $credits)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 60)
                     }
-                    Picker("Grade", selection: $grade) { ForEach(grades, id: \.self) { Text($0) } }
+                    Picker("Grade", selection: $grade) {
+                        ForEach(grades, id: \.self) { Text($0) }
+                    }
+                }
+
+                Section {
+                    Text("This course will appear in \"Your Added Courses\" and count toward your total credits.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
             .navigationTitle("Add Course")
@@ -465,14 +567,21 @@ struct AddCourseSheet: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
+                        let code = courseCode.isEmpty ? "GEN 1000" : courseCode.uppercased()
+                        let title = courseTitle.isEmpty ? readableTitleForCode(code) : courseTitle
                         modelContext.insert(UserCourse(
-                            code: courseCode.isEmpty ? "GEN 1000" : courseCode,
-                            title: courseTitle.isEmpty ? "New Course" : courseTitle,
-                            credits: Int(credits) ?? 3, grade: grade, transfers: true, costIfWasted: 0
+                            code: code,
+                            title: title,
+                            credits: Int(credits) ?? 3,
+                            grade: grade,
+                            transfers: true,
+                            costIfWasted: 0
                         ))
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
                         dismiss()
                     }
-                    .fontWeight(.semibold).disabled(courseTitle.isEmpty)
+                    .fontWeight(.semibold)
+                    .disabled(courseTitle.isEmpty && courseCode.isEmpty)
                 }
             }
             .onAppear { titleFocused = true }
