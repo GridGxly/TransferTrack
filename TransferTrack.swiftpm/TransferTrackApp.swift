@@ -8,6 +8,7 @@ import AppIntents
 struct TransferTrackApp: App {
     @State private var isOnboardingComplete: Bool =
         UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+    @AppStorage("appTheme") private var appTheme: String = AppTheme.system.rawValue
 
     init() {
         try? Tips.configure([
@@ -21,9 +22,13 @@ struct TransferTrackApp: App {
         TransferTrackShortcuts.updateAppShortcutParameters()
     }
 
+    private var selectedTheme: AppTheme {
+        AppTheme(rawValue: appTheme) ?? .system
+    }
     var body: some Scene {
         WindowGroup {
             RootView(isOnboardingComplete: $isOnboardingComplete)
+                .preferredColorScheme(selectedTheme.colorScheme)
         }
         .modelContainer(for: [UserCourse.self])
     }

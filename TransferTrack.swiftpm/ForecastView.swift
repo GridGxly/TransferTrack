@@ -27,6 +27,7 @@ struct ForecastTab: View {
 
     var body: some View {
         VStack(spacing: 16) {
+
             Button { showEditSheet = true } label: {
                 HStack(spacing: 10) {
                     CollegeLogo(schoolName: vm.selectedCC, size: 32)
@@ -55,7 +56,7 @@ struct ForecastTab: View {
                         .foregroundStyle(.tertiary)
                 }
                 .padding(14)
-                .background(.regularMaterial)
+                .background(Color(uiColor: .secondarySystemGroupedBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
@@ -64,9 +65,12 @@ struct ForecastTab: View {
             .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.selectedUni)
 
             VStack(spacing: 4) {
-                Text("Monthly Gap")
-                    .font(.subheadline)
+                Text("MONTHLY GAP")
+                    .font(.caption2.weight(.bold))
+                    .textCase(.uppercase)
+                    .tracking(1.2)
                     .foregroundStyle(.secondary)
+
                 Text("\(vm.monthlyGap >= 0 ? "+" : "")$\(vm.monthlyGap)")
                     .font(.system(size: 52, weight: .bold, design: .rounded))
                     .foregroundStyle(vm.monthlyGap >= 0 ? .green : Color(red: 1, green: 0.3, blue: 0.3))
@@ -77,12 +81,14 @@ struct ForecastTab: View {
                         color: (vm.monthlyGap >= 0 ? Color.green : Color.red).opacity(0.3),
                         radius: 12, y: 2
                     )
+
                 Text("per month after transfer")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 4)
+
 
             if vm.solutionMonthlyBonus > 0 {
                 HStack(spacing: 8) {
@@ -98,11 +104,12 @@ struct ForecastTab: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
 
+         
             HStack(spacing: 14) {
                 ViabilityRing(score: vm.viabilityScore, animated: animatedScore, size: 70)
                     .scaleEffect(ringBounce)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Viability Score").font(.headline)
+                    Text("Viability Score").font(.headline).foregroundStyle(.primary)
                     Text(viabilityMessage)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -111,7 +118,7 @@ struct ForecastTab: View {
                 Spacer()
             }
             .padding(16)
-            .background(.regularMaterial)
+            .background(Color(uiColor: .secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .padding(.horizontal, 20)
             .onAppear {
@@ -132,7 +139,17 @@ struct ForecastTab: View {
                 }
             }
 
+
             VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("Transport").font(.headline).foregroundStyle(.primary)
+                    Spacer()
+                    Text("+$\(vm.transportCost)/mo")
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(.primary)
+                        .contentTransition(.numericText())
+                }
+
                 HStack(spacing: 6) {
                     Image(systemName: transportIcons[vm.transportMode])
                         .font(.callout)
@@ -140,15 +157,9 @@ struct ForecastTab: View {
                         .padding(6)
                         .background(Color.blue.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: 6))
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Transport").font(.subheadline.weight(.medium))
-                        Text("+$\(vm.transportCost)/mo added to expenses")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
+                    Text("+$\(vm.transportCost)/mo added to expenses")
+                        .font(.caption).foregroundStyle(.secondary)
                     Spacer()
-                    Text("+$\(vm.transportCost)/mo")
-                        .font(.callout.weight(.bold))
-                        .contentTransition(.numericText())
                 }
 
                 Picker("Transport", selection: $vm.transportMode) {
@@ -161,9 +172,12 @@ struct ForecastTab: View {
                 .sensoryFeedback(.selection, trigger: vm.transportMode)
             }
             .padding(16)
+            .background(Color(uiColor: .secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .padding(.horizontal, 20)
             .opacity(showCards ? 1 : 0)
             .offset(y: showCards ? 0 : 12)
+
 
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 12) {
@@ -183,10 +197,11 @@ struct ForecastTab: View {
 
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("Tuition Jump").font(.headline)
+                    Text("Tuition Jump").font(.headline).foregroundStyle(.primary)
                     Spacer()
                     Text("+$\(vm.tuitionJump / 12)/mo")
                         .font(.subheadline.weight(.bold))
+                        .foregroundStyle(.primary)
                         .contentTransition(.numericText())
                 }
                 Chart([
@@ -194,17 +209,27 @@ struct ForecastTab: View {
                     TuitionEntry(school: vm.selectedUni, amount: vm.uniTuition, isCC: false)
                 ]) { entry in
                     BarMark(x: .value("Tuition", entry.amount), y: .value("School", entry.school))
-                        .foregroundStyle(entry.isCC ? Color.green.opacity(0.7) : Color.orange.opacity(0.8))
+                        .foregroundStyle(entry.isCC
+                            ? Color.blue.opacity(0.45)
+                            : Color.blue.opacity(0.85))
                         .cornerRadius(6)
                         .annotation(position: .trailing, spacing: 6) {
                             Text("$\(entry.amount.formatted())")
                                 .font(.caption.weight(.semibold))
+                                .foregroundStyle(.primary)
                         }
                 }
                 .chartXAxis(.hidden)
-                .chartYAxis { AxisMarks { _ in AxisValueLabel().font(.caption) } }
+                .chartYAxis {
+                    AxisMarks { _ in
+                        AxisValueLabel()
+                            .font(.caption)
+                            .offset(x: -4)
+                    }
+                }
                 .chartYSelection(value: $selectedChartSchool)
                 .frame(height: 120)
+                .padding(.vertical, 4)
 
                 if let school = selectedChartSchool {
                     let amount = school == vm.selectedCC ? vm.ccTuition : vm.uniTuition
@@ -217,6 +242,8 @@ struct ForecastTab: View {
                     .font(.caption2).foregroundStyle(.secondary)
             }
             .padding(16)
+            .background(Color(uiColor: .secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .padding(.horizontal, 20)
             .opacity(showCards ? 1 : 0)
         }

@@ -29,26 +29,41 @@ struct TranscriptScannerSheet: View {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
                                 ForEach(scannedCodes, id: \.self) { code in
-                                    Button {
-                                        onCodeFound(code)
-                                        scannedCodes.removeAll { $0 == code }
-                                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                    } label: {
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "plus.circle.fill").font(.caption)
-                                            Text(code).font(.subheadline.weight(.medium))
+                                    HStack(spacing: 6) {
+                                       
+                                        Button {
+                                            onCodeFound(code)
+                                            scannedCodes.removeAll { $0 == code }
+                                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                        } label: {
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "plus.circle.fill").font(.caption)
+                                                Text(code).font(.subheadline.weight(.medium))
+                                            }
                                         }
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
-                                        .background(Color.blue)
-                                        .foregroundStyle(.white)
-                                        .clipShape(Capsule())
+
+                                        Button {
+                                            withAnimation(.spring(response: 0.25)) {
+                                                scannedCodes.removeAll { $0 == code }
+                                            }
+                                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                        } label: {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .font(.caption)
+                                                .foregroundStyle(.white.opacity(0.7))
+                                        }
                                     }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(Color.blue)
+                                    .foregroundStyle(.white)
+                                    .clipShape(Capsule())
+                                    .transition(.scale.combined(with: .opacity))
                                 }
                             }
                             .padding(.horizontal, 16)
                         }
-                        Text("Tap a code to add it as a course").font(.caption).foregroundStyle(.secondary)
+                        Text("Tap code to add · ✕ to dismiss").font(.caption).foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 12)
                     .background(.regularMaterial)

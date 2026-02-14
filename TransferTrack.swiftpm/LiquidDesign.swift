@@ -1,14 +1,58 @@
 import SwiftUI
 
+
+
+enum AppTheme: String, CaseIterable, Identifiable {
+    case system, light, dark
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .system: return "System"
+        case .light: return "Light"
+        case .dark: return "Dark"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .system: return "circle.lefthalf.filled"
+        case .light: return "sun.max.fill"
+        case .dark: return "moon.fill"
+        }
+    }
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+}
+
+
+
 enum TTColors {
+    static let brandGreen = Color(red: 0.2, green: 0.78, blue: 0.35)
+    static let brandOrange = Color(red: 1.0, green: 0.58, blue: 0.0)
+
+
     static let cardBg = Color(uiColor: .secondarySystemGroupedBackground)
     static let subtle = Color(uiColor: .tertiarySystemGroupedBackground)
+    static let pageBg = Color(uiColor: .systemGroupedBackground)
+
+
     static let accent = Color.blue
     static let success = Color.green
     static let warning = Color.orange
     static let danger = Color.red
-    static let points = Color(red: 0.2, green: 0.7, blue: 0.3)
+
+   
+    static let points = brandGreen
+    static let mutedIconBg = Color(uiColor: .tertiarySystemFill)
 }
+
 
 struct CollegeLogo: View {
     let schoolName: String
@@ -22,10 +66,10 @@ struct CollegeLogo: View {
                     .aspectRatio(contentMode: .fill)
             } else {
                 ZStack {
-                    Circle().fill(Color.blue.opacity(0.12))
+                    Circle().fill(Color(uiColor: .tertiarySystemFill))
                     Text(initials)
                         .font(.system(size: size * 0.35, weight: .bold, design: .rounded))
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(.primary)
                 }
             }
         }
@@ -81,6 +125,8 @@ struct CollegeLogo: View {
     }
 }
 
+
+
 struct OddsBadge: View {
     let odds: String
     let detail: String
@@ -116,6 +162,8 @@ struct OddsBadge: View {
     }
 }
 
+
+
 struct ViabilityRing: View {
     let score: Int
     let animated: CGFloat
@@ -129,7 +177,7 @@ struct ViabilityRing: View {
 
     var body: some View {
         ZStack {
-            Circle().stroke(Color.gray.opacity(0.15), lineWidth: size > 80 ? 8 : 4)
+            Circle().stroke(Color(uiColor: .systemFill), lineWidth: size > 80 ? 8 : 4)
             Circle()
                 .trim(from: 0, to: animated / 100)
                 .stroke(color, style: StrokeStyle(lineWidth: size > 80 ? 8 : 4, lineCap: .round))
@@ -137,6 +185,7 @@ struct ViabilityRing: View {
             VStack(spacing: 1) {
                 Text("\(Int(animated))")
                     .font(.system(size > 80 ? .title2 : .caption2, design: .rounded).weight(.bold))
+                    .foregroundStyle(.primary)
                     .contentTransition(.numericText())
                 if size > 60 {
                     Text("/100").font(.caption2).foregroundStyle(.secondary)
@@ -147,6 +196,8 @@ struct ViabilityRing: View {
         .accessibilityLabel("Viability Score: \(score) out of 100")
     }
 }
+
+
 
 struct StatCard: View {
     let icon: String
@@ -164,12 +215,21 @@ struct StatCard: View {
                 .padding(6)
                 .background(iconColor.opacity(0.1))
                 .clipShape(RoundedRectangle(cornerRadius: 6))
-            Text(title).font(.caption).foregroundStyle(.secondary)
+
+            Text(title)
+                .font(.caption2.weight(.bold))
+                .textCase(.uppercase)
+                .tracking(0.8)
+                .foregroundStyle(.secondary)
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
+
             Text(value)
                 .font(.callout.weight(.bold))
                 .foregroundStyle(valueColor)
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
+
             if let sub = subtitle {
                 Text(sub).font(.caption2).foregroundStyle(.secondary)
             }
@@ -177,7 +237,7 @@ struct StatCard: View {
         }
         .frame(maxWidth: .infinity, minHeight: 100, alignment: .leading)
         .padding(12)
-        .background(.regularMaterial)
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .combine)
     }

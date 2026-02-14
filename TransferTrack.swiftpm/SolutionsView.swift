@@ -20,7 +20,6 @@ struct SolutionsTab: View {
     private var earnedPoints: Int {
         vm.completedSolutions.reduce(0) { t, i in i < solutions.count ? t + solutions[i].points : t }
     }
-    private var projectedScore: Int { min(100, vm.viabilityScore + earnedPoints) }
 
     private var activeSolutions: [(offset: Int, element: SchoolDatabase.Solution)] {
         Array(solutions.enumerated()).filter { !vm.completedSolutions.contains($0.offset) }
@@ -46,7 +45,20 @@ struct SolutionsTab: View {
                             .contentTransition(.numericText())
                     }
 
-                    ProgressView(value: Double(earnedPoints), total: Double(max(1, totalPoints))).tint(TTColors.points)
+
+                    GeometryReader { geo in
+                        let progress = totalPoints > 0 ? CGFloat(earnedPoints) / CGFloat(totalPoints) : 0
+                        ZStack(alignment: .leading) {
+                            Capsule()
+                                .fill(Color(uiColor: .quaternarySystemFill))
+                                .frame(height: 6)
+                            Capsule()
+                                .fill(TTColors.points)
+                                .frame(width: max(0, geo.size.width * progress), height: 6)
+                                .animation(.spring(response: 0.4), value: earnedPoints)
+                        }
+                    }
+                    .frame(height: 6)
 
                     if vm.solutionMonthlyBonus > 0 {
                         HStack(spacing: 6) {
@@ -64,6 +76,7 @@ struct SolutionsTab: View {
                 .background(.regularMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .padding(.horizontal, 20)
+
 
                 if !activeSolutions.isEmpty {
                     VStack(spacing: 0) {
@@ -134,10 +147,11 @@ struct SolutionsTab: View {
             if vm.completedSolutions.contains(index) { vm.completedSolutions.remove(index) }
             else { vm.completedSolutions.insert(index) }
         }
-        if projectedScore >= 75 && !previouslyGreen {
+        let newScore = vm.viabilityScore
+        if newScore >= 75 && !previouslyGreen {
             previouslyGreen = true
             triggerCelebration()
-        } else if projectedScore < 75 { previouslyGreen = false }
+        } else if newScore < 75 { previouslyGreen = false }
     }
 
     private func triggerCelebration() {
@@ -147,6 +161,8 @@ struct SolutionsTab: View {
         }
     }
 }
+
+
 
 @available(iOS 17.0, *)
 struct SolutionRow: View {
@@ -159,21 +175,27 @@ struct SolutionRow: View {
             HStack(spacing: 14) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(isCompleted ? TTColors.points : solution.color.opacity(0.12))
+                        .fill(isCompleted ? TTColors.points : Color(uiColor: .tertiarySystemFill))
                         .frame(width: 32, height: 32)
                     Image(systemName: isCompleted ? "checkmark" : solution.icon)
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(isCompleted ? .white : solution.color)
+                        .foregroundStyle(isCompleted ? .white : .secondary)
                 }
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text(solution.title)
                         .font(.subheadline.weight(.medium))
-                        .foregroundStyle(isCompleted ? .secondary : .primary)
+                        .strikethrough(isCompleted, color: .secondary)
+                        .foregroundStyle(isCompleted ? .tertiary : .primary)
                     Text(solution.description)
-                        .font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                        .font(.caption)
+                        .strikethrough(isCompleted, color: .secondary)
+                        .foregroundStyle(isCompleted ? .tertiary : .secondary)
+                        .lineLimit(2)
                     if solution.monthlyImpact > 0 {
                         Text("Saves ~$\(solution.monthlyImpact)/mo")
-                            .font(.caption2.weight(.medium)).foregroundStyle(.green)
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(isCompleted ? .tertiary : .secondary)
                     }
                 }
                 Spacer()
@@ -186,6 +208,8 @@ struct SolutionRow: View {
         .buttonStyle(.plain)
     }
 }
+
+
 
 @available(iOS 17.0, *)
 struct CelebrationView: View {

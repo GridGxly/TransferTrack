@@ -79,6 +79,7 @@ struct AcademicsTab: View {
                     .onAppear { ExcessCreditTip.hasWastedCredits = true }
                 }
 
+               
                 Section {
                     ForEach(transferable) { course in
                         CourseRow(course: course, style: .transferable)
@@ -93,33 +94,45 @@ struct AcademicsTab: View {
                     }
                 }
 
+               
                 if !userAddedCourses.isEmpty {
                     Section {
                         ForEach(userAddedCourses) { course in
-                            HStack {
-                                Image(systemName: iconFor(course.code)).font(.caption).foregroundStyle(.blue).frame(width: 24)
+                            HStack(spacing: 10) {
+                                Image(systemName: iconFor(course.code))
+                                    .font(.caption)
+                                    .foregroundStyle(.blue.opacity(0.7))
+                                    .frame(width: 24)
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(course.title).font(.subheadline.weight(.medium))
+                                    Text(course.title)
+                                        .font(.subheadline.weight(.medium))
                                     Text("\(course.code) · \(course.credits) cr · \(course.grade)")
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()
-                                Text(course.grade).font(.caption.weight(.bold)).foregroundStyle(.blue)
+                                Text(course.grade)
+                                    .font(.caption.weight(.bold))
+                                    .foregroundStyle(.blue)
                                     .padding(.horizontal, 8).padding(.vertical, 3)
-                                    .background(Color.blue.opacity(0.1)).clipShape(Capsule())
+                                    .background(Color.blue.opacity(0.1))
+                                    .clipShape(Capsule())
                             }
                         }
                         .onDelete { offsets in
                             for i in offsets { modelContext.delete(userAddedCourses[i]) }
                         }
                     } header: {
-                        HStack {
+                        HStack(spacing: 6) {
                             Image(systemName: "plus.circle.fill").foregroundStyle(.blue)
                             Text("Your Added Courses")
+                            Spacer()
+                            Text("\(userAddedCourses.count) courses · \(userAddedTotal) cr")
+                                .font(.caption).foregroundStyle(.secondary)
                         }
                     }
                 }
 
+                
                 if !wasted.isEmpty {
                     Section {
                         ForEach(wasted) { course in
@@ -127,9 +140,13 @@ struct AcademicsTab: View {
                                 wastedInfoCourse = course
                             } label: {
                                 HStack(spacing: 10) {
-                                    Image(systemName: "xmark.circle.fill").foregroundStyle(.red.opacity(0.5)).font(.caption).frame(width: 24)
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(.red.opacity(0.5))
+                                        .font(.caption).frame(width: 24)
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text(course.name).font(.subheadline.weight(.medium)).foregroundStyle(.primary)
+                                        Text(course.name)
+                                            .font(.subheadline.weight(.medium))
+                                            .foregroundStyle(.primary)
                                         Text("\(course.code) · \(course.credits) cr · \(course.grade)")
                                             .font(.caption).foregroundStyle(.secondary)
                                     }
@@ -145,7 +162,7 @@ struct AcademicsTab: View {
                     } header: {
                         HStack(spacing: 6) {
                             Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
-                            Text("\"Wasted\" Credits")
+                            Text("Wasted Credits")
                             Spacer()
                             Text("$\(wastedCost.formatted()) · \(wastedMonths) mo lost")
                                 .font(.caption).foregroundStyle(.red)
@@ -153,6 +170,35 @@ struct AcademicsTab: View {
                     } footer: {
                         Text("Tap any course to see why it won't transfer to \(vm.selectedUni).")
                     }
+                }
+
+               
+                Section {
+                    Button { showScanner = true } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: "doc.text.viewfinder")
+                                .font(.title2)
+                                .foregroundStyle(.blue)
+                                .frame(width: 44, height: 44)
+                                .background(Color.blue.opacity(0.1))
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Scan Transcript")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(.primary)
+                                Text("Use your camera to detect course codes automatically")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(2)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 if courses.isEmpty {
@@ -247,14 +293,9 @@ struct MilestoneOverlay: View {
                             .foregroundStyle(.yellow)
                             .symbolEffect(.bounce, options: .repeating.speed(0.5))
                     } else {
-                        if #available(iOS 18.0, *) {
-                            Image(systemName: "graduationcap.fill")
-                                .font(.system(size: 48))
-                                .foregroundStyle(.yellow)
-                                .symbolEffect(.bounce)
-                        } else {
-                            // Fallback on earlier versions
-                        }
+                        Image(systemName: "graduationcap.fill")
+                            .font(.system(size: 48))
+                            .foregroundStyle(.yellow)
                     }
                     Text("60 Credits!")
                         .font(.title.weight(.black))
@@ -296,6 +337,7 @@ struct MilestoneOverlay: View {
     }
 }
 
+
 @available(iOS 17.0, *)
 struct CourseRow: View {
     let course: SchoolDatabase.CourseTransfer
@@ -311,7 +353,8 @@ struct CourseRow: View {
                 .frame(width: 24)
             VStack(alignment: .leading, spacing: 2) {
                 Text(course.name).font(.subheadline.weight(.medium))
-                Text("\(course.code) · \(course.credits) cr · \(course.grade)").font(.caption).foregroundStyle(.secondary)
+                Text("\(course.code) · \(course.credits) cr · \(course.grade)")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
             Text(course.grade).font(.caption.weight(.bold))
@@ -337,6 +380,8 @@ struct CourseRow: View {
         }
     }
 }
+
+
 
 @available(iOS 17.0, *)
 struct WastedCourseInfoSheet: View {
@@ -386,6 +431,7 @@ struct WastedCourseInfoSheet: View {
         .presentationDetents([.medium])
     }
 }
+
 
 @available(iOS 17.0, *)
 struct AddCourseSheet: View {

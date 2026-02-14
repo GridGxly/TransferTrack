@@ -85,9 +85,27 @@ final class TransferViewModel {
         d.set(viabilityScore, forKey: "cachedViability")
     }
 
+
+
     var viabilityScore: Int {
-        if let mlScore = predictViabilityWithML() { return mlScore }
-        return fallbackViabilityScore
+        let base: Int
+        if let mlScore = predictViabilityWithML() {
+            base = mlScore
+        } else {
+            base = fallbackViabilityScore
+        }
+        return min(100, max(0, base + solutionViabilityBonus))
+    }
+
+
+    var solutionViabilityBonus: Int {
+        let solutions = SchoolDatabase.solutions(for: selectedUni, from: selectedCC, state: selectedState)
+        var bonus = 0
+        for idx in completedSolutions {
+            guard idx < solutions.count else { continue }
+            bonus += solutions[idx].points
+        }
+        return bonus
     }
 
     private var fallbackViabilityScore: Int {
@@ -128,6 +146,7 @@ final class TransferViewModel {
         return min(100, max(0, Int(score)))
     }
 
+
     var transportCost: Int {
         switch transportMode {
         case 0: return userRent > 800 ? 60 : 120
@@ -136,6 +155,7 @@ final class TransferViewModel {
         default: return 60
         }
     }
+
 
     var monthlyGap: Int {
         let income = 1800.0
@@ -160,6 +180,8 @@ final class TransferViewModel {
         return bonus
     }
 
+
+
     var ccTuition: Int { SchoolDatabase.ccTuition[selectedCC] ?? 3000 }
     var uniTuition: Int { SchoolDatabase.uniTuition[selectedUni] ?? 8000 }
     var tuitionJump: Int { uniTuition - ccTuition }
@@ -171,6 +193,8 @@ final class TransferViewModel {
     var communityColleges: [String] { SchoolDatabase.stateData[selectedState]?.ccs ?? [] }
     var universities: [String] { SchoolDatabase.stateData[selectedState]?.unis ?? [] }
 }
+
+
 
 @available(iOS 17.0, *)
 struct CheckTransferPlanIntent: AppIntent {

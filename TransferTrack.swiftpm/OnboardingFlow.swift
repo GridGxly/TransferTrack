@@ -56,6 +56,7 @@ struct OnboardingFlow: View {
                         to: nil, from: nil, for: nil
                     )
                 }
+                .foregroundStyle(.blue)
             }
         }
     }
@@ -88,6 +89,49 @@ struct OnboardingFlow: View {
     }
 }
 
+
+
+func loadAppIcon() -> UIImage? {
+
+    let names = ["AppIcon", "AppIcon60x60@3x", "AppIcon76x76@2x", "AppIcon-1024"]
+    for name in names {
+        if let img = UIImage(named: name) { return img }
+    }
+
+
+    if let icons = Bundle.main.infoDictionary?["CFBundleIcons"] as? [String: Any],
+       let primary = icons["CFBundlePrimaryIcon"] as? [String: Any],
+       let iconFiles = primary["CFBundleIconFiles"] as? [String],
+       let lastName = iconFiles.last,
+       let img = UIImage(named: lastName) {
+        return img
+    }
+
+
+    if let iconName = Bundle.main.infoDictionary?["CFBundleIconName"] as? String,
+       let img = UIImage(named: iconName) {
+        return img
+    }
+
+
+    if let resourcePath = Bundle.main.resourcePath {
+        let fm = FileManager.default
+        if let enumerator = fm.enumerator(atPath: resourcePath) {
+            while let file = enumerator.nextObject() as? String {
+                let lower = file.lowercased()
+                if lower.contains("appicon") && (lower.hasSuffix(".png") || lower.hasSuffix(".jpg")) {
+                    let fullPath = (resourcePath as NSString).appendingPathComponent(file)
+                    if let img = UIImage(contentsOfFile: fullPath) { return img }
+                }
+            }
+        }
+    }
+
+    return nil
+}
+
+
+
 @available(iOS 17.0, *)
 struct OnboardingHero: View {
     var onNext: () -> Void
@@ -101,7 +145,8 @@ struct OnboardingHero: View {
             VStack(spacing: 0) {
                 Spacer()
 
-                if let appIcon = UIImage(named: "AppIcon") {
+
+                if let appIcon = loadAppIcon() {
                     Image(uiImage: appIcon)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
@@ -111,18 +156,29 @@ struct OnboardingHero: View {
                         .scaleEffect(appear ? 1 : 0.5)
                         .opacity(appear ? 1 : 0)
                 } else {
-                    Image("AppIconPreview")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 120, height: 120)
-                        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-                        .shadow(color: .blue.opacity(0.3), radius: 20, y: 10)
-                        .font(.system(size: 80))
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(.blue)
-                        .symbolEffect(.pulse, options: .repeating)
-                        .scaleEffect(appear ? 1 : 0.5)
-                        .opacity(appear ? 1 : 0)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(red: 0.08, green: 0.10, blue: 0.14), Color(red: 0.05, green: 0.06, blue: 0.09)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                        Text("TT")
+                            .font(.system(size: 44, weight: .black, design: .rounded))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [Color(red: 0.7, green: 1.0, blue: 0.0), Color(red: 0.4, green: 0.9, blue: 0.1)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    }
+                    .frame(width: 100, height: 100)
+                    .shadow(color: Color(red: 0.5, green: 0.9, blue: 0.1).opacity(0.3), radius: 16, y: 6)
+                    .scaleEffect(appear ? 1 : 0.5)
+                    .opacity(appear ? 1 : 0)
                 }
 
                 Text("TransferTrack")
@@ -149,6 +205,8 @@ struct OnboardingHero: View {
         .onAppear { withAnimation(.spring(response: 0.8, dampingFraction: 0.65).delay(0.2)) { appear = true } }
     }
 }
+
+
 
 @available(iOS 17.0, *)
 struct OnboardingName: View {
@@ -199,6 +257,8 @@ struct OnboardingName: View {
     }
 }
 
+
+
 @available(iOS 17.0, *)
 struct OnboardingPath: View {
     let name: String
@@ -242,7 +302,7 @@ struct OnboardingPath: View {
                                 }.pickerStyle(.menu).tint(.primary)
                             }
 
-                            PathPickerWithLogo(label: "Dream School", icon: "graduationcap.fill", color: .green, schoolName: selectedUni) {
+                            PathPickerWithLogo(label: "Dream School", icon: "graduationcap.fill", color: TTColors.brandGreen, schoolName: selectedUni) {
                                 Picker("Uni", selection: $selectedUni) {
                                     ForEach(unis, id: \.self) { Text($0) }
                                 }.pickerStyle(.menu).tint(.primary)
@@ -263,6 +323,7 @@ struct OnboardingPath: View {
     }
 }
 
+
 @available(iOS 17.0, *)
 struct OnboardingAcademics: View {
     let name: String
@@ -276,14 +337,14 @@ struct OnboardingAcademics: View {
 
     var body: some View {
         ZStack {
-            RadialGradient(colors: [Color.green.opacity(0.12), Color.clear], center: .center, startRadius: 40, endRadius: 400)
+            RadialGradient(colors: [TTColors.brandGreen.opacity(0.12), Color.clear], center: .center, startRadius: 40, endRadius: 400)
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
                 Spacer()
 
                 Image(systemName: "book.circle.fill")
-                    .font(.system(size: 48)).foregroundStyle(.green).opacity(appear ? 1 : 0)
+                    .font(.system(size: 48)).foregroundStyle(TTColors.brandGreen).opacity(appear ? 1 : 0)
 
                 Text("Let's check your\nacademics, \(name).")
                     .font(.title.weight(.bold))
@@ -292,8 +353,8 @@ struct OnboardingAcademics: View {
                     .padding(.top, 16).opacity(appear ? 1 : 0)
 
                 VStack(spacing: 40) {
-                    BigNumberInput(label: "Current GPA", placeholder: "3.20", text: $gpaText, color: .green, keyboardType: .decimalPad)
-                    BigNumberInput(label: "Credits Earned", placeholder: "45", text: $creditsText, color: .green, keyboardType: .numberPad)
+                    BigNumberInput(label: "Current GPA", placeholder: "3.20", text: $gpaText, color: TTColors.brandGreen, keyboardType: .decimalPad)
+                    BigNumberInput(label: "Credits Earned", placeholder: "45", text: $creditsText, color: TTColors.brandGreen, keyboardType: .numberPad)
                 }
                 .padding(.top, 40).padding(.horizontal, 24).opacity(appear ? 1 : 0)
 
@@ -312,6 +373,8 @@ struct OnboardingAcademics: View {
     }
 }
 
+
+
 @available(iOS 17.0, *)
 struct OnboardingFinances: View {
     let name: String
@@ -327,7 +390,7 @@ struct OnboardingFinances: View {
 
     var body: some View {
         ZStack {
-            RadialGradient(colors: [Color.orange.opacity(0.12), Color.clear], center: .center, startRadius: 40, endRadius: 400)
+            RadialGradient(colors: [TTColors.brandOrange.opacity(0.12), Color.clear], center: .center, startRadius: 40, endRadius: 400)
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -336,7 +399,7 @@ struct OnboardingFinances: View {
                         Spacer().frame(height: 40)
 
                         Image(systemName: "dollarsign.circle.fill")
-                            .font(.system(size: 48)).foregroundStyle(.orange).opacity(appear ? 1 : 0)
+                            .font(.system(size: 48)).foregroundStyle(TTColors.brandOrange).opacity(appear ? 1 : 0)
 
                         Text("Almost there, \(name).\nYour financial snapshot.")
                             .font(.title.weight(.bold))
@@ -345,8 +408,8 @@ struct OnboardingFinances: View {
                             .padding(.top, 16).opacity(appear ? 1 : 0)
 
                         VStack(spacing: 40) {
-                            BigNumberInput(label: "Current Savings", placeholder: "2500", text: $savingsText, color: .orange, keyboardType: .numberPad, prefix: "$")
-                            BigNumberInput(label: "Monthly Rent", placeholder: "1200", text: $rentText, color: .orange, keyboardType: .numberPad, prefix: "$")
+                            BigNumberInput(label: "Current Savings", placeholder: "2500", text: $savingsText, color: TTColors.brandOrange, keyboardType: .numberPad, prefix: "$")
+                            BigNumberInput(label: "Monthly Rent", placeholder: "1200", text: $rentText, color: TTColors.brandOrange, keyboardType: .numberPad, prefix: "$")
 
                             PathPickerRow(label: "When do you plan to transfer?", icon: "calendar", color: .cyan) {
                                 Picker("Semester", selection: $transferSemester) {
@@ -372,6 +435,8 @@ struct OnboardingFinances: View {
         }
     }
 }
+
+
 
 @available(iOS 17.0, *)
 struct OnboardingLoading: View {
@@ -423,7 +488,7 @@ struct OnboardingLoading: View {
                         HStack(spacing: 14) {
                             ZStack {
                                 Circle()
-                                    .fill(completedSteps.contains(index) ? Color.green : (activeStep == index ? Color.blue.opacity(0.15) : Color.gray.opacity(0.1)))
+                                    .fill(completedSteps.contains(index) ? Color.green : (activeStep == index ? Color.blue.opacity(0.15) : Color(uiColor: .tertiarySystemFill)))
                                     .frame(width: 28, height: 28)
 
                                 if completedSteps.contains(index) {
@@ -431,6 +496,7 @@ struct OnboardingLoading: View {
                                         .font(.caption.weight(.bold))
                                         .foregroundStyle(.white)
                                         .transition(.scale.combined(with: .opacity))
+                                        .symbolEffect(.bounce, value: completedSteps.count)
                                 } else if activeStep == index {
                                     ProgressView()
                                         .scaleEffect(0.6)
@@ -480,6 +546,8 @@ struct OnboardingLoading: View {
     }
 }
 
+
+
 struct OnboardingButton: View {
     let title: String
     var icon: String? = nil
@@ -523,7 +591,7 @@ struct BigNumberInput: View {
                 if let p = prefix {
                     Text(p)
                         .font(.system(size: 56, weight: .bold, design: .rounded))
-                        .foregroundStyle(text.isEmpty ? Color.secondary.opacity(0.3) : color)
+                        .foregroundStyle(text.isEmpty ? color.opacity(0.3) : color)
                 }
                 TextField(placeholder, text: $text)
                     .font(.system(size: 56, weight: .bold, design: .rounded))
@@ -560,7 +628,7 @@ struct PathPickerRow<Content: View>: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.regularMaterial)
+            .background(Color(uiColor: .secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
     }
@@ -589,7 +657,7 @@ struct PathPickerWithLogo<Content: View>: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.regularMaterial)
+            .background(Color(uiColor: .secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .animation(.spring(response: 0.4, dampingFraction: 0.7), value: schoolName)
         }

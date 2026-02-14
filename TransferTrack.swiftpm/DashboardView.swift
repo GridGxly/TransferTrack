@@ -20,7 +20,7 @@ struct DashboardView: View {
                 NavigationStack {
                     ScrollView(showsIndicators: false) {
                         ForecastTab(vm: vm, showEditSheet: $showEditSheet)
-                            .padding(.bottom, 100)
+                        Spacer(minLength: 120)
                     }
                     .navigationTitle("Forecast")
                     .navigationBarTitleDisplayMode(.inline)
@@ -53,7 +53,7 @@ struct DashboardView: View {
                 NavigationStack {
                     ScrollView(showsIndicators: false) {
                         SolutionsTab(vm: vm)
-                            .padding(.bottom, 100)
+                        Spacer(minLength: 120)
                     }
                     .navigationTitle("Solutions")
                     .navigationBarTitleDisplayMode(.inline)
@@ -85,6 +85,7 @@ struct EditPathSheet: View {
     @Bindable var vm: TransferViewModel
     @Binding var isOnboardingComplete: Bool
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("appTheme") private var appTheme: String = AppTheme.system.rawValue
 
     @State private var localState: String
     @State private var localCC: String
@@ -108,6 +109,7 @@ struct EditPathSheet: View {
 
     private var ccs: [String] { SchoolDatabase.stateData[localState]?.ccs ?? [] }
     private var unis: [String] { SchoolDatabase.stateData[localState]?.unis ?? [] }
+    private var selectedTheme: AppTheme { AppTheme(rawValue: appTheme) ?? .system }
 
     var body: some View {
         NavigationStack {
@@ -151,7 +153,7 @@ struct EditPathSheet: View {
                     HStack {
                         Text("Savings"); Spacer()
                         HStack(spacing: 2) {
-                            Text("$")
+                            Text("$").foregroundStyle(.secondary)
                             TextField("2500", text: $savingsText)
                                 .keyboardType(.numberPad)
                                 .multilineTextAlignment(.trailing)
@@ -161,13 +163,26 @@ struct EditPathSheet: View {
                     HStack {
                         Text("Monthly Rent"); Spacer()
                         HStack(spacing: 2) {
-                            Text("$")
+                            Text("$").foregroundStyle(.secondary)
                             TextField("1200", text: $rentText)
                                 .keyboardType(.numberPad)
                                 .multilineTextAlignment(.trailing)
                                 .frame(width: 80)
                         }
                     }
+                }
+
+                
+                Section("Appearance") {
+                    Picker("Theme", selection: Binding(
+                        get: { selectedTheme },
+                        set: { appTheme = $0.rawValue }
+                    )) {
+                        ForEach(AppTheme.allCases) { theme in
+                            Label(theme.label, systemImage: theme.icon).tag(theme)
+                        }
+                    }
+                    .pickerStyle(.segmented)
                 }
 
                 Section {
