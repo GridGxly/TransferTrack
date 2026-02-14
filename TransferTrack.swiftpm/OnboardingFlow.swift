@@ -100,13 +100,30 @@ struct OnboardingHero: View {
 
             VStack(spacing: 0) {
                 Spacer()
-                Image(systemName: "graduationcap.circle.fill")
-                    .font(.system(size: 80))
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.blue)
-                    .symbolEffect(.pulse, options: .repeating)
-                    .scaleEffect(appear ? 1 : 0.5)
-                    .opacity(appear ? 1 : 0)
+
+                if let appIcon = UIImage(named: "AppIcon") {
+                    Image(uiImage: appIcon)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 100, height: 100)
+                        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                        .shadow(color: .blue.opacity(0.3), radius: 16, y: 6)
+                        .scaleEffect(appear ? 1 : 0.5)
+                        .opacity(appear ? 1 : 0)
+                } else {
+                    Image("AppIconPreview")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 120, height: 120)
+                        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                        .shadow(color: .blue.opacity(0.3), radius: 20, y: 10)
+                        .font(.system(size: 80))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.blue)
+                        .symbolEffect(.pulse, options: .repeating)
+                        .scaleEffect(appear ? 1 : 0.5)
+                        .opacity(appear ? 1 : 0)
+                }
 
                 Text("TransferTrack")
                     .font(.largeTitle.weight(.black))
@@ -138,6 +155,7 @@ struct OnboardingName: View {
     @Binding var name: String
     var onNext: () -> Void
     @State private var appear = false
+    @FocusState private var nameFocused: Bool
 
     var body: some View {
         ZStack {
@@ -163,6 +181,7 @@ struct OnboardingName: View {
                     .submitLabel(.continue)
                     .onSubmit { if !name.isEmpty { onNext() } }
                     .autocorrectionDisabled()
+                    .focused($nameFocused)
                     .opacity(appear ? 1 : 0)
 
                 Spacer()
@@ -173,7 +192,10 @@ struct OnboardingName: View {
                     .opacity(name.isEmpty ? 0.5 : 1.0)
             }
         }
-        .onAppear { withAnimation(.easeOut(duration: 0.5).delay(0.2)) { appear = true } }
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.5).delay(0.2)) { appear = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { nameFocused = true }
+        }
     }
 }
 
@@ -248,6 +270,9 @@ struct OnboardingAcademics: View {
     @Binding var creditsText: String
     var onNext: () -> Void
     @State private var appear = false
+    @FocusState private var gpaFocused: Bool
+
+    private var isValid: Bool { !gpaText.isEmpty && !creditsText.isEmpty }
 
     var body: some View {
         ZStack {
@@ -276,9 +301,14 @@ struct OnboardingAcademics: View {
                 Spacer()
 
                 OnboardingButton(title: "Next", icon: "arrow.right", action: onNext)
+                    .disabled(!isValid)
+                    .opacity(isValid ? 1.0 : 0.5)
             }
         }
-        .onAppear { withAnimation(.easeOut(duration: 0.5).delay(0.2)) { appear = true } }
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.5).delay(0.2)) { appear = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { gpaFocused = true }
+        }
     }
 }
 
@@ -290,7 +320,10 @@ struct OnboardingFinances: View {
     @Binding var transferSemester: String
     var onNext: () -> Void
     @State private var appear = false
+    @FocusState private var savingsFocused: Bool
+
     private let semesters = ["Fall 2026", "Spring 2027", "Fall 2027", "Spring 2028"]
+    private var isValid: Bool { !savingsText.isEmpty && !rentText.isEmpty }
 
     var body: some View {
         ZStack {
@@ -329,9 +362,14 @@ struct OnboardingFinances: View {
                 .scrollDismissesKeyboard(.interactively)
 
                 OnboardingButton(title: "Generate My Forecast", icon: "arrow.right.circle.fill", action: onNext)
+                    .disabled(!isValid)
+                    .opacity(isValid ? 1.0 : 0.5)
             }
         }
-        .onAppear { withAnimation(.easeOut(duration: 0.5).delay(0.2)) { appear = true } }
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.5).delay(0.2)) { appear = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { savingsFocused = true }
+        }
     }
 }
 
@@ -340,49 +378,74 @@ struct OnboardingLoading: View {
     let uniName: String
     var onComplete: () -> Void
 
-    @State private var currentStep = 0
-    @State private var progress: CGFloat = 0
+    @State private var completedSteps: Set<Int> = []
+    @State private var activeStep = 0
     @State private var showButton = false
-    @State private var iconPulse = 0
+    @State private var glowPhase: CGFloat = 0
 
     private var steps: [(icon: String, text: String)] {
         [
-            ("magnifyingglass", "Analyzing \(uniName) degree requirements..."),
-            ("house.lodge.fill", "Calculating off-campus housing odds..."),
-            ("dollarsign.arrow.circlepath", "Finding hidden scholarships..."),
-            ("checkmark.shield.fill", "Building your Transfer Plan.")
+            ("magnifyingglass", "Analyzing \(uniName) degree requirements"),
+            ("house.lodge.fill", "Calculating off-campus housing odds"),
+            ("dollarsign.arrow.circlepath", "Finding hidden scholarships"),
+            ("checkmark.shield.fill", "Building your Transfer Plan")
         ]
     }
 
     var body: some View {
         ZStack {
-            RadialGradient(colors: [Color.blue.opacity(0.1), Color.clear], center: .center, startRadius: 20, endRadius: 300)
+            RadialGradient(colors: [Color.blue.opacity(0.08 + glowPhase * 0.12), Color.clear], center: .center, startRadius: 20, endRadius: 300)
                 .ignoresSafeArea()
+                .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: glowPhase)
 
             VStack(spacing: 32) {
                 Spacer()
 
-                Image(systemName: steps[min(currentStep, steps.count - 1)].icon)
-                    .font(.system(size: 64))
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.blue)
-                    .symbolEffect(.variableColor.iterative, options: .repeating, value: iconPulse)
-                    .contentTransition(.symbolEffect(.replace))
-                    .animation(.easeInOut(duration: 0.4), value: currentStep)
+                ZStack {
+                    Circle()
+                        .fill(Color.blue.opacity(0.08 + glowPhase * 0.06))
+                        .frame(width: 120, height: 120)
+                        .scaleEffect(1.0 + glowPhase * 0.1)
 
-                Text(steps[min(currentStep, steps.count - 1)].text)
-                    .font(.title3.weight(.medium))
-                    .foregroundStyle(.primary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-                    .contentTransition(.opacity)
-                    .animation(.easeInOut(duration: 0.3), value: currentStep)
+                    Circle()
+                        .fill(Color.blue.opacity(0.15))
+                        .frame(width: 80, height: 80)
 
-                ProgressView(value: progress)
-                    .tint(.blue)
-                    .scaleEffect(y: 2)
-                    .padding(.horizontal, 60)
-                    .animation(.easeInOut(duration: 0.3), value: progress)
+                    Image(systemName: steps[min(activeStep, steps.count - 1)].icon)
+                        .font(.system(size: 32, weight: .medium))
+                        .foregroundStyle(.blue)
+                        .contentTransition(.symbolEffect(.replace))
+                        .animation(.easeInOut(duration: 0.4), value: activeStep)
+                }
+
+                VStack(alignment: .leading, spacing: 16) {
+                    ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
+                        HStack(spacing: 14) {
+                            ZStack {
+                                Circle()
+                                    .fill(completedSteps.contains(index) ? Color.green : (activeStep == index ? Color.blue.opacity(0.15) : Color.gray.opacity(0.1)))
+                                    .frame(width: 28, height: 28)
+
+                                if completedSteps.contains(index) {
+                                    Image(systemName: "checkmark")
+                                        .font(.caption.weight(.bold))
+                                        .foregroundStyle(.white)
+                                        .transition(.scale.combined(with: .opacity))
+                                } else if activeStep == index {
+                                    ProgressView()
+                                        .scaleEffect(0.6)
+                                        .tint(.blue)
+                                }
+                            }
+
+                            Text(step.text)
+                                .font(.subheadline.weight(activeStep == index ? .semibold : .regular))
+                                .foregroundStyle(completedSteps.contains(index) ? .secondary : (activeStep == index ? .primary : .tertiary))
+                        }
+                        .animation(.spring(response: 0.3), value: completedSteps)
+                    }
+                }
+                .padding(.horizontal, 40)
 
                 Spacer()
 
@@ -396,19 +459,22 @@ struct OnboardingLoading: View {
     }
 
     private func runLoadingSequence() {
-        let tick = UISelectionFeedbackGenerator()
-        tick.prepare()
+        glowPhase = 1.0
 
         for i in 0..<steps.count {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 1.2) {
-                withAnimation { currentStep = i }
-                progress = CGFloat(i + 1) / CGFloat(steps.count)
-                iconPulse += 1
-                tick.selectionChanged()
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 1.3) {
+                withAnimation(.spring(response: 0.3)) { activeStep = i }
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 1.3 + 0.9) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                    completedSteps.insert(i)
+                }
+                UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: 0.7)
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + Double(steps.count) * 1.2 + 0.5) {
-            UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + Double(steps.count) * 1.3 + 0.5) {
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
             withAnimation(.spring(response: 0.5)) { showButton = true }
         }
     }

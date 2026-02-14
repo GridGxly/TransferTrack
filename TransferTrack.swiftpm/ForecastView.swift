@@ -9,6 +9,7 @@ struct ForecastTab: View {
     @State private var animatedScore: CGFloat = 0
     @State private var showCards = false
     @State private var selectedChartSchool: String? = nil
+    @State private var ringBounce: CGFloat = 1.0
 
     private var runwayMonths: Int {
         if vm.monthlyGap >= 0 { return -1 }
@@ -21,6 +22,8 @@ struct ForecastTab: View {
 
     private var transportLabels: [String] { ["Keep Car", "Sell/Swap", "Transit"] }
     private var transportIcons: [String] { ["car.fill", "car.side.front.open.fill", "bus.fill"] }
+
+    private var hasData: Bool { vm.userCredits > 0 }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -70,6 +73,10 @@ struct ForecastTab: View {
                     .contentTransition(.numericText())
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
+                    .shadow(
+                        color: (vm.monthlyGap >= 0 ? Color.green : Color.red).opacity(0.3),
+                        radius: 12, y: 2
+                    )
                 Text("per month after transfer")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -93,6 +100,7 @@ struct ForecastTab: View {
 
             HStack(spacing: 14) {
                 ViabilityRing(score: vm.viabilityScore, animated: animatedScore, size: 70)
+                    .scaleEffect(ringBounce)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Viability Score").font(.headline)
                     Text(viabilityMessage)
@@ -111,6 +119,17 @@ struct ForecastTab: View {
                     animatedScore = CGFloat(vm.viabilityScore)
                 }
                 withAnimation(.easeOut(duration: 0.6).delay(0.5)) { showCards = true }
+            }
+            .onChange(of: vm.viabilityScore) { _, newScore in
+                withAnimation(.spring(response: 0.8, dampingFraction: 0.6)) {
+                    animatedScore = CGFloat(newScore)
+                }
+                withAnimation(.spring(response: 0.15, dampingFraction: 0.3)) {
+                    ringBounce = 1.12
+                }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.5).delay(0.15)) {
+                    ringBounce = 1.0
+                }
             }
 
             VStack(alignment: .leading, spacing: 10) {
@@ -131,56 +150,36 @@ struct ForecastTab: View {
                         .font(.callout.weight(.bold))
                         .contentTransition(.numericText())
                 }
-                HStack(spacing: 8) {
+
+                Picker("Transport", selection: $vm.transportMode) {
                     ForEach(0..<3, id: \.self) { mode in
-                        Button {
-                            withAnimation(.spring(response: 0.3)) { vm.transportMode = mode }
-                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: transportIcons[mode]).font(.caption)
-                                Text(transportLabels[mode]).font(.caption.weight(.medium))
-                            }
-                            .foregroundStyle(vm.transportMode == mode ? .white : .secondary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(vm.transportMode == mode ? Color.blue : Color.gray.opacity(0.12))
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(transportLabels[mode])
+                        Label(transportLabels[mode], systemImage: transportIcons[mode])
+                            .tag(mode)
                     }
                 }
+                .pickerStyle(.segmented)
+                .sensoryFeedback(.selection, trigger: vm.transportMode)
             }
             .padding(16)
-            .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .padding(.horizontal, 20)
             .opacity(showCards ? 1 : 0)
             .offset(y: showCards ? 0 : 12)
 
-            HStack(spacing: 12) {
-                StatCard(
-                    icon: "book.closed.fill",
-                    iconColor: vm.creditsAtRisk > 0 ? .orange : .green,
-                    title: "Credits at Risk",
-                    value: "\(vm.creditsAtRisk) cr",
-                    valueColor: vm.creditsAtRisk > 0 ? .orange : .green,
-                    subtitle: vm.creditsAtRisk > 0 ? "~$\(vm.creditsAtRiskCost.formatted())" : nil
-                )
-                StatCard(
-                    icon: vm.monthlyGap >= 0 ? "checkmark.circle.fill" : "clock.fill",
-                    iconColor: vm.monthlyGap >= 0 ? .green : .orange,
-                    title: "Runway",
-                    value: runwayText,
-                    valueColor: vm.monthlyGap >= 0 ? .green : .orange,
-                    subtitle: "$\(Int(vm.userSavings).formatted()) saved"
-                )
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) {
+                    statCardAtRisk
+                    statCardRunway
+                }
+                VStack(spacing: 12) {
+                    statCardAtRisk
+                    statCardRunway
+                }
             }
             .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 20)
             .opacity(showCards ? 1 : 0)
             .offset(y: showCards ? 0 : 12)
+            .redacted(reason: hasData ? [] : .placeholder)
 
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
@@ -205,7 +204,7 @@ struct ForecastTab: View {
                 .chartXAxis(.hidden)
                 .chartYAxis { AxisMarks { _ in AxisValueLabel().font(.caption) } }
                 .chartYSelection(value: $selectedChartSchool)
-                .frame(height: 80)
+                .frame(height: 120)
 
                 if let school = selectedChartSchool {
                     let amount = school == vm.selectedCC ? vm.ccTuition : vm.uniTuition
@@ -218,13 +217,33 @@ struct ForecastTab: View {
                     .font(.caption2).foregroundStyle(.secondary)
             }
             .padding(16)
-            .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .padding(.horizontal, 20)
             .opacity(showCards ? 1 : 0)
         }
         .animation(.spring(response: 0.4), value: vm.solutionMonthlyBonus)
         .animation(.spring(response: 0.4), value: vm.transportMode)
+    }
+
+    private var statCardAtRisk: some View {
+        StatCard(
+            icon: "book.closed.fill",
+            iconColor: vm.creditsAtRisk > 0 ? .orange : .green,
+            title: "Credits at Risk",
+            value: "\(vm.creditsAtRisk) cr",
+            valueColor: vm.creditsAtRisk > 0 ? .orange : .green,
+            subtitle: vm.creditsAtRisk > 0 ? "~$\(vm.creditsAtRiskCost.formatted())" : nil
+        )
+    }
+
+    private var statCardRunway: some View {
+        StatCard(
+            icon: vm.monthlyGap >= 0 ? "checkmark.circle.fill" : "clock.fill",
+            iconColor: vm.monthlyGap >= 0 ? .green : .orange,
+            title: "Runway",
+            value: runwayText,
+            valueColor: vm.monthlyGap >= 0 ? .green : .orange,
+            subtitle: "$\(Int(vm.userSavings).formatted()) saved"
+        )
     }
 
     private var viabilityMessage: String {

@@ -250,4 +250,3 @@ struct ApartmentCardView: View {
         .animation(.spring(response: 0.25), value: isSelected)
     }
 }
-

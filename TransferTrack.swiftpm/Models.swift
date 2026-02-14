@@ -100,17 +100,31 @@ final class TransferViewModel {
     }
 
     private func predictViabilityWithML() -> Int? {
-        guard let modelURL = Bundle.main.url(forResource: "TransferRiskModel", withExtension: "mlmodelc"),
-              let model = try? MLModel(contentsOf: modelURL) else { return nil }
+        let compiledName = "TransferRiskModel"
+        let compiledURL: URL? = Bundle.main.url(forResource: compiledName, withExtension: "mlmodelc")
+            ?? {
+                guard let sourceURL = Bundle.main.url(forResource: compiledName, withExtension: "mlmodel") else { return nil }
+                return try? MLModel.compileModel(at: sourceURL)
+            }()
+
+        guard let url = compiledURL else { return nil }
+
+        let config = MLModelConfiguration()
+        config.computeUnits = .cpuOnly
+
+        guard let model = try? MLModel(contentsOf: url, configuration: config) else { return nil }
+
         let input: [String: NSNumber] = [
             "GPA": NSNumber(value: userGPA),
             "Credits": NSNumber(value: userCredits),
             "Savings": NSNumber(value: userSavings),
             "Rent": NSNumber(value: userRent)
         ]
+
         guard let provider = try? MLDictionaryFeatureProvider(dictionary: input),
               let prediction = try? model.prediction(from: provider),
               let score = prediction.featureValue(for: "ViabilityScore")?.doubleValue else { return nil }
+
         return min(100, max(0, Int(score)))
     }
 
@@ -185,7 +199,9 @@ struct TransferTrackShortcuts: AppShortcutsProvider {
             phrases: [
                 "Check my transfer plan in \(.applicationName)",
                 "How's my transfer budget in \(.applicationName)",
-                "What's my monthly gap in \(.applicationName)"
+                "What's my monthly gap in \(.applicationName)",
+                "How's my budget in \(.applicationName)",
+                "What's my gap in \(.applicationName)"
             ],
             shortTitle: "Check Transfer Plan",
             systemImageName: "graduationcap.fill"

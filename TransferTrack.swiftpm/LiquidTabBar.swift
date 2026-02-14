@@ -13,46 +13,44 @@ struct LiquidTabBar: View {
     @State private var isAnimating = false
 
     private let barHeight: CGFloat = 62
-    private let blobBaseW: CGFloat = 60
-    private let blobBaseH: CGFloat = 46
 
     var body: some View {
         GeometryReader { geo in
             let tw = geo.size.width / CGFloat(tabs.count)
 
-            ZStack {
-                Capsule()
-                    .frame(height: barHeight)
-                    .glassEffect(.regular, in: .capsule)
+            GlassEffectContainer(spacing: 0) {
+                ZStack {
+                    blobView(tw: tw)
+                    rimLightView(tw: tw)
 
-                blobView(tw: tw)
-                rimLightView(tw: tw)
-
-                HStack(spacing: 0) {
-                    ForEach(Array(tabs.enumerated()), id: \.offset) { index, tab in
-                        let active = selectedTab == index
-                        Button { moveToTab(index, tw: tw) } label: {
-                            VStack(spacing: 2) {
-                                Image(systemName: tab.icon)
-                                    .font(.system(size: 20, weight: active ? .bold : .medium))
-                                    .symbolVariant(active ? .fill : .none)
-                                    .foregroundStyle(active ? .white : .secondary)
-                                    .scaleEffect(iconScales[safe: index] ?? 1.0)
-                                    .offset(y: iconOffsetY[safe: index] ?? 0)
-                                Text(tab.label)
-                                    .font(.system(size: 10, weight: active ? .semibold : .regular))
-                                    .foregroundStyle(active ? .white.opacity(0.9) : .secondary)
-                                    .scaleEffect(iconScales[safe: index] ?? 1.0)
+                    HStack(spacing: 0) {
+                        ForEach(Array(tabs.enumerated()), id: \.offset) { index, tab in
+                            let active = selectedTab == index
+                            Button { moveToTab(index, tw: tw) } label: {
+                                VStack(spacing: 2) {
+                                    Image(systemName: tab.icon)
+                                        .font(.system(size: 20, weight: active ? .bold : .medium))
+                                        .symbolVariant(active ? .fill : .none)
+                                        .foregroundStyle(active ? .white : .secondary)
+                                        .scaleEffect(iconScales[safe: index] ?? 1.0)
+                                        .offset(y: iconOffsetY[safe: index] ?? 0)
+                                    Text(tab.label)
+                                        .font(.system(size: 10, weight: active ? .semibold : .regular))
+                                        .foregroundStyle(active ? .white.opacity(0.9) : .secondary)
+                                        .scaleEffect(iconScales[safe: index] ?? 1.0)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .frame(height: barHeight)
+                                .contentShape(Rectangle())
                             }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: barHeight)
-                            .contentShape(Rectangle())
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("\(tab.label) tab")
+                            .accessibilityAddTraits(active ? .isSelected : [])
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("\(tab.label) tab")
-                        .accessibilityAddTraits(active ? .isSelected : [])
                     }
                 }
+                .frame(height: barHeight)
+                .glassEffect(.regular.interactive(), in: .capsule)
             }
             .frame(height: barHeight)
             .onAppear {
@@ -72,6 +70,8 @@ struct LiquidTabBar: View {
     }
 
     @ViewBuilder private func blobView(tw: CGFloat) -> some View {
+        let blobBaseW: CGFloat = 60
+        let blobBaseH: CGFloat = 46
         let minE = min(leadingX, trailingX)
         let maxE = max(leadingX, trailingX)
         let stretch = maxE - minE
@@ -99,6 +99,8 @@ struct LiquidTabBar: View {
     }
 
     @ViewBuilder private func rimLightView(tw: CGFloat) -> some View {
+        let blobBaseW: CGFloat = 60
+        let blobBaseH: CGFloat = 46
         let minE = min(leadingX, trailingX)
         let maxE = max(leadingX, trailingX)
         let stretch = maxE - minE

@@ -73,6 +73,8 @@ struct DashboardView: View {
         .sheet(isPresented: $showEditSheet) {
             EditPathSheet(vm: vm, isOnboardingComplete: $isOnboardingComplete)
         }
+        .sensoryFeedback(.increase, trigger: vm.monthlyGap) { old, new in new > old }
+        .sensoryFeedback(.decrease, trigger: vm.monthlyGap) { old, new in new < old }
         .onAppear { vm.cacheForSiri() }
         .onChange(of: vm.monthlyGap) { _, _ in vm.cacheForSiri() }
     }

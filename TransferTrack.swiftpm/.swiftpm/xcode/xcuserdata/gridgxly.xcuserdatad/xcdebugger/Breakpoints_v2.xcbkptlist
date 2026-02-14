@@ -20,51 +20,5 @@
             landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "1EAD7CC2-EA9C-414D-A2E5-E30D1A8C5C2E"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "LiquidDesign.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "8"
-            endingLineNumber = "8"
-            landmarkName = "TTColors"
-            landmarkType = "13">
-            <Locations>
-               <Location
-                  uuid = "1EAD7CC2-EA9C-414D-A2E5-E30D1A8C5C2E - f0ec27e80e5be5e2"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "one-time initialization function for warning"
-                  moduleName = "TransferTrack.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/gridgxly/Documents/projects/swiftchallenge/TransferTrack.swiftpm/LiquidDesign.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "8"
-                  endingLineNumber = "8">
-               </Location>
-               <Location
-                  uuid = "1EAD7CC2-EA9C-414D-A2E5-E30D1A8C5C2E - 70e8174be72848a9"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "TransferTrack.TTColors.warning.unsafeMutableAddressor : SwiftUI.Color"
-                  moduleName = "TransferTrack.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/gridgxly/Documents/projects/swiftchallenge/TransferTrack.swiftpm/LiquidDesign.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "8"
-                  endingLineNumber = "8">
-               </Location>
-            </Locations>
-         </BreakpointContent>
-      </BreakpointProxy>
    </Breakpoints>
 </Bucket>

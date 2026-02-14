@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import TipKit
+import AppIntents
 
 @main
 @available(iOS 17.0, *)
@@ -12,6 +13,12 @@ struct TransferTrackApp: App {
         try? Tips.configure([
             .datastoreLocation(.applicationDefault)
         ])
+
+        #if DEBUG
+        try? Tips.resetDatastore()
+        #endif
+
+        TransferTrackShortcuts.updateAppShortcutParameters()
     }
 
     var body: some Scene {
