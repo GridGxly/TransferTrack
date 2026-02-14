@@ -22,6 +22,7 @@ struct DashboardView: View {
                         ForecastTab(vm: vm, showEditSheet: $showEditSheet)
                         Spacer(minLength: 120)
                     }
+                    .background(Color(uiColor: .systemGroupedBackground))
                     .navigationTitle("Forecast")
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
@@ -55,6 +56,7 @@ struct DashboardView: View {
                         SolutionsTab(vm: vm)
                         Spacer(minLength: 120)
                     }
+                    .background(Color(uiColor: .systemGroupedBackground))
                     .navigationTitle("Solutions")
                     .navigationBarTitleDisplayMode(.inline)
                 }
@@ -68,7 +70,7 @@ struct DashboardView: View {
                 FloatingTabBar(selectedTab: $selectedTab, tabs: tabs)
             }
         }
-        .background(Color(uiColor: .systemBackground))
+        .background(Color(uiColor: .systemGroupedBackground))
         .ignoresSafeArea(edges: [])
         .sheet(isPresented: $showEditSheet) {
             EditPathSheet(vm: vm, isOnboardingComplete: $isOnboardingComplete)
@@ -77,7 +79,9 @@ struct DashboardView: View {
         .sensoryFeedback(.decrease, trigger: vm.monthlyGap) { old, new in new < old }
         .onAppear { vm.cacheForSiri() }
         .onChange(of: vm.monthlyGap) { _, _ in vm.cacheForSiri() }
-        .onChange(of: vm.updateTrigger) { _, _ in }
+        .onChange(of: vm.updateTrigger) { _, _ in
+            vm.cacheForSiri()
+        }
     }
 }
 
@@ -222,12 +226,9 @@ struct EditPathSheet: View {
             vm.userRent = Double(rentText) ?? vm.userRent
         }
 
-
         vm.forceRecalculate()
 
-    
         UINotificationFeedbackGenerator().notificationOccurred(.success)
-
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
             dismiss()

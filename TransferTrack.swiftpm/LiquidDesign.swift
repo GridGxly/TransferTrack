@@ -37,18 +37,15 @@ enum TTColors {
     static let brandGreen = Color(red: 0.2, green: 0.78, blue: 0.35)
     static let brandOrange = Color(red: 1.0, green: 0.58, blue: 0.0)
 
-
     static let cardBg = Color(uiColor: .secondarySystemGroupedBackground)
     static let subtle = Color(uiColor: .tertiarySystemGroupedBackground)
     static let pageBg = Color(uiColor: .systemGroupedBackground)
-
 
     static let accent = Color.blue
     static let success = Color.green
     static let warning = Color.orange
     static let danger = Color.red
 
-   
     static let points = brandGreen
     static let mutedIconBg = Color(uiColor: .tertiarySystemFill)
 }
@@ -206,6 +203,7 @@ struct StatCard: View {
     let value: String
     let valueColor: Color
     var subtitle: String? = nil
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -239,6 +237,7 @@ struct StatCard: View {
         .padding(12)
         .background(Color(uiColor: .secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .cardBorder(colorScheme: colorScheme, radius: 14)
         .accessibilityElement(children: .combine)
     }
 }

@@ -5,6 +5,7 @@ import Charts
 struct ForecastTab: View {
     @Bindable var vm: TransferViewModel
     @Binding var showEditSheet: Bool
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var animatedScore: CGFloat = 0
     @State private var showCards = false
@@ -58,11 +59,14 @@ struct ForecastTab: View {
                 .padding(14)
                 .background(Color(uiColor: .secondarySystemGroupedBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .cardBorder(colorScheme: colorScheme)
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 20)
             .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.selectedCC)
             .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.selectedUni)
+
+
 
             VStack(spacing: 4) {
                 Text("MONTHLY GAP")
@@ -104,7 +108,8 @@ struct ForecastTab: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
 
-         
+
+
             HStack(spacing: 14) {
                 ViabilityRing(score: vm.viabilityScore, animated: animatedScore, size: 70)
                     .scaleEffect(ringBounce)
@@ -120,6 +125,7 @@ struct ForecastTab: View {
             .padding(16)
             .background(Color(uiColor: .secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .cardBorder(colorScheme: colorScheme)
             .padding(.horizontal, 20)
             .onAppear {
                 withAnimation(.spring(response: 1.2, dampingFraction: 0.7).delay(0.3)) {
@@ -136,6 +142,20 @@ struct ForecastTab: View {
                 }
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.5).delay(0.15)) {
                     ringBounce = 1.0
+                }
+            }
+            .onChange(of: vm.updateTrigger) { _, _ in
+                let newScore = CGFloat(vm.viabilityScore)
+                if abs(animatedScore - newScore) > 0.5 {
+                    withAnimation(.spring(response: 0.8, dampingFraction: 0.6)) {
+                        animatedScore = newScore
+                    }
+                    withAnimation(.spring(response: 0.15, dampingFraction: 0.3)) {
+                        ringBounce = 1.12
+                    }
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.5).delay(0.15)) {
+                        ringBounce = 1.0
+                    }
                 }
             }
 
@@ -174,11 +194,13 @@ struct ForecastTab: View {
             .padding(16)
             .background(Color(uiColor: .secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .cardBorder(colorScheme: colorScheme)
             .padding(.horizontal, 20)
             .opacity(showCards ? 1 : 0)
             .offset(y: showCards ? 0 : 12)
 
 
+   
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 12) {
                     statCardAtRisk
@@ -194,6 +216,8 @@ struct ForecastTab: View {
             .opacity(showCards ? 1 : 0)
             .offset(y: showCards ? 0 : 12)
             .redacted(reason: hasData ? [] : .placeholder)
+
+
 
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
@@ -244,6 +268,7 @@ struct ForecastTab: View {
             .padding(16)
             .background(Color(uiColor: .secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .cardBorder(colorScheme: colorScheme)
             .padding(.horizontal, 20)
             .opacity(showCards ? 1 : 0)
         }
@@ -289,4 +314,20 @@ struct TuitionEntry: Identifiable {
     let school: String
     let amount: Int
     let isCC: Bool
+}
+
+
+
+extension View {
+    func cardBorder(colorScheme: ColorScheme, radius: CGFloat = 16) -> some View {
+        self.overlay(
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .stroke(
+                    colorScheme == .light
+                        ? Color(uiColor: .separator).opacity(0.35)
+                        : Color.clear,
+                    lineWidth: 0.5
+                )
+        )
+    }
 }

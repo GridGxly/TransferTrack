@@ -13,6 +13,8 @@ struct AcademicsTab: View {
     @State private var wastedInfoCourse: SchoolDatabase.CourseTransfer? = nil
     @State private var showMilestone = false
     @State private var isEditing = false
+    @State private var showSurchargeAlert = false
+    @State private var hasShownSurchargeAlert = false
 
     private var courses: [SchoolDatabase.CourseTransfer] { vm.courses }
     private var transferable: [SchoolDatabase.CourseTransfer] { vm.transferable }
@@ -94,7 +96,7 @@ struct AcademicsTab: View {
                     }
                 }
 
-                
+
                 if !userAddedCourses.isEmpty {
                     Section {
                         ForEach(userAddedCourses) { course in
@@ -222,7 +224,6 @@ struct AcademicsTab: View {
                     }
                     .buttonStyle(.plain)
 
-                 
                     Button { showScanner = true } label: {
                         HStack(spacing: 14) {
                             Image(systemName: "doc.text.viewfinder")
@@ -295,6 +296,21 @@ struct AcademicsTab: View {
             }
             .sheet(item: $wastedInfoCourse) { course in
                 WastedCourseInfoSheet(course: course, uniName: vm.selectedUni)
+            }
+            .alert("Excess Credit Surcharge Warning", isPresented: $showSurchargeAlert) {
+                Button("View Wasted Credits") {
+                }
+                Button("Got It", role: .cancel) { }
+            } message: {
+                Text("You have \(wastedCredits) credits (\(wasted.count) courses) that won't transfer to \(vm.selectedUni), costing ~$\(wastedCost.formatted()). Florida charges 50% more per credit hour once you exceed 120% of required credits. Check the Solutions tab to appeal.")
+            }
+            .onAppear {
+                if !wasted.isEmpty && !hasShownSurchargeAlert {
+                    hasShownSurchargeAlert = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                        showSurchargeAlert = true
+                    }
+                }
             }
 
             if showMilestone {
@@ -505,7 +521,6 @@ struct WastedCourseInfoSheet: View {
         }
         .presentationDetents([.medium])
     }
-
 
     private var expandedReason: String {
         course.reason

@@ -62,7 +62,6 @@ final class TransferViewModel {
         didSet { persistCompletedSolutions() }
     }
 
-
     var updateTrigger: Int = 0
 
     init() {
@@ -77,7 +76,6 @@ final class TransferViewModel {
         self.userRent = d.double(forKey: "userRent") == 0 ? 1200 : d.double(forKey: "userRent")
         self.transportMode = d.integer(forKey: "transportMode")
         self.transferSemester = d.string(forKey: "transferSemester") ?? "Fall 2026"
-
 
         if let stored = d.array(forKey: "completedSolutions") as? [Int] {
             self.completedSolutions = Set(stored)
@@ -106,6 +104,7 @@ final class TransferViewModel {
         updateTrigger += 1
         cacheForSiri()
     }
+
 
 
     var viabilityScore: Int {
@@ -266,7 +265,12 @@ struct TransferTrackShortcuts: AppShortcutsProvider {
                 "How's my transfer budget in \(.applicationName)",
                 "What's my monthly gap in \(.applicationName)",
                 "How's my budget in \(.applicationName)",
-                "What's my gap in \(.applicationName)"
+                "What's my gap in \(.applicationName)",
+                "Show my transfer score in \(.applicationName)",
+                "Am I ready to transfer in \(.applicationName)",
+                "How much will I spend in \(.applicationName)",
+                "Open \(.applicationName)",
+                "Check \(.applicationName)",
             ],
             shortTitle: "Check Transfer Plan",
             systemImageName: "graduationcap.fill"

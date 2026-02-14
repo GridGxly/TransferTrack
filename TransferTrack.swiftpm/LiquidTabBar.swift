@@ -79,6 +79,8 @@ struct GlassSegmentedTabBar: UIViewRepresentable {
         return size
     }
 
+
+    @MainActor
     class Coordinator: NSObject {
         var parent: GlassSegmentedTabBar
         init(parent: GlassSegmentedTabBar) {
@@ -133,11 +135,8 @@ struct FloatingTabBar: View {
                     .shadow(color: .black.opacity(colorScheme == .dark ? 0.25 : 0.10), radius: 12, y: 5)
 
                 blobView(tw: tw)
-
-                
                 rimLightView(tw: tw)
 
-               
                 HStack(spacing: 0) {
                     ForEach(Array(tabs.enumerated()), id: \.offset) { index, tab in
                         let active = selectedTab == index
@@ -181,8 +180,6 @@ struct FloatingTabBar: View {
         .padding(.bottom, 28)
     }
 
-  
-
     @ViewBuilder private func blobView(tw: CGFloat) -> some View {
         let minE = min(leadingX, trailingX)
         let maxE = max(leadingX, trailingX)
@@ -207,8 +204,6 @@ struct FloatingTabBar: View {
             .shadow(color: colorScheme == .dark ? .white.opacity(0.04) : .clear, radius: 1, y: -1)
             .position(x: center, y: barHeight / 2)
     }
-
-   
 
     @ViewBuilder private func rimLightView(tw: CGFloat) -> some View {
         let minE = min(leadingX, trailingX)
@@ -237,8 +232,6 @@ struct FloatingTabBar: View {
             .allowsHitTesting(false)
     }
 
-   
-
     private func moveToTab(_ index: Int, tw: CGFloat) {
         guard index != selectedTab, !isAnimating else { return }
         isAnimating = true
@@ -253,45 +246,32 @@ struct FloatingTabBar: View {
         selectedTab = index
         UIImpactFeedbackGenerator(style: .medium).impactOccurred(intensity: 0.6 + stretchFactor * 0.3)
 
-       
         withAnimation(.spring(response: 0.25, dampingFraction: 0.58)) {
             if right { leadingX = newC } else { trailingX = newC }
         }
-
         withAnimation(.spring(response: 0.48 + stretchFactor * 0.12, dampingFraction: 0.68).delay(0.08 + stretchFactor * 0.04)) {
             if right { trailingX = newC } else { leadingX = newC }
         }
 
-        
         let i = index
         withAnimation(.spring(response: 0.15, dampingFraction: 0.35).delay(0.10)) {
-            iconScales[i] = 0.75
-            iconOffsetY[i] = 4
+            iconScales[i] = 0.75; iconOffsetY[i] = 4
         }
         withAnimation(.spring(response: 0.25, dampingFraction: 0.45).delay(0.26)) {
-            iconScales[i] = 1.15
-            iconOffsetY[i] = -3
+            iconScales[i] = 1.15; iconOffsetY[i] = -3
         }
         withAnimation(.spring(response: 0.3, dampingFraction: 0.65).delay(0.44)) {
-            iconScales[i] = 1.0
-            iconOffsetY[i] = 0
+            iconScales[i] = 1.0; iconOffsetY[i] = 0
         }
 
         let old = oldIdx
-        withAnimation(.spring(response: 0.2, dampingFraction: 0.6).delay(0.05)) {
-            iconScales[old] = 0.88
-        }
-        withAnimation(.spring(response: 0.22, dampingFraction: 0.55).delay(0.18)) {
-            iconScales[old] = 1.04
-        }
-        withAnimation(.spring(response: 0.25, dampingFraction: 0.7).delay(0.32)) {
-            iconScales[old] = 1.0
-        }
+        withAnimation(.spring(response: 0.2, dampingFraction: 0.6).delay(0.05)) { iconScales[old] = 0.88 }
+        withAnimation(.spring(response: 0.22, dampingFraction: 0.55).delay(0.18)) { iconScales[old] = 1.04 }
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.7).delay(0.32)) { iconScales[old] = 1.0 }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) { isAnimating = false }
     }
 }
-
 
 extension Array {
     subscript(safe index: Int) -> Element? {

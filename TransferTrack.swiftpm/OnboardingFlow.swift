@@ -91,13 +91,38 @@ struct OnboardingFlow: View {
 
 
 
-func loadAppIcon() -> UIImage? {
 
+
+struct FramerFadeModifier: ViewModifier {
+    @State private var isVisible = false
+    var delay: Double
+    var yOffset: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(isVisible ? 1 : 0)
+            .offset(y: isVisible ? 0 : yOffset)
+            .onAppear {
+                withAnimation(.easeOut(duration: 0.55).delay(delay)) {
+                    isVisible = true
+                }
+            }
+    }
+}
+
+extension View {
+    func framerFade(delay: Double = 0, yOffset: CGFloat = 18) -> some View {
+        self.modifier(FramerFadeModifier(delay: delay, yOffset: yOffset))
+    }
+}
+
+
+
+func loadAppIcon() -> UIImage? {
     let names = ["AppIcon", "AppIcon60x60@3x", "AppIcon76x76@2x", "AppIcon-1024"]
     for name in names {
         if let img = UIImage(named: name) { return img }
     }
-
 
     if let icons = Bundle.main.infoDictionary?["CFBundleIcons"] as? [String: Any],
        let primary = icons["CFBundlePrimaryIcon"] as? [String: Any],
@@ -107,12 +132,10 @@ func loadAppIcon() -> UIImage? {
         return img
     }
 
-
     if let iconName = Bundle.main.infoDictionary?["CFBundleIconName"] as? String,
        let img = UIImage(named: iconName) {
         return img
     }
-
 
     if let resourcePath = Bundle.main.resourcePath {
         let fm = FileManager.default
@@ -135,7 +158,6 @@ func loadAppIcon() -> UIImage? {
 @available(iOS 17.0, *)
 struct OnboardingHero: View {
     var onNext: () -> Void
-    @State private var appear = false
 
     var body: some View {
         ZStack {
@@ -145,47 +167,45 @@ struct OnboardingHero: View {
             VStack(spacing: 0) {
                 Spacer()
 
-
-                if let appIcon = loadAppIcon() {
-                    Image(uiImage: appIcon)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
+                Group {
+                    if let appIcon = loadAppIcon() {
+                        Image(uiImage: appIcon)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 100, height: 100)
+                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                            .shadow(color: .blue.opacity(0.3), radius: 16, y: 6)
+                    } else {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color(red: 0.08, green: 0.10, blue: 0.14), Color(red: 0.05, green: 0.06, blue: 0.09)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                            Text("TT")
+                                .font(.system(size: 44, weight: .black, design: .rounded))
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [Color(red: 0.7, green: 1.0, blue: 0.0), Color(red: 0.4, green: 0.9, blue: 0.1)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                        }
                         .frame(width: 100, height: 100)
-                        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                        .shadow(color: .blue.opacity(0.3), radius: 16, y: 6)
-                        .scaleEffect(appear ? 1 : 0.5)
-                        .opacity(appear ? 1 : 0)
-                } else {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color(red: 0.08, green: 0.10, blue: 0.14), Color(red: 0.05, green: 0.06, blue: 0.09)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                        Text("TT")
-                            .font(.system(size: 44, weight: .black, design: .rounded))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [Color(red: 0.7, green: 1.0, blue: 0.0), Color(red: 0.4, green: 0.9, blue: 0.1)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                        .shadow(color: Color(red: 0.5, green: 0.9, blue: 0.1).opacity(0.3), radius: 16, y: 6)
                     }
-                    .frame(width: 100, height: 100)
-                    .shadow(color: Color(red: 0.5, green: 0.9, blue: 0.1).opacity(0.3), radius: 16, y: 6)
-                    .scaleEffect(appear ? 1 : 0.5)
-                    .opacity(appear ? 1 : 0)
                 }
+                .framerFade(delay: 0.15, yOffset: 24)
 
                 Text("TransferTrack")
                     .font(.largeTitle.weight(.black))
                     .foregroundStyle(.primary)
                     .padding(.top, 24)
-                    .opacity(appear ? 1 : 0)
+                    .framerFade(delay: 0.30)
 
                 Text("Navigate the 2+2 transfer path\nwithout losing credits or cash.")
                     .font(.title3.weight(.medium))
@@ -193,16 +213,15 @@ struct OnboardingHero: View {
                     .multilineTextAlignment(.center)
                     .padding(.top, 8)
                     .padding(.horizontal, 32)
-                    .opacity(appear ? 1 : 0)
+                    .framerFade(delay: 0.45)
 
                 Spacer()
                 Spacer()
 
                 OnboardingButton(title: "Start Your Journey", icon: "arrow.right", action: onNext)
-                    .opacity(appear ? 1 : 0)
+                    .framerFade(delay: 0.60, yOffset: 24)
             }
         }
-        .onAppear { withAnimation(.spring(response: 0.8, dampingFraction: 0.65).delay(0.2)) { appear = true } }
     }
 }
 
@@ -212,7 +231,6 @@ struct OnboardingHero: View {
 struct OnboardingName: View {
     @Binding var name: String
     var onNext: () -> Void
-    @State private var appear = false
     @FocusState private var nameFocused: Bool
 
     var body: some View {
@@ -222,14 +240,17 @@ struct OnboardingName: View {
 
             VStack(spacing: 0) {
                 Spacer()
+
                 Image(systemName: "person.crop.circle")
-                    .font(.system(size: 56)).foregroundStyle(.cyan).opacity(appear ? 1 : 0)
+                    .font(.system(size: 56)).foregroundStyle(.cyan)
+                    .framerFade(delay: 0.10)
 
                 Text("What should we\ncall you?")
                     .font(.largeTitle.weight(.bold))
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
-                    .padding(.top, 16).opacity(appear ? 1 : 0)
+                    .padding(.top, 16)
+                    .framerFade(delay: 0.20)
 
                 TextField("Your name", text: $name)
                     .font(.system(size: 36, weight: .bold, design: .rounded))
@@ -240,7 +261,7 @@ struct OnboardingName: View {
                     .onSubmit { if !name.isEmpty { onNext() } }
                     .autocorrectionDisabled()
                     .focused($nameFocused)
-                    .opacity(appear ? 1 : 0)
+                    .framerFade(delay: 0.35)
 
                 Spacer()
                 Spacer()
@@ -248,10 +269,10 @@ struct OnboardingName: View {
                 OnboardingButton(title: "Continue", action: onNext)
                     .disabled(name.isEmpty)
                     .opacity(name.isEmpty ? 0.5 : 1.0)
+                    .framerFade(delay: 0.50)
             }
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.5).delay(0.2)) { appear = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { nameFocused = true }
         }
     }
@@ -267,7 +288,6 @@ struct OnboardingPath: View {
     @Binding var selectedUni: String
     var onNext: () -> Void
 
-    @State private var appear = false
     private var ccs: [String] { SchoolDatabase.stateData[selectedState]?.ccs ?? [] }
     private var unis: [String] { SchoolDatabase.stateData[selectedState]?.unis ?? [] }
 
@@ -281,13 +301,16 @@ struct OnboardingPath: View {
                     VStack(spacing: 0) {
                         Spacer().frame(height: 40)
 
-                        Image(systemName: "map.fill").font(.system(size: 48)).foregroundStyle(.blue).opacity(appear ? 1 : 0)
+                        Image(systemName: "map.fill")
+                            .font(.system(size: 48)).foregroundStyle(.blue)
+                            .framerFade(delay: 0.10)
 
                         Text("Hey \(name), where\nare you transferring?")
                             .font(.title.weight(.bold))
                             .foregroundStyle(.primary)
                             .multilineTextAlignment(.center)
-                            .padding(.top, 16).opacity(appear ? 1 : 0)
+                            .padding(.top, 16)
+                            .framerFade(delay: 0.20)
 
                         VStack(spacing: 20) {
                             PathPickerRow(label: "Your State", icon: "mappin.and.ellipse", color: .purple) {
@@ -295,20 +318,23 @@ struct OnboardingPath: View {
                                     ForEach(SchoolDatabase.states, id: \.self) { Text($0) }
                                 }.pickerStyle(.menu).tint(.primary)
                             }
+                            .framerFade(delay: 0.30)
 
                             PathPickerWithLogo(label: "Transferring From", icon: "building.columns.fill", color: .blue, schoolName: selectedCC) {
                                 Picker("CC", selection: $selectedCC) {
                                     ForEach(ccs, id: \.self) { Text($0) }
                                 }.pickerStyle(.menu).tint(.primary)
                             }
+                            .framerFade(delay: 0.40)
 
                             PathPickerWithLogo(label: "Dream School", icon: "graduationcap.fill", color: TTColors.brandGreen, schoolName: selectedUni) {
                                 Picker("Uni", selection: $selectedUni) {
                                     ForEach(unis, id: \.self) { Text($0) }
                                 }.pickerStyle(.menu).tint(.primary)
                             }
+                            .framerFade(delay: 0.50)
                         }
-                        .padding(.top, 32).padding(.horizontal, 24).opacity(appear ? 1 : 0)
+                        .padding(.top, 32).padding(.horizontal, 24)
 
                         Spacer().frame(height: 100)
                     }
@@ -316,10 +342,10 @@ struct OnboardingPath: View {
                 .scrollDismissesKeyboard(.interactively)
 
                 OnboardingButton(title: "Next", icon: "arrow.right", action: onNext)
+                    .framerFade(delay: 0.60)
             }
         }
         .onChange(of: selectedState) { _, _ in selectedCC = ccs.first ?? ""; selectedUni = unis.first ?? "" }
-        .onAppear { withAnimation(.easeOut(duration: 0.5).delay(0.2)) { appear = true } }
     }
 }
 
@@ -330,7 +356,6 @@ struct OnboardingAcademics: View {
     @Binding var gpaText: String
     @Binding var creditsText: String
     var onNext: () -> Void
-    @State private var appear = false
     @FocusState private var gpaFocused: Bool
 
     private var isValid: Bool { !gpaText.isEmpty && !creditsText.isEmpty }
@@ -344,19 +369,23 @@ struct OnboardingAcademics: View {
                 Spacer()
 
                 Image(systemName: "book.circle.fill")
-                    .font(.system(size: 48)).foregroundStyle(TTColors.brandGreen).opacity(appear ? 1 : 0)
+                    .font(.system(size: 48)).foregroundStyle(TTColors.brandGreen)
+                    .framerFade(delay: 0.10)
 
                 Text("Let's check your\nacademics, \(name).")
                     .font(.title.weight(.bold))
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
-                    .padding(.top, 16).opacity(appear ? 1 : 0)
+                    .padding(.top, 16)
+                    .framerFade(delay: 0.20)
 
                 VStack(spacing: 40) {
                     BigNumberInput(label: "Current GPA", placeholder: "3.20", text: $gpaText, color: TTColors.brandGreen, keyboardType: .decimalPad)
+                        .framerFade(delay: 0.35)
                     BigNumberInput(label: "Credits Earned", placeholder: "45", text: $creditsText, color: TTColors.brandGreen, keyboardType: .numberPad)
+                        .framerFade(delay: 0.45)
                 }
-                .padding(.top, 40).padding(.horizontal, 24).opacity(appear ? 1 : 0)
+                .padding(.top, 40).padding(.horizontal, 24)
 
                 Spacer()
                 Spacer()
@@ -364,10 +393,10 @@ struct OnboardingAcademics: View {
                 OnboardingButton(title: "Next", icon: "arrow.right", action: onNext)
                     .disabled(!isValid)
                     .opacity(isValid ? 1.0 : 0.5)
+                    .framerFade(delay: 0.55)
             }
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.5).delay(0.2)) { appear = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { gpaFocused = true }
         }
     }
@@ -382,7 +411,6 @@ struct OnboardingFinances: View {
     @Binding var rentText: String
     @Binding var transferSemester: String
     var onNext: () -> Void
-    @State private var appear = false
     @FocusState private var savingsFocused: Bool
 
     private let semesters = ["Fall 2026", "Spring 2027", "Fall 2027", "Spring 2028"]
@@ -399,38 +427,44 @@ struct OnboardingFinances: View {
                         Spacer().frame(height: 40)
 
                         Image(systemName: "dollarsign.circle.fill")
-                            .font(.system(size: 48)).foregroundStyle(TTColors.brandOrange).opacity(appear ? 1 : 0)
+                            .font(.system(size: 48)).foregroundStyle(TTColors.brandOrange)
+                            .framerFade(delay: 0.10)
 
                         Text("Almost there, \(name).\nYour financial snapshot.")
                             .font(.title.weight(.bold))
                             .foregroundStyle(.primary)
                             .multilineTextAlignment(.center)
-                            .padding(.top, 16).opacity(appear ? 1 : 0)
+                            .padding(.top, 16)
+                            .framerFade(delay: 0.20)
 
                         VStack(spacing: 40) {
                             BigNumberInput(label: "Current Savings", placeholder: "2500", text: $savingsText, color: TTColors.brandOrange, keyboardType: .numberPad, prefix: "$")
+                                .framerFade(delay: 0.35)
                             BigNumberInput(label: "Monthly Rent", placeholder: "1200", text: $rentText, color: TTColors.brandOrange, keyboardType: .numberPad, prefix: "$")
+                                .framerFade(delay: 0.45)
 
                             PathPickerRow(label: "When do you plan to transfer?", icon: "calendar", color: .cyan) {
                                 Picker("Semester", selection: $transferSemester) {
                                     ForEach(semesters, id: \.self) { Text($0) }
                                 }.pickerStyle(.menu).tint(.primary)
                             }
+                            .framerFade(delay: 0.55)
                         }
-                        .padding(.top, 40).padding(.horizontal, 24).opacity(appear ? 1 : 0)
+                        .padding(.top, 40).padding(.horizontal, 24)
 
                         Spacer().frame(height: 100)
                     }
                 }
                 .scrollDismissesKeyboard(.interactively)
 
+
                 OnboardingButton(title: "Generate My Forecast", icon: "arrow.right.circle.fill", action: onNext)
                     .disabled(!isValid)
                     .opacity(isValid ? 1.0 : 0.5)
+                    .framerFade(delay: 0.65)
             }
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.5).delay(0.2)) { appear = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { savingsFocused = true }
         }
     }
@@ -533,7 +567,7 @@ struct OnboardingLoading: View {
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 1.3 + 0.9) {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                    completedSteps.insert(i)
+                    _ = completedSteps.insert(i)
                 }
                 UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: 0.7)
             }

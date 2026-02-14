@@ -40,7 +40,7 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
-            Color(uiColor: .systemBackground)
+            Color(uiColor: .systemGroupedBackground)
                 .ignoresSafeArea()
 
             if isOnboardingComplete {
