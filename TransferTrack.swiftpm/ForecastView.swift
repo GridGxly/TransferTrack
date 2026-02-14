@@ -8,9 +8,11 @@ struct ForecastTab: View {
     @Environment(\.colorScheme) private var colorScheme
 
     @State private var animatedScore: CGFloat = 0
+    @State private var animatedGap: CGFloat = 0
     @State private var showCards = false
     @State private var selectedChartSchool: String? = nil
     @State private var ringBounce: CGFloat = 1.0
+    @State private var showTransportSheet = false
 
     private var runwayMonths: Int {
         if vm.monthlyGap >= 0 { return -1 }
@@ -29,6 +31,7 @@ struct ForecastTab: View {
     var body: some View {
         VStack(spacing: 16) {
 
+           
             Button { showEditSheet = true } label: {
                 HStack(spacing: 10) {
                     CollegeLogo(schoolName: vm.selectedCC, size: 32)
@@ -75,16 +78,7 @@ struct ForecastTab: View {
                     .tracking(1.2)
                     .foregroundStyle(.secondary)
 
-                Text("\(vm.monthlyGap >= 0 ? "+" : "")$\(vm.monthlyGap)")
-                    .font(.system(size: 52, weight: .bold, design: .rounded))
-                    .foregroundStyle(vm.monthlyGap >= 0 ? .green : Color(red: 1, green: 0.3, blue: 0.3))
-                    .contentTransition(.numericText())
-                    .minimumScaleFactor(0.5)
-                    .lineLimit(1)
-                    .shadow(
-                        color: (vm.monthlyGap >= 0 ? Color.green : Color.red).opacity(0.3),
-                        radius: 12, y: 2
-                    )
+                CountingDollarText(value: animatedGap, fontSize: 52)
 
                 Text("per month after transfer")
                     .font(.caption)
@@ -92,8 +86,24 @@ struct ForecastTab: View {
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 4)
+            .onAppear {
+                withAnimation(.easeOut(duration: 1.4).delay(0.2)) {
+                    animatedGap = CGFloat(vm.monthlyGap)
+                }
+            }
+            .onChange(of: vm.monthlyGap) { _, newGap in
+                withAnimation(.easeOut(duration: 0.8)) {
+                    animatedGap = CGFloat(newGap)
+                }
+            }
+            .onChange(of: vm.updateTrigger) { _, _ in
+                withAnimation(.easeOut(duration: 0.8)) {
+                    animatedGap = CGFloat(vm.monthlyGap)
+                }
+            }
 
 
+           
             if vm.solutionMonthlyBonus > 0 {
                 HStack(spacing: 8) {
                     Image(systemName: "arrow.up.circle.fill").foregroundStyle(.green)
@@ -107,7 +117,6 @@ struct ForecastTab: View {
                 .padding(.horizontal, 20)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-
 
 
             HStack(spacing: 14) {
@@ -160,47 +169,77 @@ struct ForecastTab: View {
             }
 
 
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Text("Transport").font(.headline).foregroundStyle(.primary)
-                    Spacer()
-                    Text("+$\(vm.transportCost)/mo")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(.primary)
-                        .contentTransition(.numericText())
-                }
+            Button { showTransportSheet = true } label: {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("Transport Advisor").font(.headline).foregroundStyle(.primary)
+                        Spacer()
+                        Text("+$\(vm.transportCost)/mo")
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(.primary)
+                            .contentTransition(.numericText())
+                    }
 
-                HStack(spacing: 6) {
-                    Image(systemName: transportIcons[vm.transportMode])
-                        .font(.callout)
-                        .foregroundStyle(.blue)
-                        .padding(6)
-                        .background(Color.blue.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                    Text("+$\(vm.transportCost)/mo added to expenses")
-                        .font(.caption).foregroundStyle(.secondary)
-                    Spacer()
-                }
+                    HStack(spacing: 10) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.blue.opacity(0.1))
+                                .frame(width: 40, height: 40)
+                            Image(systemName: transportIcons[vm.transportMode])
+                                .font(.system(size: 18))
+                                .foregroundStyle(.blue)
+                        }
 
-                Picker("Transport", selection: $vm.transportMode) {
-                    ForEach(0..<3, id: \.self) { mode in
-                        Label(transportLabels[mode], systemImage: transportIcons[mode])
-                            .tag(mode)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(transportLabels[vm.transportMode])
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.primary)
+                            Text(transportSubtitle)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+
+                        HStack(spacing: 4) {
+                            Text("Compare Options")
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.blue)
+                            Image(systemName: "chevron.right")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.blue)
+                        }
+                    }
+
+                    HStack(spacing: 6) {
+                        ForEach(0..<3, id: \.self) { mode in
+                            let isActive = vm.transportMode == mode
+                            HStack(spacing: 4) {
+                                Image(systemName: transportIcons[mode])
+                                    .font(.system(size: 10))
+                                Text(shortTransportCost(mode))
+                                    .font(.caption2.weight(.medium))
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(isActive ? Color.blue.opacity(0.15) : Color(uiColor: .tertiarySystemFill))
+                            .foregroundStyle(isActive ? .blue : .secondary)
+                            .clipShape(Capsule())
+                        }
+                        Spacer()
                     }
                 }
-                .pickerStyle(.segmented)
-                .sensoryFeedback(.selection, trigger: vm.transportMode)
+                .padding(16)
+                .background(Color(uiColor: .secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .cardBorder(colorScheme: colorScheme)
             }
-            .padding(16)
-            .background(Color(uiColor: .secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .cardBorder(colorScheme: colorScheme)
+            .buttonStyle(.plain)
             .padding(.horizontal, 20)
             .opacity(showCards ? 1 : 0)
             .offset(y: showCards ? 0 : 12)
 
 
-   
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 12) {
                     statCardAtRisk
@@ -274,6 +313,31 @@ struct ForecastTab: View {
         }
         .animation(.spring(response: 0.4), value: vm.solutionMonthlyBonus)
         .animation(.spring(response: 0.4), value: vm.transportMode)
+        .sheet(isPresented: $showTransportSheet) {
+            TransportComparisonSheet(vm: vm)
+        }
+    }
+
+
+
+    private var transportSubtitle: String {
+        switch vm.transportMode {
+        case 0: return "Gas + insurance + maintenance + parking"
+        case 1: return "Lower gas & insurance, smaller payment"
+        case 2: return "Free UCF shuttle pass with tuition"
+        default: return ""
+        }
+    }
+
+    private func shortTransportCost(_ mode: Int) -> String {
+        let cost: Int
+        switch mode {
+        case 0: cost = vm.userRent > 800 ? 60 : 120
+        case 1: cost = 40
+        case 2: cost = 0
+        default: cost = 60
+        }
+        return cost == 0 ? "Free" : "$\(cost)/mo"
     }
 
     private var statCardAtRisk: some View {
@@ -314,20 +378,4 @@ struct TuitionEntry: Identifiable {
     let school: String
     let amount: Int
     let isCC: Bool
-}
-
-
-
-extension View {
-    func cardBorder(colorScheme: ColorScheme, radius: CGFloat = 16) -> some View {
-        self.overlay(
-            RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .stroke(
-                    colorScheme == .light
-                        ? Color(uiColor: .separator).opacity(0.35)
-                        : Color.clear,
-                    lineWidth: 0.5
-                )
-        )
-    }
 }

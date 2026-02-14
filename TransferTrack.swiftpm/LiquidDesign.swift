@@ -51,6 +51,46 @@ enum TTColors {
 }
 
 
+
+struct CountingText: View, Animatable {
+    var value: CGFloat
+
+    nonisolated var animatableData: CGFloat {
+        get { value }
+        set { value = newValue }
+    }
+
+    var body: some View {
+        Text("\(Int(value))")
+    }
+}
+
+struct CountingDollarText: View, Animatable {
+    var value: CGFloat
+    var fontSize: CGFloat = 52
+
+    nonisolated var animatableData: CGFloat {
+        get { value }
+        set { value = newValue }
+    }
+
+    private var displayValue: Int { Int(value) }
+    private var isPositive: Bool { displayValue >= 0 }
+
+    var body: some View {
+        Text("\(isPositive ? "+$" : "-$")\(abs(displayValue))")
+            .font(.system(size: fontSize, weight: .bold, design: .rounded))
+            .foregroundStyle(isPositive ? .green : Color(red: 1, green: 0.3, blue: 0.3))
+            .minimumScaleFactor(0.5)
+            .lineLimit(1)
+            .shadow(
+                color: (isPositive ? Color.green : Color.red).opacity(0.3),
+                radius: 12, y: 2
+            )
+    }
+}
+
+
 struct CollegeLogo: View {
     let schoolName: String
     var size: CGFloat = 40
@@ -161,14 +201,21 @@ struct OddsBadge: View {
 
 
 
-struct ViabilityRing: View {
+
+struct ViabilityRing: View, Animatable {
     let score: Int
-    let animated: CGFloat
+    var animated: CGFloat
     var size: CGFloat = 180
 
+    nonisolated var animatableData: CGFloat {
+        get { animated }
+        set { animated = newValue }
+    }
+
     var color: Color {
-        if score >= 75 { return .green }
-        else if score >= 50 { return .orange }
+        let s = Int(animated)
+        if s >= 75 { return .green }
+        else if s >= 50 { return .orange }
         else { return .red }
     }
 
@@ -176,14 +223,13 @@ struct ViabilityRing: View {
         ZStack {
             Circle().stroke(Color(uiColor: .systemFill), lineWidth: size > 80 ? 8 : 4)
             Circle()
-                .trim(from: 0, to: animated / 100)
+                .trim(from: 0, to: max(0, animated / 100))
                 .stroke(color, style: StrokeStyle(lineWidth: size > 80 ? 8 : 4, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             VStack(spacing: 1) {
                 Text("\(Int(animated))")
                     .font(.system(size > 80 ? .title2 : .caption2, design: .rounded).weight(.bold))
                     .foregroundStyle(.primary)
-                    .contentTransition(.numericText())
                 if size > 60 {
                     Text("/100").font(.caption2).foregroundStyle(.secondary)
                 }
@@ -239,5 +285,20 @@ struct StatCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .cardBorder(colorScheme: colorScheme, radius: 14)
         .accessibilityElement(children: .combine)
+    }
+}
+
+
+extension View {
+    func cardBorder(colorScheme: ColorScheme, radius: CGFloat = 16) -> some View {
+        self.overlay(
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .stroke(
+                    colorScheme == .light
+                        ? Color(uiColor: .separator).opacity(0.35)
+                        : Color.clear,
+                    lineWidth: 0.5
+                )
+        )
     }
 }

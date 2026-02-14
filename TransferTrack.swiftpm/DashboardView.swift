@@ -213,6 +213,7 @@ struct EditPathSheet: View {
                 localUni = unis.first ?? ""
             }
         }
+        .preferredColorScheme(selectedTheme.colorScheme)
     }
 
     private func save() {

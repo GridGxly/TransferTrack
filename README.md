@@ -168,7 +168,6 @@ TransferTrack is built as a Swift Playground for the challenge, but the architec
 ## Author
 
 **Ralph Clavens Love Noel**
-Computer Science Major
 
 
 *Built from personal adversity. Designed for every transfer student who deserves a plan.*

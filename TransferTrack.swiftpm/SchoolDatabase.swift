@@ -321,37 +321,103 @@ struct SchoolDatabase {
         let monthlyImpact: Int
     }
 
+
+
     static func solutions(for uni: String, from cc: String, state: String) -> [Solution] {
         var items: [Solution] = []
 
         switch state {
         case "Florida":
-            items.append(Solution(title: "Apply for DirectConnect", description: "Guaranteed admission from \(cc) to \(uni) with 2.0+ GPA", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
-            items.append(Solution(title: "Apply for Bright Futures", description: "State scholarship covering up to 100% tuition", points: 7, icon: "star.fill", color: .yellow, monthlyImpact: 300))
+            items.append(Solution(
+                title: "Lock In DirectConnect",
+                description: "Your \(cc) AA degree guarantees \(uni) admission — but only if you finish the AA first. Don't transfer with 55 credits thinking you'll finish later. Complete it, then transfer. That guarantee is worth more than any early start.",
+                points: 8, icon: "link", color: .blue, monthlyImpact: 0
+            ))
+            items.append(Solution(
+                title: "File for Bright Futures Before July 1",
+                description: "If you had Bright Futures in high school, it transfers with you — but you have to reactivate it through your \(uni) financial aid office. Miss the renewal window and you lose it permanently. Check your status at floridastudentfinancialaid.org right now.",
+                points: 7, icon: "star.fill", color: .yellow, monthlyImpact: 300
+            ))
         case "California":
-            items.append(Solution(title: "Use TAG Agreement", description: "Transfer Admission Guarantee to \(uni)", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
-            items.append(Solution(title: "Apply for Cal Grant", description: "State financial aid for CA residents", points: 7, icon: "star.fill", color: .yellow, monthlyImpact: 400))
+            items.append(Solution(
+                title: "Submit TAG Application (Sept 1–30 only)",
+                description: "TAG locks in your \(uni) admission — but the window is literally one month in September. Miss it by a day and you're in the regular pool with 80,000 other applicants. Set a calendar reminder for September 1st now.",
+                points: 8, icon: "link", color: .blue, monthlyImpact: 0
+            ))
+            items.append(Solution(
+                title: "File Cal Grant by March 2",
+                description: "Free money from the state — up to $14K/year at UCs. Requires FAFSA + GPA verification from \(cc). Your CC financial aid office sends the GPA automatically, but only if you tell them to. Walk in and ask. Takes 5 minutes.",
+                points: 7, icon: "star.fill", color: .yellow, monthlyImpact: 400
+            ))
         case "Texas":
-            items.append(Solution(title: "Use Texas Core Curriculum", description: "42-credit guaranteed transfer block to \(uni)", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
-            items.append(Solution(title: "Apply for TEXAS Grant", description: "State need-based financial aid", points: 7, icon: "star.fill", color: .yellow, monthlyImpact: 350))
+            items.append(Solution(
+                title: "Complete the Texas Core (42 credits)",
+                description: "The 42-credit Texas Core Curriculum transfers as a BLOCK to any public university. That means if you finish it at \(cc), \(uni) has to accept all 42 credits — no questions, no 'we don't offer that equivalent.' Finish the block.",
+                points: 8, icon: "link", color: .blue, monthlyImpact: 0
+            ))
+            items.append(Solution(
+                title: "Apply for TEXAS Grant Right Now",
+                description: "Need-based grant up to $10K/year. Most students don't know it exists because it's not advertised like financial aid. File FAFSA → mark \(uni) as your school → TEXAS Grant eligibility is automatic. No separate application.",
+                points: 7, icon: "star.fill", color: .yellow, monthlyImpact: 350
+            ))
         case "Virginia":
-            items.append(Solution(title: "Use GAA Transfer", description: "Guaranteed Admission Agreement to \(uni)", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
+            items.append(Solution(
+                title: "Confirm Your GAA Status",
+                description: "The Guaranteed Admission Agreement from \(cc) to \(uni) has GPA minimums that vary by major. Engineering at Virginia Tech needs a 3.4, not the 3.0 on the flyer. Log into the VA transfer portal and confirm YOUR major's actual cutoff.",
+                points: 8, icon: "link", color: .blue, monthlyImpact: 0
+            ))
         case "Washington":
-            items.append(Solution(title: "Use DTA Degree", description: "Direct Transfer Agreement guarantees junior standing", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
+            items.append(Solution(
+                title: "Finish Your DTA Degree",
+                description: "The Direct Transfer Agreement degree from \(cc) guarantees junior standing at \(uni). Without it, they evaluate you course-by-course and you'll lose credits. The DTA is the single most important thing you can do before transferring.",
+                points: 8, icon: "link", color: .blue, monthlyImpact: 0
+            ))
         case "North Carolina":
-            items.append(Solution(title: "Use CAA Transfer", description: "Comprehensive Articulation Agreement to UNC system", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
+            items.append(Solution(
+                title: "Use the CAA Transfer Path",
+                description: "The Comprehensive Articulation Agreement maps every \(cc) course to a UNC system equivalent. Print your degree audit, cross-reference it against the CAA transfer list on cfnc.org, and make sure every remaining course is on there. One random elective can cost you a semester.",
+                points: 8, icon: "link", color: .blue, monthlyImpact: 0
+            ))
         case "New Jersey":
-            items.append(Solution(title: "Use NJ Transfer", description: "Statewide transfer agreement to \(uni)", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
+            items.append(Solution(
+                title: "Run Your NJ Transfer Evaluation",
+                description: "Go to njtransfer.org and run a course-by-course evaluation from \(cc) to \(uni) right now. It shows exactly which credits transfer and which don't. Advisors at \(cc) sometimes use outdated equivalency charts — the website is the source of truth.",
+                points: 8, icon: "link", color: .blue, monthlyImpact: 0
+            ))
         default: break
         }
 
         items.append(contentsOf: [
-            Solution(title: "Submit FAFSA Renewal", description: "Financial aid must be renewed for \(uni)", points: 10, icon: "doc.text.fill", color: .green, monthlyImpact: 250),
-            Solution(title: "Appeal Credit Transfer", description: "Contest at-risk credits with syllabus docs", points: 5, icon: "arrow.uturn.backward", color: .red, monthlyImpact: 0),
-            Solution(title: "Find a Roommate", description: "Split rent costs to reduce monthly gap", points: 6, icon: "person.2.fill", color: .purple, monthlyImpact: 0),
-            Solution(title: "Apply for Transfer Scholarships", description: "\(uni) offers transfer-specific awards", points: 7, icon: "dollarsign.circle.fill", color: .orange, monthlyImpact: 150),
-            Solution(title: "Set Up Emergency Fund", description: "Save 3 months of projected gap before transfer", points: 3, icon: "banknote.fill", color: .cyan, monthlyImpact: 0),
-            Solution(title: "Get a Campus Job", description: "\(uni) Federal Work-Study covers ~$200/mo", points: 4, icon: "briefcase.fill", color: .brown, monthlyImpact: 200),
+            Solution(
+                title: "Renew Your FAFSA (Deadline: June 30)",
+                description: "Your FAFSA from \(cc) does NOT auto-transfer. You have to refile it and add \(uni)'s school code (search it on studentaid.gov). Do this the week you get accepted — don't wait for orientation. Late filers get less aid.",
+                points: 10, icon: "doc.text.fill", color: .green, monthlyImpact: 250
+            ),
+            Solution(
+                title: "Fight Your Wasted Credits",
+                description: "Don't just accept the rejection. Email the \(uni) department chair for each rejected course, attach your syllabus plus the course description, and request a manual equivalency review. I've seen students recover 6–9 credits this way. Polite persistence works.",
+                points: 5, icon: "arrow.uturn.backward", color: .red, monthlyImpact: 0
+            ),
+            Solution(
+                title: "Lock Down a Roommate Now",
+                description: "Don't wait until move-in week. Post in the \(uni) housing Facebook group and r/\(uni.replacingOccurrences(of: " ", with: "").lowercased()) subreddit now. A roommate doesn't just split rent — it splits utilities, internet, and renter's insurance. That's 30%+ off your monthly housing cost.",
+                points: 6, icon: "person.2.fill", color: .purple, monthlyImpact: 0
+            ),
+            Solution(
+                title: "Apply for the \(uni) Transfer Scholarship",
+                description: "Most transfer students skip this because they think scholarships are only for freshmen. Wrong. \(uni) has transfer-specific awards — usually $1,000–$3,000/year. Check \(uni.lowercased().replacingOccurrences(of: " ", with: "")).edu/scholarships and filter by 'transfer.' Application takes 20 minutes.",
+                points: 7, icon: "dollarsign.circle.fill", color: .orange, monthlyImpact: 150
+            ),
+            Solution(
+                title: "Build a 3-Month Emergency Cushion",
+                description: "Your runway is how long your savings last at your projected deficit. If you're negative $300/mo, you need at least $900 saved before day one. Open a separate high-yield savings account (Ally or Marcus) and automate $50/week into it starting today.",
+                points: 3, icon: "banknote.fill", color: .cyan, monthlyImpact: 0
+            ),
+            Solution(
+                title: "Get on Federal Work-Study First Week",
+                description: "Campus jobs through Work-Study pay $12–15/hr and work around your class schedule. The catch: positions fill in the first week of the semester. Don't wait for the job fair. Go to \(uni)'s student employment portal the day your semester starts and apply to 5+ positions.",
+                points: 4, icon: "briefcase.fill", color: .brown, monthlyImpact: 200
+            ),
         ])
 
         return items
