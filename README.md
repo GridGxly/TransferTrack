@@ -14,7 +14,7 @@
 
 ## The Problem
 
-Every year, over 3 million students transfer from community colleges to four-year universities. Most of them have no idea what the financial shock will look like until it's too late. Tuition doubles. Rent spikes. Credits get rejected and cost thousands. The academic transfer path is mapped out by advisors, but the financial transition is completely uncharted.
+Every year, 2.6 million students transfer from community colleges to four-year universities. Most of them have no idea what the financial shock will look like until it's too late. Tuition doubles. Rent spikes. Credits get rejected and cost thousands. The academic transfer path is mapped out by advisors, but the financial transition is completely uncharted.
 
 I know because I live it. I'm a first-generation CS student at Valencia College transferring to UCF. I built TransferTrack because no tool existed that could show me (in one screen) whether I could actually afford to transfer.
 
