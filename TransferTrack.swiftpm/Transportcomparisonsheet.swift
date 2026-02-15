@@ -15,56 +15,127 @@ struct TransportComparisonSheet: View {
         _selectedOption = State(initialValue: vm.transportMode)
     }
 
-    private let options: [VehicleOption] = [
-        VehicleOption(
-            name: "Keep Current Car",
-            subtitle: "2007 Infiniti FX35",
-            icon: "car.fill",
-            iconColor: .orange,
-            mileage: "14 MPG city · 19 hwy",
-            costs: [
-                CostLine(label: "Gas (800 mi/mo)", amount: 180, icon: "fuelpump.fill"),
-                CostLine(label: "Insurance (full coverage)", amount: 145, icon: "shield.fill"),
-                CostLine(label: "Maintenance (high mileage)", amount: 95, icon: "wrench.fill"),
-                CostLine(label: "UCF Parking Permit", amount: 53, icon: "parkingsign.circle.fill"),
-            ],
-            pros: ["No car payment", "Freedom to drive anywhere", "Move furniture yourself"],
-            cons: ["$180/mo in gas alone (V6 eats)", "17 years old — breakdowns add up", "Insurance is brutal on SUVs under 25"],
-            tag: nil
-        ),
-        VehicleOption(
-            name: "Swap to Used Car",
-            subtitle: "2019 Honda Civic (example)",
-            icon: "car.side.front.open.fill",
-            iconColor: .blue,
-            mileage: "30 MPG city · 38 hwy",
-            costs: [
-                CostLine(label: "Gas (800 mi/mo)", amount: 85, icon: "fuelpump.fill"),
-                CostLine(label: "Insurance (liability)", amount: 90, icon: "shield.fill"),
-                CostLine(label: "Maintenance", amount: 25, icon: "wrench.fill"),
-                CostLine(label: "UCF Parking Permit", amount: 53, icon: "parkingsign.circle.fill"),
-            ],
-            pros: ["Half the gas cost", "Way cheaper insurance", "Sell the FX35 for ~$4–6K cash injection"],
-            cons: ["Car payment ~$280/mo if financed", "Depreciation on the new purchase", "Time spent selling + buying"],
-            tag: nil
-        ),
-        VehicleOption(
-            name: "UCF Shuttle + Transit",
-            subtitle: "Free with tuition fees",
-            icon: "bus.fill",
-            iconColor: .green,
-            mileage: "SunRail · Lynx · UCF Shuttle",
-            costs: [
-                CostLine(label: "UCF Shuttle", amount: 0, icon: "bus.fill"),
-                CostLine(label: "Lynx Bus Pass", amount: 0, icon: "tram.fill"),
-                CostLine(label: "SunRail (occasional)", amount: 0, icon: "tram.circle.fill"),
-                CostLine(label: "Lyft/Uber (emergencies)", amount: 40, icon: "car.circle.fill"),
-            ],
-            pros: ["$0/mo base cost", "Sell the car → $4–6K in savings", "No parking, insurance, or gas stress"],
-            cons: ["Limited late-night routes", "Grocery trips need planning", "64-mile commute home is harder"],
-            tag: "BEST VALUE"
-        ),
-    ]
+
+
+    private struct UniTransit {
+        let parkingCost: Int
+        let shuttleName: String
+        let busName: String
+        let railName: String
+        let systemsSummary: String
+    }
+
+    private var transit: UniTransit {
+        switch vm.selectedUni {
+        case "UCF":
+            return UniTransit(parkingCost: 53, shuttleName: "UCF Shuttle", busName: "Lynx Bus Pass", railName: "SunRail", systemsSummary: "SunRail · Lynx · UCF Shuttle")
+        case "Univ. of Florida":
+            return UniTransit(parkingCost: 48, shuttleName: "Gator Aider Shuttle", busName: "RTS Bus Pass", railName: "Regional Transit", systemsSummary: "RTS · Gator Aider · Later Gator")
+        case "FSU":
+            return UniTransit(parkingCost: 45, shuttleName: "Seminole Express", busName: "StarMetro Pass", railName: "Regional Transit", systemsSummary: "StarMetro · Seminole Express")
+        case "USF":
+            return UniTransit(parkingCost: 50, shuttleName: "Bull Runner", busName: "HART Bus Pass", railName: "TECO Streetcar", systemsSummary: "HART · Bull Runner · TECO")
+        case "FIU":
+            return UniTransit(parkingCost: 55, shuttleName: "FIU Shuttle", busName: "Miami-Dade Transit", railName: "Metrorail", systemsSummary: "Metrorail · MDT Bus · FIU Shuttle")
+        case "UCLA":
+            return UniTransit(parkingCost: 110, shuttleName: "BruinBus", busName: "Big Blue Bus", railName: "Metro Rail", systemsSummary: "Metro · Big Blue Bus · BruinBus")
+        case "UC Berkeley":
+            return UniTransit(parkingCost: 95, shuttleName: "Bear Transit", busName: "AC Transit Pass", railName: "BART", systemsSummary: "BART · AC Transit · Bear Transit")
+        case "UC Davis":
+            return UniTransit(parkingCost: 65, shuttleName: "Unitrans", busName: "Yolobus Pass", railName: "Amtrak Capitol Corridor", systemsSummary: "Unitrans · Yolobus · Amtrak")
+        case "CSU LA":
+            return UniTransit(parkingCost: 55, shuttleName: "CSULA Shuttle", busName: "Metro Bus Pass", railName: "Metro Gold Line", systemsSummary: "Metro Gold Line · Metro Bus · Shuttle")
+        case "San Jose State":
+            return UniTransit(parkingCost: 60, shuttleName: "SJSU Shuttle", busName: "VTA Bus Pass", railName: "VTA Light Rail", systemsSummary: "VTA Light Rail · VTA Bus · Shuttle")
+        case "UT Austin":
+            return UniTransit(parkingCost: 65, shuttleName: "UT Shuttle", busName: "CapMetro Pass", railName: "MetroRail", systemsSummary: "CapMetro · MetroRail · UT Shuttle")
+        case "Texas A&M":
+            return UniTransit(parkingCost: 45, shuttleName: "Aggie Spirit", busName: "Brazos Transit", railName: "Regional Transit", systemsSummary: "Brazos Transit · Aggie Spirit")
+        case "Univ. of Houston":
+            return UniTransit(parkingCost: 55, shuttleName: "Cougar Line", busName: "METRO Bus Pass", railName: "METRORail", systemsSummary: "METRORail · METRO Bus · Cougar Line")
+        case "UTSA":
+            return UniTransit(parkingCost: 40, shuttleName: "Runner Shuttle", busName: "VIA Transit Pass", railName: "VIA Transit", systemsSummary: "VIA Transit · Runner Shuttle")
+        case "Texas State":
+            return UniTransit(parkingCost: 42, shuttleName: "Bobcat Shuttle", busName: "CARTS Transit", railName: "Regional Transit", systemsSummary: "CARTS · Bobcat Shuttle")
+        case "UVA":
+            return UniTransit(parkingCost: 55, shuttleName: "UTS Shuttle", busName: "Charlottesville Transit", railName: "Amtrak", systemsSummary: "CTS · UTS Shuttle · Amtrak")
+        case "Virginia Tech":
+            return UniTransit(parkingCost: 48, shuttleName: "BT Shuttle", busName: "Blacksburg Transit", railName: "Regional Transit", systemsSummary: "Blacksburg Transit · BT Shuttle")
+        case "George Mason":
+            return UniTransit(parkingCost: 60, shuttleName: "Mason Shuttle", busName: "Fairfax Connector", railName: "Metro Orange Line", systemsSummary: "Metro · Fairfax Connector · Mason Shuttle")
+        case "Univ. of Washington":
+            return UniTransit(parkingCost: 80, shuttleName: "UW Shuttle", busName: "King County Metro", railName: "Link Light Rail", systemsSummary: "Link Rail · Metro · UW Shuttle")
+        case "WSU":
+            return UniTransit(parkingCost: 38, shuttleName: "Cougar Shuttle", busName: "Pullman Transit", railName: "Regional Transit", systemsSummary: "Pullman Transit · Cougar Shuttle")
+        case "UNC Chapel Hill":
+            return UniTransit(parkingCost: 55, shuttleName: "P2P Shuttle", busName: "Chapel Hill Transit", railName: "GoTriangle", systemsSummary: "CHT · P2P · GoTriangle")
+        case "NC State":
+            return UniTransit(parkingCost: 50, shuttleName: "Wolfline", busName: "GoRaleigh Pass", railName: "GoTriangle", systemsSummary: "GoRaleigh · Wolfline · GoTriangle")
+        case "Rutgers":
+            return UniTransit(parkingCost: 65, shuttleName: "Rutgers Shuttle", busName: "NJ Transit Bus", railName: "NJ Transit Rail", systemsSummary: "NJ Transit · Rutgers Shuttle")
+        case "NJIT":
+            return UniTransit(parkingCost: 70, shuttleName: "NJIT Shuttle", busName: "NJ Transit Bus", railName: "Newark Light Rail", systemsSummary: "Light Rail · NJ Transit · Shuttle")
+        case "Rowan Univ.":
+            return UniTransit(parkingCost: 45, shuttleName: "Rowan Shuttle", busName: "NJ Transit Bus", railName: "PATCO", systemsSummary: "NJ Transit · PATCO · Shuttle")
+        default:
+            return UniTransit(parkingCost: 50, shuttleName: "\(vm.selectedUni) Shuttle", busName: "Local Bus Pass", railName: "Regional Rail", systemsSummary: "Campus Shuttle · Local Transit")
+        }
+    }
+
+
+
+    private var options: [VehicleOption] {
+        [
+            VehicleOption(
+                name: "Keep Current Car",
+                subtitle: "Your current vehicle",
+                icon: "car.fill",
+                iconColor: .orange,
+                mileage: "Your current MPG",
+                costs: [
+                    CostLine(label: "Gas (estimated)", amount: 180, icon: "fuelpump.fill"),
+                    CostLine(label: "Insurance (full coverage)", amount: 145, icon: "shield.fill"),
+                    CostLine(label: "Maintenance", amount: 95, icon: "wrench.fill"),
+                    CostLine(label: "\(vm.selectedUni) Parking Permit", amount: transit.parkingCost, icon: "parkingsign.circle.fill"),
+                ],
+                pros: ["No car payment", "Freedom to drive anywhere", "Move furniture yourself"],
+                cons: ["Gas adds up fast on a long commute", "Older cars mean unpredictable repairs", "Insurance is higher for drivers under 25"],
+                tag: nil
+            ),
+            VehicleOption(
+                name: "Swap to Used Car",
+                subtitle: "Fuel-efficient alternative",
+                icon: "car.side.front.open.fill",
+                iconColor: .blue,
+                mileage: "30+ MPG city · 38+ hwy",
+                costs: [
+                    CostLine(label: "Gas (estimated)", amount: 85, icon: "fuelpump.fill"),
+                    CostLine(label: "Insurance (liability)", amount: 90, icon: "shield.fill"),
+                    CostLine(label: "Maintenance", amount: 25, icon: "wrench.fill"),
+                    CostLine(label: "\(vm.selectedUni) Parking Permit", amount: transit.parkingCost, icon: "parkingsign.circle.fill"),
+                ],
+                pros: ["Half the gas cost", "Way cheaper insurance", "Sell current car for cash injection"],
+                cons: ["Car payment if financed (~$280/mo)", "Depreciation on the new purchase", "Time spent selling + buying"],
+                tag: nil
+            ),
+            VehicleOption(
+                name: "\(vm.selectedUni) Transit",
+                subtitle: "Free with tuition fees",
+                icon: "bus.fill",
+                iconColor: .green,
+                mileage: transit.systemsSummary,
+                costs: [
+                    CostLine(label: transit.shuttleName, amount: 0, icon: "bus.fill"),
+                    CostLine(label: transit.busName, amount: 0, icon: "tram.fill"),
+                    CostLine(label: transit.railName, amount: 0, icon: "tram.circle.fill"),
+                    CostLine(label: "Lyft/Uber (emergencies)", amount: 40, icon: "car.circle.fill"),
+                ],
+                pros: ["$0/mo base cost", "Sell your car for savings", "No parking, insurance, or gas stress"],
+                cons: ["Limited late-night routes", "Grocery trips need planning", "Long-distance commute home is harder"],
+                tag: "BEST VALUE"
+            ),
+        ]
+    }
 
     var body: some View {
         NavigationStack {
@@ -78,9 +149,10 @@ struct TransportComparisonSheet: View {
                             .foregroundStyle(.blue)
                         Text("Transport Advisor")
                             .font(.title2.weight(.bold))
-                        Text("Compare your real monthly costs")
+                        Text("Compare your real monthly costs at \(vm.selectedUni)")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
                     }
                     .padding(.top, 8)
 
@@ -113,7 +185,7 @@ struct TransportComparisonSheet: View {
                                     Text(total == 0 ? "Free" : "$\(total)")
                                         .font(.system(.headline, design: .rounded).weight(.bold))
                                         .foregroundStyle(isSelected ? .white : .primary)
-                                    Text(option.name.components(separatedBy: " ").first ?? "")
+                                    Text(index == 2 ? "Transit" : option.name.components(separatedBy: " ").first ?? "")
                                         .font(.caption2)
                                         .foregroundStyle(isSelected ? .white.opacity(0.8) : .secondary)
                                 }
@@ -256,6 +328,7 @@ struct TransportOptionCard: View {
                             Text(option.name)
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(.primary)
+                                .lineLimit(1)
                             if let tag = option.tag {
                                 Text(tag)
                                     .font(.system(size: 9, weight: .bold))
@@ -272,6 +345,7 @@ struct TransportOptionCard: View {
                         Text(option.mileage)
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
+                            .lineLimit(1)
                     }
 
                     Spacer()

@@ -41,6 +41,7 @@ struct DashboardView: View {
                 NavigationStack {
                     AcademicsTab(vm: vm)
                         .navigationTitle("Academics")
+                        .navigationBarTitleDisplayMode(.inline)
                 }
                 .tag(1)
 

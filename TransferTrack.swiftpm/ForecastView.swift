@@ -324,7 +324,7 @@ struct ForecastTab: View {
         switch vm.transportMode {
         case 0: return "Gas + insurance + maintenance + parking"
         case 1: return "Lower gas & insurance, smaller payment"
-        case 2: return "Free UCF shuttle pass with tuition"
+        case 2: return "Free \(vm.selectedUni) shuttle pass with tuition"
         default: return ""
         }
     }

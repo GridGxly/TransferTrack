@@ -15,6 +15,7 @@ struct AcademicsTab: View {
     @State private var isEditing = false
     @State private var showSurchargeAlert = false
     @State private var hasShownSurchargeAlert = false
+    @State private var shouldScrollToWasted = false
 
     private var courses: [SchoolDatabase.CourseTransfer] { vm.courses }
     private var transferable: [SchoolDatabase.CourseTransfer] { vm.transferable }
@@ -35,231 +36,242 @@ struct AcademicsTab: View {
 
     var body: some View {
         ZStack {
-            List {
-                Section {
-                    VStack(spacing: 12) {
-                        HStack {
-                            Image(systemName: "gauge.open.with.lines.needle.33percent")
-                                .foregroundStyle(transferEfficiency >= 0.8 ? .green : .orange)
-                                .font(.title3)
-                            Text("Transfer Efficiency").font(.headline)
-                            Spacer()
-                            Text("\(Int(transferEfficiency * 100))%")
-                                .font(.title3.weight(.bold))
-                                .foregroundStyle(transferEfficiency >= 0.8 ? .green : .orange)
-                                .contentTransition(.numericText())
-                        }
-
-                        Gauge(value: transferEfficiency) { EmptyView() }
-                        currentValueLabel: {
-                            Text("\(transferableCredits)/\(totalCredits) cr").font(.caption2.weight(.medium))
-                        } minimumValueLabel: {
-                            Text("0%").font(.caption2).foregroundStyle(.red)
-                        } maximumValueLabel: {
-                            Text("100%").font(.caption2).foregroundStyle(.green)
-                        }
-                        .gaugeStyle(.linearCapacity)
-                        .tint(Gradient(colors: [.red, .orange, .green]))
-
-                        if grandTotalCredits >= 60 {
-                            HStack(spacing: 6) {
-                                Image(systemName: "star.fill").foregroundStyle(.yellow).font(.caption)
-                                Text("AA/AS Degree threshold reached (\(grandTotalCredits) credits)")
-                                    .font(.caption.weight(.medium)).foregroundStyle(.green)
-                            }
-                            .padding(8)
-                            .frame(maxWidth: .infinity)
-                            .background(Color.green.opacity(0.08))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                        }
-                    }
-                }
-
-                if !wasted.isEmpty {
+            ScrollViewReader { proxy in
+                List {
                     Section {
-                        TipView(excessCreditTip)
-                    }
-                    .onAppear { ExcessCreditTip.hasWastedCredits = true }
-                }
-
-                Section {
-                    ForEach(transferable) { course in
-                        CourseRow(course: course, style: .transferable)
-                    }
-                } header: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "checkmark.seal.fill").foregroundStyle(.green)
-                        Text("Degree Applicable")
-                        Spacer()
-                        Text("\(transferable.count) courses · \(transferableCredits) cr")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-
-
-                if !userAddedCourses.isEmpty {
-                    Section {
-                        ForEach(userAddedCourses) { course in
-                            HStack(spacing: 10) {
-                                Image(systemName: iconFor(course.code))
-                                    .font(.caption)
-                                    .foregroundStyle(.blue.opacity(0.7))
-                                    .frame(width: 24)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(course.title)
-                                        .font(.subheadline.weight(.medium))
-                                        .lineLimit(1)
-                                    Text("\(course.code) · \(course.credits) cr · \(course.grade)")
-                                        .font(.caption).foregroundStyle(.secondary)
-                                        .lineLimit(1)
-                                }
+                        VStack(spacing: 12) {
+                            HStack {
+                                Image(systemName: "gauge.open.with.lines.needle.33percent")
+                                    .foregroundStyle(transferEfficiency >= 0.8 ? .green : .orange)
+                                    .font(.title3)
+                                Text("Transfer Efficiency").font(.headline)
                                 Spacer()
-                                Text(course.grade)
-                                    .font(.caption.weight(.bold))
-                                    .foregroundStyle(.blue)
-                                    .padding(.horizontal, 8).padding(.vertical, 3)
-                                    .background(Color.blue.opacity(0.1))
-                                    .clipShape(Capsule())
+                                Text("\(Int(transferEfficiency * 100))%")
+                                    .font(.title3.weight(.bold))
+                                    .foregroundStyle(transferEfficiency >= 0.8 ? .green : .orange)
+                                    .contentTransition(.numericText())
                             }
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                Button(role: .destructive) {
-                                    withAnimation {
-                                        modelContext.delete(course)
-                                    }
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
+
+                            Gauge(value: transferEfficiency) { EmptyView() }
+                            currentValueLabel: {
+                                Text("\(transferableCredits)/\(totalCredits) cr").font(.caption2.weight(.medium))
+                            } minimumValueLabel: {
+                                Text("0%").font(.caption2).foregroundStyle(.red)
+                            } maximumValueLabel: {
+                                Text("100%").font(.caption2).foregroundStyle(.green)
                             }
-                            .contextMenu {
-                                Button(role: .destructive) {
-                                    withAnimation {
-                                        modelContext.delete(course)
-                                    }
-                                } label: {
-                                    Label("Delete Course", systemImage: "trash")
+                            .gaugeStyle(.linearCapacity)
+                            .tint(Gradient(colors: [.red, .orange, .green]))
+
+                            if grandTotalCredits >= 60 {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "star.fill").foregroundStyle(.yellow).font(.caption)
+                                    Text("AA/AS Degree threshold reached (\(grandTotalCredits) credits)")
+                                        .font(.caption.weight(.medium)).foregroundStyle(.green)
                                 }
+                                .padding(8)
+                                .frame(maxWidth: .infinity)
+                                .background(Color.green.opacity(0.08))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
                         }
-                        .onDelete { offsets in
-                            for i in offsets { modelContext.delete(userAddedCourses[i]) }
+                    }
+
+                    if !wasted.isEmpty {
+                        Section {
+                            TipView(excessCreditTip)
+                        }
+                        .onAppear { ExcessCreditTip.hasWastedCredits = true }
+                    }
+
+                    Section {
+                        ForEach(transferable) { course in
+                            CourseRow(course: course, style: .transferable)
                         }
                     } header: {
                         HStack(spacing: 6) {
-                            Image(systemName: "plus.circle.fill").foregroundStyle(.blue)
-                            Text("Your Added Courses")
+                            Image(systemName: "checkmark.seal.fill").foregroundStyle(.green)
+                            Text("Degree Applicable")
                             Spacer()
-                            Text("\(userAddedCourses.count) courses · \(userAddedTotal) cr")
+                            Text("\(transferable.count) courses · \(transferableCredits) cr")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
-                    } footer: {
-                        Text("Swipe left on any course to delete it, or long-press for options.")
                     }
-                }
 
 
-                if !wasted.isEmpty {
-                    Section {
-                        ForEach(wasted) { course in
-                            Button {
-                                wastedInfoCourse = course
-                            } label: {
+                    if !userAddedCourses.isEmpty {
+                        Section {
+                            ForEach(userAddedCourses) { course in
                                 HStack(spacing: 10) {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundStyle(.red.opacity(0.5))
-                                        .font(.caption).frame(width: 24)
+                                    Image(systemName: iconFor(course.code))
+                                        .font(.caption)
+                                        .foregroundStyle(.blue.opacity(0.7))
+                                        .frame(width: 24)
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text(course.name)
+                                        Text(course.title)
                                             .font(.subheadline.weight(.medium))
-                                            .foregroundStyle(.primary)
+                                            .lineLimit(1)
                                         Text("\(course.code) · \(course.credits) cr · \(course.grade)")
                                             .font(.caption).foregroundStyle(.secondary)
+                                            .lineLimit(1)
                                     }
                                     Spacer()
-                                    Text("$\(course.costIfWasted)")
-                                        .font(.caption.weight(.bold)).foregroundStyle(.red)
-                                    Image(systemName: "chevron.right")
-                                        .font(.caption2).foregroundStyle(.tertiary)
+                                    Text(course.grade)
+                                        .font(.caption.weight(.bold))
+                                        .foregroundStyle(.blue)
+                                        .padding(.horizontal, 8).padding(.vertical, 3)
+                                        .background(Color.blue.opacity(0.1))
+                                        .clipShape(Capsule())
+                                }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        withAnimation {
+                                            modelContext.delete(course)
+                                        }
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
+                                .contextMenu {
+                                    Button(role: .destructive) {
+                                        withAnimation {
+                                            modelContext.delete(course)
+                                        }
+                                    } label: {
+                                        Label("Delete Course", systemImage: "trash")
+                                    }
                                 }
                             }
-                            .buttonStyle(.plain)
+                            .onDelete { offsets in
+                                for i in offsets { modelContext.delete(userAddedCourses[i]) }
+                            }
+                        } header: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "plus.circle.fill").foregroundStyle(.blue)
+                                Text("Your Added Courses")
+                                Spacer()
+                                Text("\(userAddedCourses.count) courses · \(userAddedTotal) cr")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                        } footer: {
+                            Text("Swipe left on any course to delete it, or long-press for options.")
                         }
+                    }
+
+
+                    if !wasted.isEmpty {
+                        Section {
+                            ForEach(wasted) { course in
+                                Button {
+                                    wastedInfoCourse = course
+                                } label: {
+                                    HStack(spacing: 10) {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundStyle(.red.opacity(0.5))
+                                            .font(.caption).frame(width: 24)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(course.name)
+                                                .font(.subheadline.weight(.medium))
+                                                .foregroundStyle(.primary)
+                                            Text("\(course.code) · \(course.credits) cr · \(course.grade)")
+                                                .font(.caption).foregroundStyle(.secondary)
+                                        }
+                                        Spacer()
+                                        Text("$\(course.costIfWasted)")
+                                            .font(.caption.weight(.bold)).foregroundStyle(.red)
+                                        Image(systemName: "chevron.right")
+                                            .font(.caption2).foregroundStyle(.tertiary)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        } header: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                                Text("Wasted Credits")
+                                Spacer()
+                                Text("$\(wastedCost.formatted()) · \(wastedMonths) mo lost")
+                                    .font(.caption).foregroundStyle(.red)
+                            }
+                        } footer: {
+                            Text("Tap any course to see why it won't transfer to \(vm.selectedUni).")
+                        }
+                        .id("wastedSection")
+                    }
+
+
+                    Section {
+                        Button { showAddCourse = true } label: {
+                            HStack(spacing: 14) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.title2)
+                                    .foregroundStyle(.green)
+                                    .frame(width: 44, height: 44)
+                                    .background(Color.green.opacity(0.1))
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Add Course Manually")
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundStyle(.primary)
+                                    Text("Type in your course code, title, and grade")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(2)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.tertiary)
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.plain)
+
+                        Button { showScanner = true } label: {
+                            HStack(spacing: 14) {
+                                Image(systemName: "doc.text.viewfinder")
+                                    .font(.title2)
+                                    .foregroundStyle(.blue)
+                                    .frame(width: 44, height: 44)
+                                    .background(Color.blue.opacity(0.1))
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Scan Transcript")
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundStyle(.primary)
+                                    Text("Use your camera to detect course codes automatically")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(2)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.tertiary)
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.plain)
                     } header: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
-                            Text("Wasted Credits")
-                            Spacer()
-                            Text("$\(wastedCost.formatted()) · \(wastedMonths) mo lost")
-                                .font(.caption).foregroundStyle(.red)
-                        }
-                    } footer: {
-                        Text("Tap any course to see why it won't transfer to \(vm.selectedUni).")
+                        Text("Add Courses")
+                    }
+
+                    if courses.isEmpty {
+                        ContentUnavailableView("No Transfer Data", systemImage: "graduationcap.fill",
+                            description: Text("Select your colleges to see your credit analysis."))
                     }
                 }
-
-
-                Section {
-                    Button { showAddCourse = true } label: {
-                        HStack(spacing: 14) {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.title2)
-                                .foregroundStyle(.green)
-                                .frame(width: 44, height: 44)
-                                .background(Color.green.opacity(0.1))
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Add Course Manually")
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(.primary)
-                                Text("Type in your course code, title, and grade")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(2)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.tertiary)
+                .listStyle(.insetGrouped)
+                .safeAreaPadding(.bottom, 80)
+                .onChange(of: shouldScrollToWasted) { _, newVal in
+                    if newVal {
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            proxy.scrollTo("wastedSection", anchor: .top)
                         }
-                        .padding(.vertical, 4)
+                        shouldScrollToWasted = false
                     }
-                    .buttonStyle(.plain)
-
-                    Button { showScanner = true } label: {
-                        HStack(spacing: 14) {
-                            Image(systemName: "doc.text.viewfinder")
-                                .font(.title2)
-                                .foregroundStyle(.blue)
-                                .frame(width: 44, height: 44)
-                                .background(Color.blue.opacity(0.1))
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Scan Transcript")
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(.primary)
-                                Text("Use your camera to detect course codes automatically")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(2)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.tertiary)
-                        }
-                        .padding(.vertical, 4)
-                    }
-                    .buttonStyle(.plain)
-                } header: {
-                    Text("Add Courses")
-                }
-
-                if courses.isEmpty {
-                    ContentUnavailableView("No Transfer Data", systemImage: "graduationcap.fill",
-                        description: Text("Select your colleges to see your credit analysis."))
                 }
             }
-            .listStyle(.insetGrouped)
-            .safeAreaPadding(.bottom, 80)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
@@ -299,6 +311,9 @@ struct AcademicsTab: View {
             }
             .alert("Excess Credit Surcharge Warning", isPresented: $showSurchargeAlert) {
                 Button("View Wasted Credits") {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        shouldScrollToWasted = true
+                    }
                 }
                 Button("Got It", role: .cancel) { }
             } message: {
