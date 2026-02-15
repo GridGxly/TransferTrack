@@ -1,112 +1,69 @@
-<div align="center">
-
 # TransferTrack
 
 **Navigate the 2+2 transfer path without losing credits or cash.**
 
-The on-device financial forecasting agent built for community college transfer students.
-
-![Swift](https://img.shields.io/badge/Swift-5.9+-F05138?style=flat-square&logo=swift&logoColor=white)
-![SwiftUI](https://img.shields.io/badge/SwiftUI-iOS%2017+-007AFF?style=flat-square&logo=apple&logoColor=white)
-![CoreML](https://img.shields.io/badge/CoreML-VisionKit-34C759?style=flat-square&logo=apple&logoColor=white)
-![Siri](https://img.shields.io/badge/Siri-AppIntents-5856D6?style=flat-square&logo=apple&logoColor=white)
-![Offline](https://img.shields.io/badge/100%25-Offline%20First-FF9500?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square)
-
-*2026 Apple Swift Student Challenge Submission*
-
-</div>
+[![Swift](https://img.shields.io/badge/Swift-5.9-F05138?logo=swift&logoColor=white)](https://swift.org)
+[![Platform](https://img.shields.io/badge/Platform-iOS_17+-007AFF?logo=apple&logoColor=white)](https://developer.apple.com/ios/)
+[![SwiftUI](https://img.shields.io/badge/UI-SwiftUI-blue?logo=swift&logoColor=white)](https://developer.apple.com/swiftui/)
+[![CoreML](https://img.shields.io/badge/ML-CoreML-green?logo=apple&logoColor=white)](https://developer.apple.com/machine-learning/)
+[![Siri](https://img.shields.io/badge/Voice-AppIntents-purple?logo=apple&logoColor=white)](https://developer.apple.com/documentation/appintents)
+[![License](https://img.shields.io/badge/License-MIT-lightgrey)](LICENSE)
+[![Swift Student Challenge](https://img.shields.io/badge/SSC-2026_Submission-gold?logo=apple&logoColor=white)](https://developer.apple.com/swift-student-challenge/)
 
 ---
 
 ## The Problem
 
-The "2+2" transfer path is sold as the smart, cheap way to get a degree. For thousands of students, it's a trap.
+Every year, over 3 million students transfer from community colleges to four-year universities. Most of them have no idea what the financial shock will look like until it's too late. Tuition doubles. Rent spikes. Credits get rejected and cost thousands. The academic transfer path is mapped out by advisors, but the financial transition is completely uncharted.
 
-Students transfer from community college to university and get hit with **Transfer Shock**: credits get rejected, tuition doubles, financial aid formulas change, and they suddenly need to qualify for an apartment with no credit history.
+I know because I live it. I'm a first-generation CS student at Valencia College transferring to UCF. I built TransferTrack because no tool existed that could show me (in one screen) whether I could actually afford to transfer.
 
-Standard budgeting apps track what you spent yesterday. **TransferTrack predicts exactly what your life will look like the day you step onto the university campus.**
+## What It Does
 
----
+TransferTrack is a **100% offline, on-device financial forecasting agent** built for community college transfer students. It calculates your exact monthly deficit (or surplus) after transferring, scores your overall viability, and gives you actionable steps to close the gap.
 
 ## Features
 
-### 📊 Financial Forecast Engine
-- **Monthly Gap Calculator** — Projects your income vs. expenses *after* transfer, factoring in tuition jumps, rent changes, and transport costs
-- **Viability Score** — A dynamic 0–100 score computed from GPA, credits, savings, and rent (with optional CoreML model inference)
-- **Tuition Jump Visualization** — Interactive Swift Charts comparing CC vs. university tuition with tap-to-inspect details
+- **Ticking Math Engine** — Custom `CountingText` and `CountingDollarText` views conforming to `Animatable` make your Monthly Gap visually count from $0 to your real number (like $-331) over 1.4 seconds. The Viability Ring counts frame-by-frame alongside the arc. Numbers feel alive, not static.
 
-### 📷 Transcript Scanner (CoreML + VisionKit)
-- Point your camera at a paper transcript
-- Regex-backed `DataScannerViewController` detects course codes like `MAC 1105` in real-time
-- Auto-maps 60+ course prefixes to human-readable titles
-- Tap detected codes to add — no manual typing required
+- **CoreML Transcript Scanner** — Point your camera at a physical paper transcript. VisionKit + CoreML detect course codes (regex pattern: `[A-Z]{2,4}\s?\d{4}[A-Z]?`), and the app digitizes them into transferable vs. wasted credit buckets instantly.
 
-### 🗣️ Siri Integration (AppIntents)
-- *"Hey Siri, check my transfer plan in TransferTrack"*
-- Returns your Monthly Gap and Viability Score entirely hands-free
-- 10 phrase variations with `INAlternativeAppNames` for natural speech recognition
-- Works even when the app is backgrounded
+- **Siri Integration (AppIntents)** — Say "Siri, check my transfer plan in TransferTrack." Siri reads your Monthly Gap and Viability Score hands-free. Ten phrase variations registered.
 
-### 🏠 Interactive Housing Map
-- MapKit-powered apartment listings positioned by distance from campus
-- Color-coded approval odds (High/Medium/Low) based on student-friendly criteria
-- Custom bottom sheet with peek/half/full detents and gesture-driven snapping
-- Route polylines from apartment to campus
+- **Housing Deck** — Swipeable `TabView(.page)` apartment cards with gradient headers color-coded by approval odds (green/orange/red), featured badges ("NO CREDIT CHECK", "PER-BED LEASE", "BEST VALUE"), rent vs. budget comparison pills, and insider tips per approval type. Map pins sync bidirectionally with card swipes.
 
-### 📚 Academic Credit Analysis
-- Automatic transfer eligibility checking per school pair
-- **Wasted Credits Alert** — Native `.alert()` warns about Florida's Excess Credit Surcharge (50% penalty above 120% degree credits)
-- SwiftData persistence for user-added courses with swipe-to-delete
+- **Transport Advisor** — Full-screen comparison modal with real cost breakdowns for three options: Keep Current Car, Swap to Used Car, or Campus Transit. Each option shows itemized monthly costs, pros/cons, and a total. Fully dynamic: parking permits, shuttle names, and transit systems adapt to whichever university you select.
 
-### 💡 Solutions Tab (Gamified Recovery)
-- Actionable steps: find a roommate, apply for state scholarships, get a campus job
-- Each solution **dynamically recalculates** the Viability Score and Monthly Gap in real-time
-- State-specific: DirectConnect (FL), TAG (CA), TEXAS Grant (TX), GAA (VA), DTA (WA), CAA (NC), NJ Transfer (NJ)
-- Progress bar with points system — celebrate when score turns green
+- **Insider Solutions** — Every solution is hand-written with specific deadlines, dollar amounts, and insider tricks. State-specific paths for Florida, California, Texas, Virginia, Washington, North Carolina, and New Jersey. No generic advice.
 
-### 🎨 UI/UX Polish
-- **Framer Motion onboarding** — Custom `.framerFade(delay:yOffset:)` ViewModifier creates staggered cascading entrance animations
-- **Liquid Glass Tab Bar** — iOS 26 `GlassEffect` with fallback `FloatingTabBar` featuring gooey blob physics, rim lighting, and bounce animations
-- **Light/Dark Mode** — `systemGroupedBackground` + `.cardBorder()` modifier for perfect contrast in both modes
-- **Confetti celebrations** — 60-credit milestone overlay and green-score celebration with particle effects
+- **Wasted Credit Alerts** — Auto-detects courses that won't transfer, calculates the dollar cost, warns about Florida's Excess Credit Surcharge (50% more per credit hour past 120%), and scrolls directly to the problem courses when you tap "View Wasted Credits."
+
+- **Dynamic Everything** — Switch your transfer path from Valencia → UCF to Santa Monica → UCLA and every screen adapts: tuition chart, housing listings, transport costs, transit system names, course mappings, solutions, and Siri cache.
+
+- **Framer Motion Onboarding** — Staggered fade-in animations with custom `FramerFadeModifier` across a 6-step onboarding flow. Loading screen cycles through analysis steps with live progress indicators.
+
+- **Liquid Glass Tab Bar** — iOS 26 `GlassEffect` tab bar with `UISegmentedControl` bridge for modern devices, plus a custom `FloatingTabBar` with liquid blob animation (stretch, compress, rim light) as a fallback.
+
+- **Light/Dark/System Themes** — Segmented picker in Edit Plan sheet applies instantly via `.preferredColorScheme`. Cards use adaptive borders in light mode for depth.
+
+> **Note:** Xcode app playgrounds are run in Simulator. Camera features (transcript scanner) require a physical device.
 
 ---
 
-## The Tech Stack
+## Tech Stack
 
 | Layer | Technology | Why |
 |-------|-----------|-----|
-| **UI Framework** | SwiftUI + iOS 17 | Declarative, composable, challenge-compliant |
-| **Data Persistence** | SwiftData (`@Model`) | Native Swift ORM for user courses |
-| **State Management** | `@Observable` + `updateTrigger` pattern | Forces computed property recalc after async dismissals |
-| **Camera/OCR** | VisionKit `DataScannerViewController` | On-device text recognition, no API calls |
-| **ML Inference** | CoreML (`MLModel`) | Optional viability prediction with CPU-only config |
-| **Voice Assistant** | AppIntents + Siri Shortcuts | Hands-free access to financial data |
-| **Maps** | MapKit + `MapPolyline` | Housing visualization with route overlays |
-| **Charts** | Swift Charts | Tuition comparison bar charts |
-| **Tips** | TipKit | Contextual education (Excess Credit Surcharge) |
-| **Concurrency** | `@MainActor`, Swift strict concurrency | Zero warnings under strict checking |
-| **Animations** | Custom ViewModifiers, `.spring()`, `.symbolEffect` | 60fps cascading and bouncing transitions |
-
-**Architecture**: Single-target `.swiftpm` App Playground. Zero external dependencies. Zero network calls. 100% offline.
-
----
-
-## Prerequisites & Installation
-
-### For Swift Student Challenge Judges
-1. Open the `.swiftpm` file in **Xcode 16+**
-2. Select **iPhone 14 Plus** simulator (or any iOS 17+ device)
-3. Press **Run** (⌘R)
-4. The app can be experienced within **3 minutes**
-
-### Requirements
-- Xcode 16.0+
-- iOS 17.0+ deployment target
-- No external packages or CocoaPods required
-
-> **Note**: Xcode app playgrounds are run in Simulator. Camera features (transcript scanner) require a physical device.
+| UI | SwiftUI | Declarative, fits the single-file .swiftpm constraint |
+| Data | SwiftData + `@Observable` | Persistent user courses with `@Query`, reactive ViewModel |
+| ML | CoreML | On-device viability prediction (GPA, Credits, Savings, Rent) |
+| Vision | VisionKit `DataScannerViewController` | Live camera text recognition for transcript scanning |
+| Voice | AppIntents + `AppShortcutsProvider` | Siri integration with 10 registered phrases |
+| Animation | `Animatable` protocol | Frame-by-frame counting text for financial figures |
+| Tips | TipKit | Contextual Excess Credit Surcharge education |
+| Maps | MapKit | Interactive apartment pins with selection sync |
+| Charts | Swift Charts | Tuition comparison bar chart with tap interaction |
+| Haptics | `UIImpactFeedbackGenerator` + `.sensoryFeedback` | Tactile response on gap changes, tab switches, completions |
 
 ---
 
@@ -120,6 +77,28 @@ Standard budgeting apps track what you spent yesterday. **TransferTrack predicts
 | **Light/Dark Mode** | `systemGroupedBackground` / `secondarySystemGroupedBackground` with conditional card borders |
 | **Reduce Motion** | Spring animations respect system preference via implicit SwiftUI handling |
 | **Hands-Free** | Full Siri integration via AppIntents for screen-free operation |
+
+---
+
+## Architecture
+
+```
+TransferTrack.swiftpm/
+├── TransferTrackApp.swift       # @main, theme, TipKit, Siri config
+├── OnboardingFlow.swift         # 6-step onboarding with Framer animations
+├── DashboardView.swift          # Tab container + EditPathSheet
+├── ForecastView.swift           # Monthly Gap, Viability Ring, Transport Advisor
+├── AcademicsView.swift          # Credit analysis, scanner, wasted alerts
+├── HousingView.swift            # Map + swipeable  deck
+├── SolutionsView.swift          # Checklist with points, celebrations
+├── TransportComparisonSheet.swift #  3-option modal
+├── LiquidDesign.swift           # CountingText, ViabilityRing, shared components
+├── LiquidTabBar.swift           # Glass + Floating tab bar
+├── TranscriptScanner.swift      # VisionKit camera integration
+├── SchoolDatabase.swift         # 7-state data: schools, tuition, housing, courses, solutions
+├── Models.swift                 # UserCourse, TransferViewModel, AppIntents, CoreML
+└── Assets/                      # College logos, app icon
+```
 
 ---
 
@@ -139,43 +118,69 @@ Standard budgeting apps track what you spent yesterday. **TransferTrack predicts
 
 ---
 
+## Prerequisites & Installation
+
+1. **Xcode 15.3+** on macOS Sonoma or later
+2. Clone the repo:
+   ```bash
+   git clone https://github.com/GridGxly/TransferTrack.git
+   ```
+3. Open `TransferTrack.swiftpm` in Xcode (or Swift Playgrounds on iPad)
+4. Build and run on **iPhone Simulator** (iOS 17+) or a physical device
+5. No external dependencies. No API keys. No internet required.
+
+---
+
+## Demo Flow (3 Minutes)
+
+1. **Onboarding** — Enter name, select Valencia → UCF, input GPA/savings/rent
+2. **Forecast** — Watch Monthly Gap tick from $0 to $-331. See Viability Ring count to 62.
+3. **Transport** — Tap Compare Options. See your car at $473/mo vs. transit at $40/mo. Apply transit.
+4. **Housing** — Swipe through apartment cards. Pull sheet to full. Read insider tips.
+5. **Academics** — See 9 transferable credits, 3 wasted. Tap a wasted course for details.
+6. **Solutions** — Complete "Renew FAFSA" and "Get Work-Study." Watch gap improve and ring bounce.
+7. **Siri** — "Hey Siri, check my transfer plan in TransferTrack."
+
+---
+
 ## Future App Store Roadmap
 
 TransferTrack is built as a Swift Playground for the challenge, but the architecture is designed to scale into a full App Store product.
 
 ### Phase 1: App Store Launch (iOS 18)
+
 - **Interactive Home Screen Widget** — A medium-sized widget showing a live Viability Score ring, monthly gap, and a transfer countdown ("42 days to Fall 2026"). Uses `AppIntentTimelineProvider` for background refresh.
 - **Lock Screen Widget** — Circular gauge showing Viability Score at a glance.
 - **Push Notifications** — Deadline reminders for FAFSA renewal, scholarship applications, and housing deposits.
 
 ### Phase 2: Live Data Integration
+
 - **Plaid API** — Securely connect bank accounts to auto-populate savings and track spending patterns.
 - **College Scorecard API** — Pull live tuition, graduation rates, and financial aid data from the U.S. Department of Education.
 - **Zillow/Apartments.com API** — Real-time rental listings with actual approval requirements.
 
 ### Phase 3: Community & Scale
+
 - **Peer Matching** — Connect transfer students heading to the same university for roommate matching.
 - **Advisor Dashboard** — Web portal for academic advisors to view aggregate transfer risk data.
 - **50-State Coverage** — Expand from 7 states to all 50, covering every major articulation agreement.
 
 ### Phase 4: Platform
+
 - **Apple Watch Complication** — Viability Score ring on your wrist.
 - **iPad Split View** — Side-by-side forecast comparison for different school paths.
 - **visionOS** — Spatial housing map with 3D apartment walkthroughs.
 
 ---
 
-## Author
+## License
 
-**Ralph Clavens Love Noel**
-
-
-*Built from personal adversity. Designed for every transfer student who deserves a plan.*
+MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 
-<div align="center">
+## Author
 
-*TransferTrack — Because your future shouldn't be a surprise.*
+**[Ralph Clavens Love Noel](https://www.linkedin.com/in/ralphnoel/)**
 
-</div>
+Built from personal adversity. Designed for every transfer student who deserves a plan.
