@@ -45,23 +45,29 @@ enum TTColors {
 }
 
 
+
 @available(iOS 17.0, *)
 struct ScoreAwareBackground: View {
     let score: Int
     @Environment(\.colorScheme) private var colorScheme
 
-    private var colors: [Color] {
-        let base = TTBrand.gradient(for: score)
-        if colorScheme == .light {
-            return base.map { $0.opacity(0.12) } + [Color(uiColor: .systemGroupedBackground)]
-        } else {
-            return base.map { $0.opacity(0.18) } + [Color(red: 0.06, green: 0.06, blue: 0.08)]
-        }
+    private var baseGradient: [Color] {
+        TTBrand.gradient(for: score)
+    }
+
+    private var orbOpacity: Double {
+        colorScheme == .light ? 0.08 : 0.18
+    }
+
+    private var baseColor: Color {
+        colorScheme == .light
+            ? Color(uiColor: .systemGroupedBackground)
+            : Color(red: 0.06, green: 0.06, blue: 0.08)
     }
 
     var body: some View {
         ZStack {
-            Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
+            baseColor.ignoresSafeArea()
 
             GeometryReader { geo in
                 let w = geo.size.width
@@ -70,7 +76,7 @@ struct ScoreAwareBackground: View {
                 Circle()
                     .fill(
                         RadialGradient(
-                            colors: [colors[0], .clear],
+                            colors: [baseGradient[0].opacity(orbOpacity), .clear],
                             center: .center,
                             startRadius: 0,
                             endRadius: w * 0.6
@@ -80,10 +86,11 @@ struct ScoreAwareBackground: View {
                     .offset(x: -w * 0.2, y: -h * 0.1)
                     .blur(radius: 60)
 
+                let secondColor = baseGradient.count > 1 ? baseGradient[1] : baseGradient[0]
                 Circle()
                     .fill(
                         RadialGradient(
-                            colors: [colors[1], .clear],
+                            colors: [secondColor.opacity(orbOpacity), .clear],
                             center: .center,
                             startRadius: 0,
                             endRadius: w * 0.5
@@ -95,9 +102,12 @@ struct ScoreAwareBackground: View {
             }
         }
         .ignoresSafeArea()
+        .animation(.easeInOut(duration: 0.6), value: colorScheme)
         .animation(.easeInOut(duration: 1.5), value: score)
     }
 }
+
+
 
 
 struct GlassCard: ViewModifier {
@@ -105,20 +115,31 @@ struct GlassCard: ViewModifier {
     var padding: CGFloat = 16
     @Environment(\.colorScheme) private var colorScheme
 
+    private var strokeColor: Color {
+        colorScheme == .light
+            ? Color(uiColor: .separator).opacity(0.3)
+            : Color.white.opacity(0.08)
+    }
+
+    private var shadowColor: Color {
+        colorScheme == .light
+            ? Color.black.opacity(0.08)
+            : Color.black.opacity(0.3)
+    }
+
+    private var shadowRadius: CGFloat {
+        colorScheme == .light ? 8 : 12
+    }
+
     func body(content: Content) -> some View {
         content
             .padding(padding)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .stroke(
-                        colorScheme == .light
-                            ? Color.white.opacity(0.6)
-                            : Color.white.opacity(0.08),
-                        lineWidth: 0.5
-                    )
+                    .stroke(strokeColor, lineWidth: 0.5)
             )
-            .shadow(color: .black.opacity(colorScheme == .dark ? 0.3 : 0.06), radius: 12, y: 4)
+            .shadow(color: shadowColor, radius: shadowRadius, y: 4)
     }
 }
 
@@ -131,6 +152,7 @@ extension View {
         self.modifier(GlassCard(radius: radius, padding: 0))
     }
 }
+
 
 
 struct RoundedFontDesign: ViewModifier {
@@ -148,6 +170,7 @@ extension View {
         self.modifier(RoundedFontDesign())
     }
 }
+
 
 
 struct StaggerFadeModifier: ViewModifier {
@@ -174,11 +197,11 @@ extension View {
         self.modifier(StaggerFadeModifier(delay: delay, yOffset: yOffset, scale: scale))
     }
 
-
     func framerFade(delay: Double = 0, yOffset: CGFloat = 18) -> some View {
         self.modifier(StaggerFadeModifier(delay: delay, yOffset: yOffset, scale: 0.98))
     }
 }
+
 
 
 extension View {
@@ -187,13 +210,14 @@ extension View {
             RoundedRectangle(cornerRadius: radius, style: .continuous)
                 .stroke(
                     colorScheme == .light
-                        ? Color.white.opacity(0.7)
+                        ? Color(uiColor: .separator).opacity(0.25)
                         : Color.white.opacity(0.06),
                     lineWidth: 0.5
                 )
         )
     }
 }
+
 
 
 @available(iOS 17.0, *)
@@ -217,6 +241,9 @@ struct ScorePill: View {
     }
 }
 
+
+
+
 @available(iOS 17.0, *)
 struct OnboardingBackground: View {
     let step: Int
@@ -236,7 +263,6 @@ struct OnboardingBackground: View {
     var body: some View {
         ZStack {
             LinearGradient(colors: gradientColors, startPoint: .topLeading, endPoint: .bottomTrailing)
-
 
             GeometryReader { geo in
                 let w = geo.size.width

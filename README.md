@@ -44,7 +44,7 @@ TransferTrack is a **100% offline, on-device financial forecasting agent** built
 
 - **Liquid Glass Tab Bar** — iOS 26 `GlassEffect` tab bar with `UISegmentedControl` bridge via `ImageRenderer` for modern devices, plus a custom `FloatingTabBar` with liquid blob animation (stretch, compress, rim light) as a graceful fallback.
 
-- **Adaptive Design System** — Reusable `TTAdaptiveGlassCard`, `TTAdaptiveCardBorder`, and `TTScoreAwareBackground` ViewModifiers with environment-aware borders, shadows, and gradients that shift between light and dark mode.
+- **Adaptive Design System** — Reusable `TTAdaptiveCardBorder` ViewModifier with environment-aware borders, shadows, and gradients that shift between light and dark mode.
 
 - **Light/Dark/System Themes** — Segmented picker in Edit Plan sheet applies instantly via `.preferredColorScheme`. Cards use adaptive borders in light mode for depth.
 
@@ -90,14 +90,14 @@ TransferTrack.swiftpm/
 ├── App/
 │   └── TransferTrackApp.swift          # @main, theme, TipKit, Siri config
 ├── Components/
-│   ├── LiquidDesign.swift              # CountingText, ViabilityRing, StatCard, CollegeLogo
+│   ├── Components.swift                # CountingText, ViabilityRing, StatCard, CollegeLogo
 │   ├── LiquidTabBar.swift              # iOS 26 GlassEffect + FloatingTabBar fallback
 │   └── TranscriptScanner.swift         # VisionKit camera integration
 ├── Models/
 │   ├── Models.swift                    # UserCourse, TransferViewModel, AppIntents, CoreML
 │   └── SchoolDatabase.swift            # 7-state data: schools, tuition, housing, courses, solutions
 ├── Theme/
-│   ├── Adaptivedesign.swift            # TTAdaptiveGlassCard, CardBorder, ScoreAwareBackground
+│   ├── Adaptivedesign.swift            # TTAdaptiveCardBorder environment-aware ViewModifier
 │   └── TTtheme.swift                   # Brand colors, GlassCard, StaggerFade, OnboardingBackground
 ├── Views/
 │   ├── Dashboard/
