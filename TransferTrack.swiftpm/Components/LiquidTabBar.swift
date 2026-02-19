@@ -1,7 +1,6 @@
 import SwiftUI
 
 
-
 @available(iOS 26.0, *)
 struct LiquidTabBar: View {
     @Binding var selectedTab: Int
@@ -18,8 +17,8 @@ struct LiquidTabBar: View {
                 .glassEffect(.regular.interactive(), in: .capsule)
             }
         }
-        .frame(height: 58)
-        .padding(.horizontal, 20)
+        .frame(height: 56)
+        .padding(.horizontal, 16)
         .padding(.bottom, 16)
     }
 }
@@ -43,10 +42,10 @@ struct GlassSegmentedTabBar: UIViewRepresentable {
             let isActive = index == selectedTab
             let content = VStack(spacing: 2) {
                 Image(systemName: tab.icon)
-                    .font(.system(size: 18, weight: isActive ? .bold : .medium))
+                    .font(.system(size: 16, weight: isActive ? .bold : .medium))
                     .symbolVariant(isActive ? .fill : .none)
                 Text(tab.label)
-                    .font(.system(size: 9, weight: isActive ? .semibold : .regular))
+                    .font(.system(size: 8, weight: isActive ? .semibold : .regular))
             }
             .foregroundStyle(isActive ? Color.primary : Color.secondary)
             .frame(width: size.width / CGFloat(tabs.count), height: size.height)
@@ -79,13 +78,10 @@ struct GlassSegmentedTabBar: UIViewRepresentable {
         return size
     }
 
-
     @MainActor
     class Coordinator: NSObject {
         var parent: GlassSegmentedTabBar
-        init(parent: GlassSegmentedTabBar) {
-            self.parent = parent
-        }
+        init(parent: GlassSegmentedTabBar) { self.parent = parent }
 
         @objc func tabSelected(_ control: UISegmentedControl) {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -97,7 +93,6 @@ struct GlassSegmentedTabBar: UIViewRepresentable {
 }
 
 
-
 @available(iOS 17.0, *)
 struct FloatingTabBar: View {
     @Binding var selectedTab: Int
@@ -106,14 +101,22 @@ struct FloatingTabBar: View {
 
     @State private var leadingX: CGFloat = 0
     @State private var trailingX: CGFloat = 0
-    @State private var iconScales: [CGFloat] = [1, 1, 1, 1]
-    @State private var iconOffsetY: [CGFloat] = [0, 0, 0, 0]
+    @State private var iconScales: [CGFloat]
+    @State private var iconOffsetY: [CGFloat]
     @State private var hasAppeared = false
     @State private var isAnimating = false
 
-    private let barHeight: CGFloat = 58
-    private let blobBaseW: CGFloat = 56
-    private let blobBaseH: CGFloat = 42
+    private let barHeight: CGFloat = 56
+    private let blobBaseW: CGFloat = 48
+    private let blobBaseH: CGFloat = 38
+
+    init(selectedTab: Binding<Int>, tabs: [(icon: String, label: String)]) {
+        self._selectedTab = selectedTab
+        self.tabs = tabs
+        let count = tabs.count
+        _iconScales = State(initialValue: Array(repeating: CGFloat(1), count: count))
+        _iconOffsetY = State(initialValue: Array(repeating: CGFloat(0), count: count))
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -123,19 +126,18 @@ struct FloatingTabBar: View {
                 Capsule()
                     .fill(.ultraThinMaterial)
                     .overlay(
-                        Capsule()
-                            .stroke(
-                                colorScheme == .dark
-                                    ? Color.white.opacity(0.12)
-                                    : Color.black.opacity(0.06),
-                                lineWidth: 0.5
-                            )
+                        Capsule().stroke(
+                            colorScheme == .dark ? Color.white.opacity(0.10) : Color.black.opacity(0.04),
+                            lineWidth: 0.5
+                        )
                     )
                     .frame(height: barHeight)
-                    .shadow(color: .black.opacity(colorScheme == .dark ? 0.25 : 0.10), radius: 12, y: 5)
+                    .shadow(color: .black.opacity(colorScheme == .dark ? 0.3 : 0.08), radius: 16, y: 6)
+
 
                 blobView(tw: tw)
                 rimLightView(tw: tw)
+
 
                 HStack(spacing: 0) {
                     ForEach(Array(tabs.enumerated()), id: \.offset) { index, tab in
@@ -143,12 +145,12 @@ struct FloatingTabBar: View {
                         Button { moveToTab(index, tw: tw) } label: {
                             VStack(spacing: 2) {
                                 Image(systemName: tab.icon)
-                                    .font(.system(size: 18, weight: active ? .bold : .medium))
+                                    .font(.system(size: 16, weight: active ? .bold : .medium))
                                     .symbolVariant(active ? .fill : .none)
                                     .scaleEffect(iconScales[safe: index] ?? 1.0)
                                     .offset(y: iconOffsetY[safe: index] ?? 0)
                                 Text(tab.label)
-                                    .font(.system(size: 9, weight: active ? .semibold : .regular))
+                                    .font(.system(size: 8, weight: active ? .semibold : .regular, design: .rounded))
                                     .lineLimit(1)
                                     .scaleEffect(iconScales[safe: index] ?? 1.0)
                             }
@@ -176,7 +178,7 @@ struct FloatingTabBar: View {
             }
         }
         .frame(height: barHeight)
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 16)
         .padding(.bottom, 28)
     }
 
@@ -193,15 +195,13 @@ struct FloatingTabBar: View {
             .fill(
                 LinearGradient(
                     colors: colorScheme == .dark
-                        ? [Color.white.opacity(0.30), Color.white.opacity(0.14), Color.white.opacity(0.06)]
-                        : [Color.black.opacity(0.55), Color.black.opacity(0.35), Color.black.opacity(0.20)],
-                    startPoint: .top,
-                    endPoint: .bottom
+                        ? [Color.white.opacity(0.28), Color.white.opacity(0.12), Color.white.opacity(0.05)]
+                        : [Color.black.opacity(0.50), Color.black.opacity(0.32), Color.black.opacity(0.18)],
+                    startPoint: .top, endPoint: .bottom
                 )
             )
             .frame(width: blobW, height: blobH)
-            .shadow(color: colorScheme == .dark ? .white.opacity(0.06) : .black.opacity(0.12), radius: 8, y: 3)
-            .shadow(color: colorScheme == .dark ? .white.opacity(0.04) : .clear, radius: 1, y: -1)
+            .shadow(color: colorScheme == .dark ? .white.opacity(0.05) : .black.opacity(0.10), radius: 8, y: 3)
             .position(x: center, y: barHeight / 2)
     }
 
@@ -220,8 +220,8 @@ struct FloatingTabBar: View {
             .stroke(
                 LinearGradient(
                     colors: colorScheme == .dark
-                        ? [.white.opacity(0.30 + normalizedX * 0.08), .white.opacity(0.06), .white.opacity(0.02)]
-                        : [.white.opacity(0.60 + normalizedX * 0.10), .white.opacity(0.15), .white.opacity(0.04)],
+                        ? [.white.opacity(0.25 + normalizedX * 0.06), .white.opacity(0.05), .white.opacity(0.02)]
+                        : [.white.opacity(0.55 + normalizedX * 0.08), .white.opacity(0.12), .white.opacity(0.03)],
                     startPoint: .init(x: 0.3 - Double(normalizedX) * 0.2, y: 0),
                     endPoint: .init(x: 0.7 - Double(normalizedX) * 0.2, y: 1)
                 ),
@@ -241,7 +241,7 @@ struct FloatingTabBar: View {
         let newC = CGFloat(index) * tw + tw / 2
         let right = newC > oldC
         let distance = abs(index - oldIdx)
-        let stretchFactor = min(1.0, Double(distance) * 0.35)
+        let stretchFactor = min(1.0, Double(distance) * 0.3)
 
         selectedTab = index
         UIImpactFeedbackGenerator(style: .medium).impactOccurred(intensity: 0.6 + stretchFactor * 0.3)
@@ -249,27 +249,33 @@ struct FloatingTabBar: View {
         withAnimation(.spring(response: 0.25, dampingFraction: 0.58)) {
             if right { leadingX = newC } else { trailingX = newC }
         }
-        withAnimation(.spring(response: 0.48 + stretchFactor * 0.12, dampingFraction: 0.68).delay(0.08 + stretchFactor * 0.04)) {
+        withAnimation(.spring(response: 0.45 + stretchFactor * 0.10, dampingFraction: 0.68).delay(0.08)) {
             if right { trailingX = newC } else { leadingX = newC }
         }
 
         let i = index
         withAnimation(.spring(response: 0.15, dampingFraction: 0.35).delay(0.10)) {
-            iconScales[i] = 0.75; iconOffsetY[i] = 4
+            if i < iconScales.count { iconScales[i] = 0.78; iconOffsetY[i] = 3 }
         }
-        withAnimation(.spring(response: 0.25, dampingFraction: 0.45).delay(0.26)) {
-            iconScales[i] = 1.15; iconOffsetY[i] = -3
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.45).delay(0.24)) {
+            if i < iconScales.count { iconScales[i] = 1.12; iconOffsetY[i] = -2 }
         }
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.65).delay(0.44)) {
-            iconScales[i] = 1.0; iconOffsetY[i] = 0
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.65).delay(0.40)) {
+            if i < iconScales.count { iconScales[i] = 1.0; iconOffsetY[i] = 0 }
         }
 
         let old = oldIdx
-        withAnimation(.spring(response: 0.2, dampingFraction: 0.6).delay(0.05)) { iconScales[old] = 0.88 }
-        withAnimation(.spring(response: 0.22, dampingFraction: 0.55).delay(0.18)) { iconScales[old] = 1.04 }
-        withAnimation(.spring(response: 0.25, dampingFraction: 0.7).delay(0.32)) { iconScales[old] = 1.0 }
+        withAnimation(.spring(response: 0.2, dampingFraction: 0.6).delay(0.05)) {
+            if old < iconScales.count { iconScales[old] = 0.88 }
+        }
+        withAnimation(.spring(response: 0.22, dampingFraction: 0.55).delay(0.18)) {
+            if old < iconScales.count { iconScales[old] = 1.03 }
+        }
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.7).delay(0.30)) {
+            if old < iconScales.count { iconScales[old] = 1.0 }
+        }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) { isAnimating = false }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.60) { isAnimating = false }
     }
 }
 

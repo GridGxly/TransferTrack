@@ -34,26 +34,30 @@ struct SolutionsTab: View {
                 VStack(spacing: 12) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Action Plan").font(.title3.weight(.semibold))
+                            Text("Action Plan")
+                                .font(.system(.title3, design: .rounded).weight(.semibold))
                             Text("Complete actions to boost your transfer readiness.")
-                                .font(.subheadline).foregroundStyle(.secondary)
+                                .font(.system(.subheadline, design: .rounded))
+                                .foregroundStyle(.secondary)
                         }
                         Spacer()
                         Text("\(earnedPoints)/\(totalPoints)")
                             .font(.system(.title3, design: .rounded).weight(.bold))
-                            .foregroundStyle(TTColors.points)
+                            .foregroundStyle(TTBrand.mint)
                             .contentTransition(.numericText())
                     }
-
 
                     GeometryReader { geo in
                         let progress = totalPoints > 0 ? CGFloat(earnedPoints) / CGFloat(totalPoints) : 0
                         ZStack(alignment: .leading) {
+                            Capsule().fill(Color(uiColor: .quaternarySystemFill)).frame(height: 6)
                             Capsule()
-                                .fill(Color(uiColor: .quaternarySystemFill))
-                                .frame(height: 6)
-                            Capsule()
-                                .fill(TTColors.points)
+                                .fill(
+                                    LinearGradient(
+                                        colors: TTBrand.gradient(for: vm.viabilityScore),
+                                        startPoint: .leading, endPoint: .trailing
+                                    )
+                                )
                                 .frame(width: max(0, geo.size.width * progress), height: 6)
                                 .animation(.spring(response: 0.4), value: earnedPoints)
                         }
@@ -62,28 +66,29 @@ struct SolutionsTab: View {
 
                     if vm.solutionMonthlyBonus > 0 {
                         HStack(spacing: 6) {
-                            Image(systemName: "chart.line.uptrend.xyaxis").foregroundStyle(.green)
+                            Image(systemName: "chart.line.uptrend.xyaxis").foregroundStyle(TTBrand.mint)
                             Text("Saving +$\(vm.solutionMonthlyBonus)/mo from completed actions")
-                                .font(.caption.weight(.medium)).foregroundStyle(.green)
+                                .font(.system(.caption, design: .rounded).weight(.medium))
+                                .foregroundStyle(TTBrand.mint)
                         }
                         .padding(8).frame(maxWidth: .infinity)
-                        .background(Color.green.opacity(0.08))
+                        .background(TTBrand.mint.opacity(0.08))
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                         .transition(.move(edge: .top).combined(with: .opacity))
                     }
                 }
-                .padding(20)
-                .background(.regularMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .glassCard(radius: 20, padding: 20)
                 .padding(.horizontal, 20)
-
 
                 if !activeSolutions.isEmpty {
                     VStack(spacing: 0) {
                         HStack {
-                            Text("Active").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                            Text("Active")
+                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                .foregroundStyle(.secondary)
                             Spacer()
-                            Text("\(activeSolutions.count) remaining").font(.caption).foregroundStyle(.tertiary)
+                            Text("\(activeSolutions.count) remaining")
+                                .font(.caption).foregroundStyle(.tertiary)
                         }
                         .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 8)
 
@@ -107,9 +112,12 @@ struct SolutionsTab: View {
                 if !completedSolutionsList.isEmpty {
                     VStack(spacing: 0) {
                         HStack {
-                            Text("Completed").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                            Text("Completed")
+                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                .foregroundStyle(.secondary)
                             Spacer()
-                            Text("\(completedSolutionsList.count) done").font(.caption).foregroundStyle(.tertiary)
+                            Text("\(completedSolutionsList.count) done")
+                                .font(.caption).foregroundStyle(.tertiary)
                         }
                         .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 8)
 
@@ -143,15 +151,12 @@ struct SolutionsTab: View {
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: vm.completedSolutions)
     }
 
-
     private func displaySavings(for solution: SchoolDatabase.Solution) -> String? {
         if solution.title.contains("Roommate") {
             let split = Int(vm.userRent * 0.3)
             return split > 0 ? "Saves ~$\(split)/mo" : nil
         }
-        if solution.monthlyImpact > 0 {
-            return "Saves ~$\(solution.monthlyImpact)/mo"
-        }
+        if solution.monthlyImpact > 0 { return "Saves ~$\(solution.monthlyImpact)/mo" }
         return nil
     }
 
@@ -161,14 +166,11 @@ struct SolutionsTab: View {
             if vm.completedSolutions.contains(index) { vm.completedSolutions.remove(index) }
             else { vm.completedSolutions.insert(index) }
         }
-
         let newScore = vm.viabilityScore
         if newScore >= 75 && !previouslyGreen {
             previouslyGreen = true
             triggerCelebration()
-        } else if newScore < 75 {
-            previouslyGreen = false
-        }
+        } else if newScore < 75 { previouslyGreen = false }
     }
 
     private func triggerCelebration() {
@@ -178,9 +180,6 @@ struct SolutionsTab: View {
         }
     }
 }
-
-
-
 
 @available(iOS 17.0, *)
 struct SolutionRow: View {
@@ -194,16 +193,15 @@ struct SolutionRow: View {
             HStack(spacing: 14) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(isCompleted ? TTColors.points : Color(uiColor: .tertiarySystemFill))
+                        .fill(isCompleted ? TTBrand.mint : Color(uiColor: .tertiarySystemFill))
                         .frame(width: 32, height: 32)
                     Image(systemName: isCompleted ? "checkmark" : solution.icon)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(isCompleted ? .white : .secondary)
                 }
-
                 VStack(alignment: .leading, spacing: 2) {
                     Text(solution.title)
-                        .font(.subheadline.weight(.medium))
+                        .font(.system(.subheadline, design: .rounded).weight(.medium))
                         .strikethrough(isCompleted, color: .secondary)
                         .foregroundStyle(isCompleted ? .tertiary : .primary)
                     Text(solution.description)
@@ -213,23 +211,20 @@ struct SolutionRow: View {
                         .lineLimit(2)
                     if let savings = displaySavings {
                         Text(savings)
-                            .font(.caption2.weight(.medium))
+                            .font(.system(.caption2, design: .rounded).weight(.medium))
                             .foregroundStyle(isCompleted ? .tertiary : .secondary)
                     }
                 }
                 Spacer()
                 Text("+\(solution.points)")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(isCompleted ? .secondary : TTColors.points)
+                    .font(.system(.caption, design: .rounded).weight(.bold))
+                    .foregroundStyle(isCompleted ? .secondary : TTBrand.mint)
             }
             .padding(.horizontal, 16).padding(.vertical, 12)
         }
         .buttonStyle(.plain)
     }
 }
-
-
-
 
 @available(iOS 17.0, *)
 struct CelebrationView: View {
@@ -240,8 +235,12 @@ struct CelebrationView: View {
             ZStack {
                 VStack(spacing: 8) {
                     Image(systemName: "star.fill").font(.largeTitle).foregroundStyle(.yellow)
-                    Text("Score is Green!").font(.title2.weight(.bold)).foregroundStyle(.primary)
-                    Text("You're on track for a smooth transfer").font(.subheadline).foregroundStyle(.secondary)
+                    Text("Score is Green!")
+                        .font(.system(.title2, design: .rounded).weight(.bold))
+                        .foregroundStyle(.primary)
+                    Text("You're on track for a smooth transfer")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
                 }
                 .padding(24)
                 .background(.ultraThinMaterial)
@@ -258,7 +257,7 @@ struct CelebrationView: View {
     }
 
     private func spawn(in size: CGSize) {
-        let colors: [Color] = [.green, .yellow, .blue, .orange, .purple, .cyan]
+        let colors: [Color] = [TTBrand.mint, .yellow, TTBrand.skyBlue, TTBrand.amber, TTBrand.violet, .cyan]
         for i in 0..<30 {
             let p = ConfettiParticle(x: CGFloat.random(in: 0...size.width), y: -20,
                 size: CGFloat.random(in: 4...10), color: colors[i % colors.count], opacity: 1.0)
@@ -272,9 +271,4 @@ struct CelebrationView: View {
             }
         }
     }
-}
-
-struct ConfettiParticle: Identifiable {
-    let id = UUID()
-    var x: CGFloat; var y: CGFloat; var size: CGFloat; var color: Color; var opacity: Double
 }

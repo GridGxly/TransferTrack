@@ -25,7 +25,8 @@ struct TranscriptScannerSheet: View {
 
                 if !scannedCodes.isEmpty {
                     VStack(spacing: 8) {
-                        Text("Detected Course Codes").font(.subheadline.weight(.semibold))
+                        Text("Detected Course Codes")
+                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
                                 ForEach(scannedCodes, id: \.self) { code in
@@ -39,7 +40,7 @@ struct TranscriptScannerSheet: View {
                                         } label: {
                                             HStack(spacing: 4) {
                                                 Image(systemName: "plus.circle.fill").font(.caption)
-                                                Text(code).font(.subheadline.weight(.medium))
+                                                Text(code).font(.system(.subheadline, design: .rounded).weight(.medium))
                                             }
                                         }
 
@@ -56,7 +57,7 @@ struct TranscriptScannerSheet: View {
                                     }
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 8)
-                                    .background(Color.blue)
+                                    .background(TTBrand.skyBlue)
                                     .foregroundStyle(.white)
                                     .clipShape(Capsule())
                                     .transition(.scale.combined(with: .opacity))
@@ -64,7 +65,9 @@ struct TranscriptScannerSheet: View {
                             }
                             .padding(.horizontal, 16)
                         }
-                        Text("Tap code to add · ✕ to dismiss").font(.caption).foregroundStyle(.secondary)
+                        Text("Tap code to add · ✕ to dismiss")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 12)
                     .background(.regularMaterial)
@@ -148,24 +151,19 @@ struct TranscriptDataScanner: UIViewControllerRepresentable {
             }
         }
 
-
         private func normalizeCode(_ raw: String) -> String {
-
             let stripped = raw.uppercased()
                 .components(separatedBy: .whitespacesAndNewlines)
                 .joined()
-
-
             let letters = stripped.prefix(while: \.isLetter)
             let rest = stripped.dropFirst(letters.count)
-
             guard !letters.isEmpty, !rest.isEmpty else { return stripped }
-
-
             return "\(letters) \(rest)"
         }
     }
 }
+
+
 
 func readableTitleForCode(_ code: String) -> String {
     let parts = code.split(separator: " ")
@@ -208,7 +206,6 @@ func readableTitleForCode(_ code: String) -> String {
 
     return code
 }
-
 
 private func levelSuffix(_ number: String) -> String {
     guard let first = number.first, first.isNumber else { return "" }

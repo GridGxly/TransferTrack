@@ -3,6 +3,8 @@ import CoreLocation
 
 struct SchoolDatabase {
 
+
+
     static let stateData: [String: (ccs: [String], unis: [String])] = [
         "Florida": (
             ccs: ["Valencia College", "Miami Dade College", "Seminole State", "Polk State", "Santa Fe College"],
@@ -35,6 +37,8 @@ struct SchoolDatabase {
     ]
 
     static var states: [String] { Array(stateData.keys).sorted() }
+
+
 
     static let universityCoordinates: [String: CLLocationCoordinate2D] = [
         "Valencia College": CLLocationCoordinate2D(latitude: 28.5218, longitude: -81.4641),
@@ -104,6 +108,8 @@ struct SchoolDatabase {
         "Stockton Univ.": CLLocationCoordinate2D(latitude: 39.4785, longitude: -74.5634),
     ]
 
+
+
     static let logoMap: [String: String] = [
         "Valencia College": "valencia-college", "Miami Dade College": "miami-dade-college",
         "Seminole State": "seminole-state", "Polk State": "polk-state", "Santa Fe College": "santa-fe-college",
@@ -132,6 +138,8 @@ struct SchoolDatabase {
         "NJIT": "njit", "Stockton Univ.": "stockton-univ",
     ]
 
+
+
     static let ccTuition: [String: Int] = [
         "Valencia College": 3120, "Miami Dade College": 3400, "Seminole State": 3100,
         "Polk State": 2900, "Santa Fe College": 2800,
@@ -154,6 +162,8 @@ struct SchoolDatabase {
         "UNC Chapel Hill": 8998, "NC State": 9101, "App State": 7296, "ECU": 7287, "UNC Charlotte": 7108,
         "Rutgers": 15804, "Rowan Univ.": 13880, "Montclair State": 13288, "NJIT": 18096, "Stockton Univ.": 13558,
     ]
+
+ 
 
     struct Apartment: Identifiable {
         let id = UUID()
@@ -185,27 +195,6 @@ struct SchoolDatabase {
                 Apartment(name: "Campus Lodge", distance: "1.8 mi", beds: 2, baths: 2, rent: 880, odds: "High Odds", oddsDetail: "No Credit Check"),
                 Apartment(name: "Windsor Park", distance: "2.0 mi", beds: 3, baths: 2, rent: 750, odds: "High Odds", oddsDetail: "Student-Friendly"),
             ]
-        case "FSU":
-            return [
-                Apartment(name: "Stadium Centre", distance: "0.4 mi", beds: 2, baths: 2, rent: 1050, odds: "High Odds", oddsDetail: "Student-Friendly"),
-                Apartment(name: "The Osceola", distance: "1.0 mi", beds: 1, baths: 1, rent: 900, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
-                Apartment(name: "College Town", distance: "0.2 mi", beds: 3, baths: 3, rent: 750, odds: "High Odds", oddsDetail: "Per-bed Lease"),
-                Apartment(name: "Seminole Flatts", distance: "1.5 mi", beds: 2, baths: 1, rent: 820, odds: "High Odds", oddsDetail: "No Credit Check"),
-            ]
-        case "USF":
-            return [
-                Apartment(name: "The Venue", distance: "0.5 mi", beds: 2, baths: 2, rent: 1100, odds: "High Odds", oddsDetail: "Student-Friendly"),
-                Apartment(name: "Avalon Heights", distance: "1.4 mi", beds: 1, baths: 1, rent: 850, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
-                Apartment(name: "42 North", distance: "0.3 mi", beds: 4, baths: 2, rent: 720, odds: "High Odds", oddsDetail: "Per-bed Lease"),
-                Apartment(name: "Province Tampa", distance: "0.8 mi", beds: 2, baths: 2, rent: 980, odds: "High Odds", oddsDetail: "Student-Friendly"),
-            ]
-        case "FIU":
-            return [
-                Apartment(name: "109 Tower", distance: "0.6 mi", beds: 2, baths: 2, rent: 1350, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
-                Apartment(name: "Student Housing FIU", distance: "0.1 mi", beds: 1, baths: 1, rent: 1100, odds: "High Odds", oddsDetail: "Student-Friendly"),
-                Apartment(name: "The Flats at CityPlace", distance: "2.0 mi", beds: 2, baths: 2, rent: 1600, odds: "Low Odds", oddsDetail: "Guarantor Required"),
-                Apartment(name: "Bayview Student Living", distance: "1.2 mi", beds: 3, baths: 2, rent: 900, odds: "High Odds", oddsDetail: "Per-bed Lease"),
-            ]
         case "UCLA":
             return [
                 Apartment(name: "Westwood Palms", distance: "0.8 mi", beds: 2, baths: 2, rent: 2800, odds: "Low Odds", oddsDetail: "Guarantor Required"),
@@ -213,21 +202,6 @@ struct SchoolDatabase {
                 Apartment(name: "Weyburn Terrace", distance: "0.3 mi", beds: 2, baths: 1, rent: 2400, odds: "Medium Odds", oddsDetail: "UCLA Housing"),
                 Apartment(name: "Gayley Heights", distance: "0.4 mi", beds: 1, baths: 1, rent: 1900, odds: "High Odds", oddsDetail: "Student-Friendly"),
                 Apartment(name: "Levering Terrace", distance: "0.2 mi", beds: 2, baths: 2, rent: 2600, odds: "Medium Odds", oddsDetail: "UCLA Housing"),
-            ]
-        case "UC Berkeley":
-            return [
-                Apartment(name: "Hillside Village", distance: "0.6 mi", beds: 2, baths: 1, rent: 2600, odds: "Low Odds", oddsDetail: "Guarantor Required"),
-                Apartment(name: "Durant Square", distance: "0.3 mi", beds: 1, baths: 1, rent: 2100, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
-                Apartment(name: "Panoramic", distance: "0.2 mi", beds: 1, baths: 1, rent: 1800, odds: "High Odds", oddsDetail: "Student-Friendly"),
-                Apartment(name: "Channing Bowditch", distance: "0.4 mi", beds: 2, baths: 2, rent: 2350, odds: "Medium Odds", oddsDetail: "UC Housing"),
-                Apartment(name: "Northside Cooperative", distance: "0.5 mi", beds: 1, baths: 1, rent: 1200, odds: "High Odds", oddsDetail: "Co-op Housing"),
-            ]
-        case "UC Davis":
-            return [
-                Apartment(name: "The Ramble", distance: "0.7 mi", beds: 2, baths: 2, rent: 1600, odds: "High Odds", oddsDetail: "Student-Friendly"),
-                Apartment(name: "West Village", distance: "0.1 mi", beds: 1, baths: 1, rent: 1350, odds: "High Odds", oddsDetail: "UC Housing"),
-                Apartment(name: "Aggie Square", distance: "1.0 mi", beds: 2, baths: 1, rent: 1400, odds: "High Odds", oddsDetail: "No Credit Check"),
-                Apartment(name: "Tandem Properties", distance: "0.8 mi", beds: 1, baths: 1, rent: 1100, odds: "High Odds", oddsDetail: "Student-Friendly"),
             ]
         case "UT Austin":
             return [
@@ -237,19 +211,12 @@ struct SchoolDatabase {
                 Apartment(name: "26 West", distance: "0.3 mi", beds: 4, baths: 4, rent: 950, odds: "High Odds", oddsDetail: "Per-bed Lease"),
                 Apartment(name: "Dobie Center", distance: "0.1 mi", beds: 1, baths: 1, rent: 1350, odds: "High Odds", oddsDetail: "Student Housing"),
             ]
-        case "Texas A&M":
+        case "Rutgers":
             return [
-                Apartment(name: "The Stack", distance: "0.5 mi", beds: 2, baths: 2, rent: 1100, odds: "High Odds", oddsDetail: "Student-Friendly"),
-                Apartment(name: "College Station Crossing", distance: "1.2 mi", beds: 1, baths: 1, rent: 850, odds: "High Odds", oddsDetail: "No Credit Check"),
-                Apartment(name: "Park West", distance: "0.8 mi", beds: 4, baths: 4, rent: 650, odds: "High Odds", oddsDetail: "Per-bed Lease"),
-                Apartment(name: "The Junction", distance: "0.3 mi", beds: 2, baths: 2, rent: 1000, odds: "High Odds", oddsDetail: "Student-Friendly"),
-            ]
-        case "Univ. of Houston":
-            return [
-                Apartment(name: "Cougar Place", distance: "0.2 mi", beds: 2, baths: 2, rent: 1050, odds: "High Odds", oddsDetail: "Student Housing"),
-                Apartment(name: "Bayou Oaks", distance: "0.5 mi", beds: 1, baths: 1, rent: 900, odds: "High Odds", oddsDetail: "Student-Friendly"),
-                Apartment(name: "Cambridge Oaks", distance: "1.5 mi", beds: 2, baths: 1, rent: 850, odds: "High Odds", oddsDetail: "No Credit Check"),
-                Apartment(name: "Wheeler Transit", distance: "0.8 mi", beds: 1, baths: 1, rent: 780, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
+                Apartment(name: "The Yard", distance: "0.3 mi", beds: 2, baths: 2, rent: 1400, odds: "High Odds", oddsDetail: "Student-Friendly"),
+                Apartment(name: "College Ave Apartments", distance: "0.5 mi", beds: 1, baths: 1, rent: 1100, odds: "Medium Odds", oddsDetail: "Co-signer Recommended"),
+                Apartment(name: "Easton Avenue", distance: "0.8 mi", beds: 3, baths: 2, rent: 900, odds: "High Odds", oddsDetail: "Per-bed Lease"),
+                Apartment(name: "George Street Lofts", distance: "1.0 mi", beds: 2, baths: 1, rent: 1250, odds: "High Odds", oddsDetail: "No Credit Check"),
             ]
         default:
             return [
@@ -268,6 +235,8 @@ struct SchoolDatabase {
         return apts.reduce(0) { $0 + $1.rent } / apts.count
     }
 
+
+
     struct CourseTransfer: Identifiable {
         let id = UUID()
         let name: String
@@ -280,6 +249,9 @@ struct SchoolDatabase {
     }
 
     static func courses(from cc: String, to uni: String) -> [CourseTransfer] {
+
+        let state = stateForSchool(uni)
+
         var transferable: [CourseTransfer] = [
             CourseTransfer(name: "English Composition I", code: "ENC 1101", credits: 3, grade: "A-", transfers: true, costIfWasted: 0, reason: "Satisfies general education writing requirement"),
             CourseTransfer(name: "College Algebra", code: "MAC 1105", credits: 3, grade: "B+", transfers: true, costIfWasted: 0, reason: "Core math requirement fulfilled"),
@@ -288,7 +260,10 @@ struct SchoolDatabase {
             CourseTransfer(name: "Microeconomics", code: "ECO 2023", credits: 3, grade: "B+", transfers: true, costIfWasted: 0, reason: "Accepted as equivalent to \(uni) ECO requirement"),
         ]
 
-        if ["UCF", "UT Austin", "UCLA", "UC Berkeley", "Virginia Tech", "NC State", "NJIT", "Rutgers"].contains(uni) {
+
+        let stemUnis = ["UCF", "UT Austin", "UCLA", "UC Berkeley", "Virginia Tech", "NC State", "NJIT", "Rutgers",
+                        "Texas A&M", "Univ. of Washington", "Georgia Tech", "San Jose State", "George Mason"]
+        if stemUnis.contains(uni) {
             transferable.append(contentsOf: [
                 CourseTransfer(name: "Intro to Programming", code: "COP 2000", credits: 3, grade: "A", transfers: true, costIfWasted: 0, reason: "Maps to \(uni) intro CS course"),
                 CourseTransfer(name: "Calculus I", code: "MAC 2311", credits: 4, grade: "B+", transfers: true, costIfWasted: 0, reason: "Direct equivalent accepted"),
@@ -302,14 +277,80 @@ struct SchoolDatabase {
             ])
         }
 
-        let wasted: [CourseTransfer] = [
-            CourseTransfer(name: "Art Appreciation", code: "ARH 1000", credits: 3, grade: "A", transfers: false, costIfWasted: 600, reason: "Fulfills humanities at CC, but \(uni) requires upper-level arts for this major"),
-            CourseTransfer(name: "Music of the World", code: "MUH 2012", credits: 3, grade: "B+", transfers: false, costIfWasted: 600, reason: "No equivalent course exists at \(uni); elective credit only, doesn't count toward degree"),
-            CourseTransfer(name: "Humanities Elective", code: "HUM 2230", credits: 3, grade: "B", transfers: false, costIfWasted: 600, reason: "\(uni) requires HUM 3000+ level; this lower-level course is not accepted"),
-        ]
+
+        let costPerCredit: Int
+        switch state {
+        case "Florida": costPerCredit = 200
+        case "California": costPerCredit = 250
+        case "Texas": costPerCredit = 180
+        case "Virginia": costPerCredit = 300
+        case "New Jersey": costPerCredit = 280
+        default: costPerCredit = 200
+        }
+
+        var wasted: [CourseTransfer] = []
+
+        switch state {
+        case "Florida":
+            wasted = [
+                CourseTransfer(name: "Art Appreciation", code: "ARH 1000", credits: 3, grade: "A", transfers: false, costIfWasted: costPerCredit * 3, reason: "Fulfills humanities at your community college, but \(uni) requires upper-level arts for this major"),
+                CourseTransfer(name: "Music of the World", code: "MUH 2012", credits: 3, grade: "B+", transfers: false, costIfWasted: costPerCredit * 3, reason: "No equivalent course exists at \(uni); elective credit only, doesn't count toward degree"),
+                CourseTransfer(name: "Humanities Elective", code: "HUM 2230", credits: 3, grade: "B", transfers: false, costIfWasted: costPerCredit * 3, reason: "\(uni) requires HUM 3000+ level; this lower-level course is not accepted"),
+            ]
+        case "California":
+            wasted = [
+                CourseTransfer(name: "Ethnic Studies Survey", code: "ES 001", credits: 3, grade: "A", transfers: false, costIfWasted: costPerCredit * 3, reason: "\(uni) requires their own Ethnic Studies series; CC equivalent not on ASSIST.org transfer list"),
+                CourseTransfer(name: "Intro to Film", code: "CINE 001", credits: 3, grade: "B+", transfers: false, costIfWasted: costPerCredit * 3, reason: "Not on the IGETC-approved list for \(uni); counts as general elective only"),
+                CourseTransfer(name: "Health Education", code: "HLTH 001", credits: 3, grade: "B", transfers: false, costIfWasted: costPerCredit * 3, reason: "\(uni) does not accept Health Ed from community colleges toward any degree requirement"),
+            ]
+        case "Texas":
+            wasted = [
+                CourseTransfer(name: "Kinesiology Activity", code: "KINE 1100", credits: 1, grade: "A", transfers: false, costIfWasted: costPerCredit * 1, reason: "Activity courses do not count toward the Texas Core Curriculum block for \(uni)"),
+                CourseTransfer(name: "Creative Arts Survey", code: "ARTS 1301", credits: 3, grade: "B+", transfers: false, costIfWasted: costPerCredit * 3, reason: "\(uni) requires a specific fine arts course not matched by this survey class"),
+                CourseTransfer(name: "Speech Communication", code: "SPCH 1321", credits: 3, grade: "B", transfers: false, costIfWasted: costPerCredit * 3, reason: "\(uni) requires COMM 1310 specifically; SPCH 1321 is not accepted as equivalent"),
+            ]
+        case "Virginia":
+            wasted = [
+                CourseTransfer(name: "Art Survey", code: "ART 101", credits: 3, grade: "A", transfers: false, costIfWasted: costPerCredit * 3, reason: "Not on the GAA approved transfer list for \(uni); counts as free elective only"),
+                CourseTransfer(name: "Music Appreciation", code: "MUS 121", credits: 3, grade: "B+", transfers: false, costIfWasted: costPerCredit * 3, reason: "\(uni) requires a performance-based music credit; appreciation courses don't qualify"),
+                CourseTransfer(name: "Personal Finance", code: "BUS 100", credits: 3, grade: "B", transfers: false, costIfWasted: costPerCredit * 3, reason: "Business elective at CC level is not equivalent to any \(uni) School of Business requirement"),
+            ]
+        case "Washington":
+            wasted = [
+                CourseTransfer(name: "PE Activity Course", code: "PE 100", credits: 2, grade: "A", transfers: false, costIfWasted: costPerCredit * 2, reason: "Activity credits don't count toward DTA requirements for \(uni)"),
+                CourseTransfer(name: "Career Exploration", code: "HDCE 101", credits: 3, grade: "B+", transfers: false, costIfWasted: costPerCredit * 3, reason: "Professional/technical course; not transferable under the DTA agreement to \(uni)"),
+                CourseTransfer(name: "Intro to Library Research", code: "LIB 101", credits: 2, grade: "B", transfers: false, costIfWasted: costPerCredit * 2, reason: "\(uni) does not accept library science as a transferable academic credit"),
+            ]
+        case "North Carolina":
+            wasted = [
+                CourseTransfer(name: "Wellness Concepts", code: "HEA 110", credits: 1, grade: "A", transfers: false, costIfWasted: costPerCredit * 1, reason: "Not on the CAA transfer list; \(uni) does not accept wellness courses from CC"),
+                CourseTransfer(name: "Academic Transition", code: "ACA 122", credits: 1, grade: "A", transfers: false, costIfWasted: costPerCredit * 1, reason: "Orientation/transition courses are CC-specific and not transferable to \(uni)"),
+                CourseTransfer(name: "Art Appreciation", code: "ART 111", credits: 3, grade: "B+", transfers: false, costIfWasted: costPerCredit * 3, reason: "\(uni) accepts ART 114 (Art History) but not ART 111 (Appreciation); different course content"),
+            ]
+        case "New Jersey":
+            wasted = [
+                CourseTransfer(name: "Fitness & Wellness", code: "HPE 101", credits: 2, grade: "A", transfers: false, costIfWasted: costPerCredit * 2, reason: "Physical education credits don't transfer to \(uni) degree requirements per njtransfer.org"),
+                CourseTransfer(name: "Intro to Cinema", code: "COM 105", credits: 3, grade: "B+", transfers: false, costIfWasted: costPerCredit * 3, reason: "Not listed as equivalent on njtransfer.org for \(uni); elective credit only"),
+                CourseTransfer(name: "Music Fundamentals", code: "MUS 100", credits: 3, grade: "B", transfers: false, costIfWasted: costPerCredit * 3, reason: "\(uni) requires MUS 100-level theory, not fundamentals; no equivalency match"),
+            ]
+        default:
+            wasted = [
+                CourseTransfer(name: "Art Appreciation", code: "ART 100", credits: 3, grade: "A", transfers: false, costIfWasted: costPerCredit * 3, reason: "Fulfills humanities at your community college, but \(uni) requires upper-level arts"),
+                CourseTransfer(name: "Music Survey", code: "MUS 100", credits: 3, grade: "B+", transfers: false, costIfWasted: costPerCredit * 3, reason: "No equivalent course exists at \(uni); elective credit only"),
+                CourseTransfer(name: "Humanities Elective", code: "HUM 200", credits: 3, grade: "B", transfers: false, costIfWasted: costPerCredit * 3, reason: "\(uni) requires higher-level humanities; this course is not accepted"),
+            ]
+        }
 
         return transferable + wasted
     }
+
+    private static func stateForSchool(_ school: String) -> String {
+        for (state, data) in stateData {
+            if data.ccs.contains(school) || data.unis.contains(school) { return state }
+        }
+        return "Florida"
+    }
+
 
     struct Solution: Identifiable {
         let id = UUID()
@@ -321,103 +362,37 @@ struct SchoolDatabase {
         let monthlyImpact: Int
     }
 
-
-
     static func solutions(for uni: String, from cc: String, state: String) -> [Solution] {
         var items: [Solution] = []
 
         switch state {
         case "Florida":
-            items.append(Solution(
-                title: "Lock In DirectConnect",
-                description: "Your \(cc) AA degree guarantees \(uni) admission — but only if you finish the AA first. Don't transfer with 55 credits thinking you'll finish later. Complete it, then transfer. That guarantee is worth more than any early start.",
-                points: 8, icon: "link", color: .blue, monthlyImpact: 0
-            ))
-            items.append(Solution(
-                title: "File for Bright Futures Before July 1",
-                description: "If you had Bright Futures in high school, it transfers with you — but you have to reactivate it through your \(uni) financial aid office. Miss the renewal window and you lose it permanently. Check your status at floridastudentfinancialaid.org right now.",
-                points: 7, icon: "star.fill", color: .yellow, monthlyImpact: 300
-            ))
+            items.append(Solution(title: "Lock In DirectConnect", description: "Your \(cc) AA degree guarantees \(uni) admission — but only if you finish the AA first. Don't transfer with 55 credits thinking you'll finish later. Complete it, then transfer.", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
+            items.append(Solution(title: "File for Bright Futures Before July 1", description: "If you had Bright Futures in high school, it transfers with you — but you have to reactivate it through your \(uni) financial aid office. Miss the renewal window and you lose it permanently.", points: 7, icon: "star.fill", color: .yellow, monthlyImpact: 300))
         case "California":
-            items.append(Solution(
-                title: "Submit TAG Application (Sept 1–30 only)",
-                description: "TAG locks in your \(uni) admission — but the window is literally one month in September. Miss it by a day and you're in the regular pool with 80,000 other applicants. Set a calendar reminder for September 1st now.",
-                points: 8, icon: "link", color: .blue, monthlyImpact: 0
-            ))
-            items.append(Solution(
-                title: "File Cal Grant by March 2",
-                description: "Free money from the state — up to $14K/year at UCs. Requires FAFSA + GPA verification from \(cc). Your CC financial aid office sends the GPA automatically, but only if you tell them to. Walk in and ask. Takes 5 minutes.",
-                points: 7, icon: "star.fill", color: .yellow, monthlyImpact: 400
-            ))
+            items.append(Solution(title: "Submit TAG Application (Sept 1–30)", description: "TAG locks in your \(uni) admission — but the window is literally one month in September. Miss it by a day and you're in the regular pool with 80,000 other applicants.", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
+            items.append(Solution(title: "File Cal Grant by March 2", description: "Free money from the state — up to $14K/year at UCs. Requires FAFSA + GPA verification from \(cc). Your CC financial aid office sends the GPA automatically, but only if you tell them to.", points: 7, icon: "star.fill", color: .yellow, monthlyImpact: 400))
         case "Texas":
-            items.append(Solution(
-                title: "Complete the Texas Core (42 credits)",
-                description: "The 42-credit Texas Core Curriculum transfers as a BLOCK to any public university. That means if you finish it at \(cc), \(uni) has to accept all 42 credits — no questions, no 'we don't offer that equivalent.' Finish the block.",
-                points: 8, icon: "link", color: .blue, monthlyImpact: 0
-            ))
-            items.append(Solution(
-                title: "Apply for TEXAS Grant Right Now",
-                description: "Need-based grant up to $10K/year. Most students don't know it exists because it's not advertised like financial aid. File FAFSA → mark \(uni) as your school → TEXAS Grant eligibility is automatic. No separate application.",
-                points: 7, icon: "star.fill", color: .yellow, monthlyImpact: 350
-            ))
+            items.append(Solution(title: "Complete the Texas Core (42 credits)", description: "The 42-credit Texas Core Curriculum transfers as a BLOCK to any public university. If you finish it at \(cc), \(uni) has to accept all 42 credits — no questions asked.", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
+            items.append(Solution(title: "Apply for TEXAS Grant", description: "Need-based grant up to $10K/year. File FAFSA → mark \(uni) as your school → TEXAS Grant eligibility is automatic. No separate application required.", points: 7, icon: "star.fill", color: .yellow, monthlyImpact: 350))
         case "Virginia":
-            items.append(Solution(
-                title: "Confirm Your GAA Status",
-                description: "The Guaranteed Admission Agreement from \(cc) to \(uni) has GPA minimums that vary by major. Engineering at Virginia Tech needs a 3.4, not the 3.0 on the flyer. Log into the VA transfer portal and confirm YOUR major's actual cutoff.",
-                points: 8, icon: "link", color: .blue, monthlyImpact: 0
-            ))
+            items.append(Solution(title: "Confirm Your GAA Status", description: "The Guaranteed Admission Agreement from \(cc) to \(uni) has GPA minimums that vary by major. Engineering at Virginia Tech needs a 3.4, not the 3.0 on the flyer. Confirm YOUR major's actual cutoff.", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
         case "Washington":
-            items.append(Solution(
-                title: "Finish Your DTA Degree",
-                description: "The Direct Transfer Agreement degree from \(cc) guarantees junior standing at \(uni). Without it, they evaluate you course-by-course and you'll lose credits. The DTA is the single most important thing you can do before transferring.",
-                points: 8, icon: "link", color: .blue, monthlyImpact: 0
-            ))
+            items.append(Solution(title: "Finish Your DTA Degree", description: "The Direct Transfer Agreement degree from \(cc) guarantees junior standing at \(uni). Without it, they evaluate you course-by-course and you'll lose credits.", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
         case "North Carolina":
-            items.append(Solution(
-                title: "Use the CAA Transfer Path",
-                description: "The Comprehensive Articulation Agreement maps every \(cc) course to a UNC system equivalent. Print your degree audit, cross-reference it against the CAA transfer list on cfnc.org, and make sure every remaining course is on there. One random elective can cost you a semester.",
-                points: 8, icon: "link", color: .blue, monthlyImpact: 0
-            ))
+            items.append(Solution(title: "Use the CAA Transfer Path", description: "The Comprehensive Articulation Agreement maps every \(cc) course to a UNC system equivalent. Cross-reference your degree audit against the CAA transfer list on cfnc.org.", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
         case "New Jersey":
-            items.append(Solution(
-                title: "Run Your NJ Transfer Evaluation",
-                description: "Go to njtransfer.org and run a course-by-course evaluation from \(cc) to \(uni) right now. It shows exactly which credits transfer and which don't. Advisors at \(cc) sometimes use outdated equivalency charts — the website is the source of truth.",
-                points: 8, icon: "link", color: .blue, monthlyImpact: 0
-            ))
+            items.append(Solution(title: "Run Your NJ Transfer Evaluation", description: "Go to njtransfer.org and run a course-by-course evaluation from \(cc) to \(uni) right now. It shows exactly which credits transfer and which don't. The website is the source of truth.", points: 8, icon: "link", color: .blue, monthlyImpact: 0))
         default: break
         }
 
         items.append(contentsOf: [
-            Solution(
-                title: "Renew Your FAFSA (Deadline: June 30)",
-                description: "Your FAFSA from \(cc) does NOT auto-transfer. You have to refile it and add \(uni)'s school code (search it on studentaid.gov). Do this the week you get accepted — don't wait for orientation. Late filers get less aid.",
-                points: 10, icon: "doc.text.fill", color: .green, monthlyImpact: 250
-            ),
-            Solution(
-                title: "Fight Your Wasted Credits",
-                description: "Don't just accept the rejection. Email the \(uni) department chair for each rejected course, attach your syllabus plus the course description, and request a manual equivalency review. I've seen students recover 6–9 credits this way. Polite persistence works.",
-                points: 5, icon: "arrow.uturn.backward", color: .red, monthlyImpact: 0
-            ),
-            Solution(
-                title: "Lock Down a Roommate Now",
-                description: "Don't wait until move-in week. Post in the \(uni) housing Facebook group and r/\(uni.replacingOccurrences(of: " ", with: "").lowercased()) subreddit now. A roommate doesn't just split rent — it splits utilities, internet, and renter's insurance. That's 30%+ off your monthly housing cost.",
-                points: 6, icon: "person.2.fill", color: .purple, monthlyImpact: 0
-            ),
-            Solution(
-                title: "Apply for the \(uni) Transfer Scholarship",
-                description: "Most transfer students skip this because they think scholarships are only for freshmen. Wrong. \(uni) has transfer-specific awards — usually $1,000–$3,000/year. Check \(uni.lowercased().replacingOccurrences(of: " ", with: "")).edu/scholarships and filter by 'transfer.' Application takes 20 minutes.",
-                points: 7, icon: "dollarsign.circle.fill", color: .orange, monthlyImpact: 150
-            ),
-            Solution(
-                title: "Build a 3-Month Emergency Cushion",
-                description: "Your runway is how long your savings last at your projected deficit. If you're negative $300/mo, you need at least $900 saved before day one. Open a separate high-yield savings account (Ally or Marcus) and automate $50/week into it starting today.",
-                points: 3, icon: "banknote.fill", color: .cyan, monthlyImpact: 0
-            ),
-            Solution(
-                title: "Get on Federal Work-Study First Week",
-                description: "Campus jobs through Work-Study pay $12–15/hr and work around your class schedule. The catch: positions fill in the first week of the semester. Don't wait for the job fair. Go to \(uni)'s student employment portal the day your semester starts and apply to 5+ positions.",
-                points: 4, icon: "briefcase.fill", color: .brown, monthlyImpact: 200
-            ),
+            Solution(title: "Renew Your FAFSA (Deadline: June 30)", description: "Your FAFSA from \(cc) does NOT auto-transfer. Refile it and add \(uni)'s school code on studentaid.gov. Do this the week you get accepted — late filers get less aid.", points: 10, icon: "doc.text.fill", color: .green, monthlyImpact: 250),
+            Solution(title: "Fight Your Wasted Credits", description: "Email the \(uni) department chair for each rejected course, attach your syllabus plus the course description, and request a manual equivalency review. Polite persistence works.", points: 5, icon: "arrow.uturn.backward", color: .red, monthlyImpact: 0),
+            Solution(title: "Lock Down a Roommate Now", description: "Post in the \(uni) housing Facebook group and subreddit now. A roommate splits rent, utilities, internet, and renter's insurance — that's 30%+ off your monthly housing cost.", points: 6, icon: "person.2.fill", color: .purple, monthlyImpact: 0),
+            Solution(title: "Apply for the \(uni) Transfer Scholarship", description: "Most transfer students skip this thinking scholarships are only for freshmen. Wrong. \(uni) has transfer-specific awards — usually $1,000–$3,000/year. Application takes 20 minutes.", points: 7, icon: "dollarsign.circle.fill", color: .orange, monthlyImpact: 150),
+            Solution(title: "Build a 3-Month Emergency Cushion", description: "Your runway is how long your savings last at your projected deficit. Open a separate high-yield savings account and automate $50/week into it starting today.", points: 3, icon: "banknote.fill", color: .cyan, monthlyImpact: 0),
+            Solution(title: "Get on Federal Work-Study First Week", description: "Campus jobs through Work-Study pay $12–15/hr and work around your class schedule. Positions fill in the first week — go to \(uni)'s student employment portal day one.", points: 4, icon: "briefcase.fill", color: .brown, monthlyImpact: 200),
         ])
 
         return items

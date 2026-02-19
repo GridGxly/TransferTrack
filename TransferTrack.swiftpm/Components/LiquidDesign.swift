@@ -1,70 +1,6 @@
 import SwiftUI
 
 
-
-enum AppTheme: String, CaseIterable, Identifiable {
-    case system, light, dark
-    var id: String { rawValue }
-
-    var label: String {
-        switch self {
-        case .system: return "System"
-        case .light: return "Light"
-        case .dark: return "Dark"
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .system: return "circle.lefthalf.filled"
-        case .light: return "sun.max.fill"
-        case .dark: return "moon.fill"
-        }
-    }
-
-    var colorScheme: ColorScheme? {
-        switch self {
-        case .system: return nil
-        case .light: return .light
-        case .dark: return .dark
-        }
-    }
-}
-
-
-
-enum TTColors {
-    static let brandGreen = Color(red: 0.2, green: 0.78, blue: 0.35)
-    static let brandOrange = Color(red: 1.0, green: 0.58, blue: 0.0)
-
-    static let cardBg = Color(uiColor: .secondarySystemGroupedBackground)
-    static let subtle = Color(uiColor: .tertiarySystemGroupedBackground)
-    static let pageBg = Color(uiColor: .systemGroupedBackground)
-
-    static let accent = Color.blue
-    static let success = Color.green
-    static let warning = Color.orange
-    static let danger = Color.red
-
-    static let points = brandGreen
-    static let mutedIconBg = Color(uiColor: .tertiarySystemFill)
-}
-
-
-
-struct CountingText: View, Animatable {
-    var value: CGFloat
-
-    nonisolated var animatableData: CGFloat {
-        get { value }
-        set { value = newValue }
-    }
-
-    var body: some View {
-        Text("\(Int(value))")
-    }
-}
-
 struct CountingDollarText: View, Animatable {
     var value: CGFloat
     var fontSize: CGFloat = 52
@@ -80,13 +16,27 @@ struct CountingDollarText: View, Animatable {
     var body: some View {
         Text("\(isPositive ? "+$" : "-$")\(abs(displayValue))")
             .font(.system(size: fontSize, weight: .bold, design: .rounded))
-            .foregroundStyle(isPositive ? .green : Color(red: 1, green: 0.3, blue: 0.3))
+            .foregroundStyle(isPositive ? TTBrand.mint : TTBrand.coral)
             .minimumScaleFactor(0.5)
             .lineLimit(1)
             .shadow(
-                color: (isPositive ? Color.green : Color.red).opacity(0.3),
-                radius: 12, y: 2
+                color: (isPositive ? TTBrand.mint : TTBrand.coral).opacity(0.35),
+                radius: 16, y: 3
             )
+    }
+}
+
+
+struct CountingText: View, Animatable {
+    var value: CGFloat
+
+    nonisolated var animatableData: CGFloat {
+        get { value }
+        set { value = newValue }
+    }
+
+    var body: some View {
+        Text("\(Int(value))")
     }
 }
 
@@ -103,7 +53,13 @@ struct CollegeLogo: View {
                     .aspectRatio(contentMode: .fill)
             } else {
                 ZStack {
-                    Circle().fill(Color(uiColor: .tertiarySystemFill))
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(uiColor: .tertiarySystemFill), Color(uiColor: .quaternarySystemFill)],
+                                startPoint: .topLeading, endPoint: .bottomTrailing
+                            )
+                        )
                     Text(initials)
                         .font(.system(size: size * 0.35, weight: .bold, design: .rounded))
                         .foregroundStyle(.primary)
@@ -163,6 +119,109 @@ struct CollegeLogo: View {
 }
 
 
+@available(iOS 17.0, *)
+struct ViabilityRing: View, Animatable {
+    let score: Int
+    var animated: CGFloat
+    var size: CGFloat = 180
+
+    nonisolated var animatableData: CGFloat {
+        get { animated }
+        set { animated = newValue }
+    }
+
+    var gradient: [Color] { TTBrand.gradient(for: Int(animated)) }
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(Color(uiColor: .systemFill).opacity(0.5), lineWidth: size > 80 ? 8 : 4)
+
+            Circle()
+                .trim(from: 0, to: max(0.001, animated / 100))
+                .stroke(
+                    AngularGradient(
+                        colors: gradient + [gradient.first ?? .green],
+                        center: .center,
+                        startAngle: .degrees(-90),
+                        endAngle: .degrees(270)
+                    ),
+                    style: StrokeStyle(lineWidth: size > 80 ? 8 : 4, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90))
+
+
+            Circle()
+                .trim(from: 0, to: max(0.001, animated / 100))
+                .stroke(
+                    gradient.first ?? .green,
+                    style: StrokeStyle(lineWidth: size > 80 ? 12 : 6, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90))
+                .blur(radius: 8)
+                .opacity(0.4)
+
+            VStack(spacing: 1) {
+                Text("\(Int(animated))")
+                    .font(.system(size > 80 ? .title2 : .caption2, design: .rounded).weight(.bold))
+                    .foregroundStyle(.primary)
+                if size > 60 {
+                    Text("/100")
+                        .font(.system(.caption2, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .frame(width: size, height: size)
+        .accessibilityLabel("Viability Score: \(score) out of 100")
+    }
+}
+
+
+@available(iOS 17.0, *)
+struct StatCard: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let value: String
+    let valueColor: Color
+    var subtitle: String? = nil
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Image(systemName: icon)
+                .font(.callout)
+                .foregroundStyle(iconColor)
+                .padding(6)
+                .background(iconColor.opacity(0.15))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            Text(title)
+                .font(.system(.caption2, design: .rounded).weight(.bold))
+                .textCase(.uppercase)
+                .tracking(0.8)
+                .foregroundStyle(.secondary)
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
+
+            Text(value)
+                .font(.system(.callout, design: .rounded).weight(.bold))
+                .foregroundStyle(valueColor)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+
+            if let sub = subtitle {
+                Text(sub).font(.caption2).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, minHeight: 100, alignment: .leading)
+        .glassCard(radius: 16, padding: 12)
+        .accessibilityElement(children: .combine)
+    }
+}
+
 
 struct OddsBadge: View {
     let odds: String
@@ -170,9 +229,9 @@ struct OddsBadge: View {
 
     private var color: Color {
         switch odds {
-        case "High Odds": return .green
-        case "Medium Odds": return .orange
-        case "Low Odds": return .red
+        case "High Odds": return TTBrand.mint
+        case "Medium Odds": return TTBrand.amber
+        case "Low Odds": return TTBrand.coral
         default: return .gray
         }
     }
@@ -189,116 +248,19 @@ struct OddsBadge: View {
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: shapeIcon).font(.caption2)
-            Text("\(odds) — \(detail)").font(.caption.weight(.medium))
+            Text("\(odds) — \(detail)")
+                .font(.system(.caption, design: .rounded).weight(.medium))
         }
         .foregroundStyle(color)
         .padding(.horizontal, 10)
-        .padding(.vertical, 4)
-        .background(color.opacity(0.1))
+        .padding(.vertical, 5)
+        .background(color.opacity(0.12))
         .clipShape(Capsule())
     }
 }
 
 
-
-
-struct ViabilityRing: View, Animatable {
-    let score: Int
-    var animated: CGFloat
-    var size: CGFloat = 180
-
-    nonisolated var animatableData: CGFloat {
-        get { animated }
-        set { animated = newValue }
-    }
-
-    var color: Color {
-        let s = Int(animated)
-        if s >= 75 { return .green }
-        else if s >= 50 { return .orange }
-        else { return .red }
-    }
-
-    var body: some View {
-        ZStack {
-            Circle().stroke(Color(uiColor: .systemFill), lineWidth: size > 80 ? 8 : 4)
-            Circle()
-                .trim(from: 0, to: max(0, animated / 100))
-                .stroke(color, style: StrokeStyle(lineWidth: size > 80 ? 8 : 4, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-            VStack(spacing: 1) {
-                Text("\(Int(animated))")
-                    .font(.system(size > 80 ? .title2 : .caption2, design: .rounded).weight(.bold))
-                    .foregroundStyle(.primary)
-                if size > 60 {
-                    Text("/100").font(.caption2).foregroundStyle(.secondary)
-                }
-            }
-        }
-        .frame(width: size, height: size)
-        .accessibilityLabel("Viability Score: \(score) out of 100")
-    }
-}
-
-
-
-struct StatCard: View {
-    let icon: String
-    let iconColor: Color
-    let title: String
-    let value: String
-    let valueColor: Color
-    var subtitle: String? = nil
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: icon)
-                .font(.callout)
-                .foregroundStyle(iconColor)
-                .padding(6)
-                .background(iconColor.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-
-            Text(title)
-                .font(.caption2.weight(.bold))
-                .textCase(.uppercase)
-                .tracking(0.8)
-                .foregroundStyle(.secondary)
-                .minimumScaleFactor(0.7)
-                .lineLimit(1)
-
-            Text(value)
-                .font(.callout.weight(.bold))
-                .foregroundStyle(valueColor)
-                .minimumScaleFactor(0.6)
-                .lineLimit(1)
-
-            if let sub = subtitle {
-                Text(sub).font(.caption2).foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 0)
-        }
-        .frame(maxWidth: .infinity, minHeight: 100, alignment: .leading)
-        .padding(12)
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .cardBorder(colorScheme: colorScheme, radius: 14)
-        .accessibilityElement(children: .combine)
-    }
-}
-
-
-extension View {
-    func cardBorder(colorScheme: ColorScheme, radius: CGFloat = 16) -> some View {
-        self.overlay(
-            RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .stroke(
-                    colorScheme == .light
-                        ? Color(uiColor: .separator).opacity(0.35)
-                        : Color.clear,
-                    lineWidth: 0.5
-                )
-        )
-    }
+struct ConfettiParticle: Identifiable {
+    let id = UUID()
+    var x: CGFloat; var y: CGFloat; var size: CGFloat; var color: Color; var opacity: Double
 }

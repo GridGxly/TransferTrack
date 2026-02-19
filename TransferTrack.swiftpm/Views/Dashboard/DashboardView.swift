@@ -12,17 +12,20 @@ struct DashboardView: View {
         ("book.closed.fill", "Academics"),
         ("house.fill", "Housing"),
         ("lightbulb.fill", "Solutions"),
+        ("calendar.badge.clock", "Timeline"),
     ]
 
     var body: some View {
         ZStack(alignment: .bottom) {
+            ScoreAwareBackground(score: vm.viabilityScore)
+
             TabView(selection: $selectedTab) {
                 NavigationStack {
                     ScrollView(showsIndicators: false) {
                         ForecastTab(vm: vm, showEditSheet: $showEditSheet)
                         Spacer(minLength: 120)
                     }
-                    .background(Color(uiColor: .systemGroupedBackground))
+                    .background(Color.clear)
                     .navigationTitle("Forecast")
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
@@ -57,11 +60,18 @@ struct DashboardView: View {
                         SolutionsTab(vm: vm)
                         Spacer(minLength: 120)
                     }
-                    .background(Color(uiColor: .systemGroupedBackground))
+                    .background(Color.clear)
                     .navigationTitle("Solutions")
                     .navigationBarTitleDisplayMode(.inline)
                 }
                 .tag(3)
+
+                NavigationStack {
+                    TimelineTab(vm: vm)
+                        .navigationTitle("Timeline")
+                        .navigationBarTitleDisplayMode(.inline)
+                }
+                .tag(4)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
 
@@ -71,7 +81,6 @@ struct DashboardView: View {
                 FloatingTabBar(selectedTab: $selectedTab, tabs: tabs)
             }
         }
-        .background(Color(uiColor: .systemGroupedBackground))
         .ignoresSafeArea(edges: [])
         .sheet(isPresented: $showEditSheet) {
             EditPathSheet(vm: vm, isOnboardingComplete: $isOnboardingComplete)
@@ -80,13 +89,9 @@ struct DashboardView: View {
         .sensoryFeedback(.decrease, trigger: vm.monthlyGap) { old, new in new < old }
         .onAppear { vm.cacheForSiri() }
         .onChange(of: vm.monthlyGap) { _, _ in vm.cacheForSiri() }
-        .onChange(of: vm.updateTrigger) { _, _ in
-            vm.cacheForSiri()
-        }
+        .onChange(of: vm.updateTrigger) { _, _ in vm.cacheForSiri() }
     }
 }
-
-
 
 
 @available(iOS 17.0, *)
@@ -148,6 +153,9 @@ struct EditPathSheet: View {
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
+                            .onChange(of: gpaText) { _, newVal in
+                                gpaText = clampGPAInput(newVal)
+                            }
                     }
                     HStack {
                         Text("Credits Earned"); Spacer()
@@ -214,6 +222,7 @@ struct EditPathSheet: View {
                 localUni = unis.first ?? ""
             }
         }
+        .presentationDetents([.large])
         .preferredColorScheme(selectedTheme.colorScheme)
     }
 
@@ -222,18 +231,15 @@ struct EditPathSheet: View {
             vm.selectedState = localState
             vm.selectedCC = localCC
             vm.selectedUni = localUni
-            vm.userGPA = Double(gpaText) ?? vm.userGPA
+            vm.userGPA = clampGPA(Double(gpaText) ?? vm.userGPA)
             vm.userCredits = Double(creditsText) ?? vm.userCredits
             vm.userSavings = Double(savingsText) ?? vm.userSavings
             vm.userRent = Double(rentText) ?? vm.userRent
         }
-
         vm.forceRecalculate()
-
         UINotificationFeedbackGenerator().notificationOccurred(.success)
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            dismiss()
-        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { dismiss() }
     }
 }
+
+
