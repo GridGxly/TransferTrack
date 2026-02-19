@@ -32,6 +32,15 @@ struct ForecastTab: View {
         GridItem(.flexible(), spacing: 12)
     ]
 
+
+    private func tintBg(_ color: Color) -> Color {
+        color.opacity(colorScheme == .light ? 0.10 : 0.15)
+    }
+
+    private func tintBgStrong(_ color: Color) -> Color {
+        color.opacity(colorScheme == .light ? 0.12 : 0.18)
+    }
+
     var body: some View {
         VStack(spacing: 16) {
             pathHeader
@@ -47,6 +56,7 @@ struct ForecastTab: View {
             TransportComparisonSheet(vm: vm)
         }
     }
+
 
 
     private var pathHeader: some View {
@@ -111,7 +121,7 @@ struct ForecastTab: View {
                     .foregroundStyle(TTBrand.mint)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(TTBrand.mint.opacity(0.12))
+                    .background(tintBgStrong(TTBrand.mint))
                     .clipShape(Capsule())
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
@@ -172,7 +182,6 @@ struct ForecastTab: View {
     }
 
 
-
     private var bentoGrid: some View {
         LazyVGrid(columns: bentoColumns, spacing: 12) {
             StatCard(
@@ -201,7 +210,6 @@ struct ForecastTab: View {
     }
 
 
-
     private var transportAdvisor: some View {
         Button { showTransportSheet = true } label: {
             VStack(alignment: .leading, spacing: 10) {
@@ -219,7 +227,7 @@ struct ForecastTab: View {
                 HStack(spacing: 10) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(TTBrand.skyBlue.opacity(0.15))
+                            .fill(tintBg(TTBrand.skyBlue))
                             .frame(width: 40, height: 40)
                         Image(systemName: transportIcons[vm.transportMode])
                             .font(.system(size: 18))
@@ -254,7 +262,13 @@ struct ForecastTab: View {
                                 .font(.system(.caption2, design: .rounded).weight(.medium))
                         }
                         .padding(.horizontal, 10).padding(.vertical, 6)
-                        .background(isActive ? TTBrand.skyBlue.opacity(0.15) : Color(uiColor: .tertiarySystemFill))
+                        .background(
+                            isActive
+                                ? tintBg(TTBrand.skyBlue)
+                                : Color(uiColor: colorScheme == .light
+                                    ? .systemGray5
+                                    : .tertiarySystemFill)
+                        )
                         .foregroundStyle(isActive ? TTBrand.skyBlue : .secondary)
                         .clipShape(Capsule())
                     }
@@ -271,7 +285,6 @@ struct ForecastTab: View {
     }
 
 
-
     private var tuitionChart: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("TUITION IMPACT")
@@ -279,7 +292,7 @@ struct ForecastTab: View {
                 .textCase(.uppercase)
                 .tracking(1.0)
                 .foregroundStyle(.secondary)
-
+            
             HStack {
                 Text("Annual Tuition")
                     .font(.system(.headline, design: .rounded))
@@ -290,7 +303,7 @@ struct ForecastTab: View {
                     .foregroundStyle(TTBrand.coral)
                     .contentTransition(.numericText())
             }
-
+            
             Chart([
                 TuitionEntry(school: vm.selectedCC, amount: vm.ccTuition, isCC: true),
                 TuitionEntry(school: vm.selectedUni, amount: vm.uniTuition, isCC: false)
@@ -298,8 +311,8 @@ struct ForecastTab: View {
                 BarMark(x: .value("Tuition", entry.amount), y: .value("School", entry.school))
                     .foregroundStyle(
                         entry.isCC
-                            ? TTBrand.skyBlue.opacity(0.45)
-                            : TTBrand.skyBlue.opacity(0.85)
+                        ? TTBrand.skyBlue.opacity(colorScheme == .light ? 0.35 : 0.45)
+                        : TTBrand.skyBlue.opacity(colorScheme == .light ? 0.70 : 0.85)
                     )
                     .cornerRadius(6)
                     .annotation(position: .trailing, spacing: 6) {
@@ -319,7 +332,7 @@ struct ForecastTab: View {
             .chartYSelection(value: $selectedChartSchool)
             .frame(height: 100)
             .padding(.vertical, 4)
-
+            
             if let school = selectedChartSchool {
                 let amount = school == vm.selectedCC ? vm.ccTuition : vm.uniTuition
                 Text("\(school): $\(amount.formatted())/year")
@@ -333,8 +346,6 @@ struct ForecastTab: View {
         .opacity(showCards ? 1 : 0)
         .staggerFade(delay: 0.4)
     }
-
-
 
     private var shortViabilityLabel: String {
         if vm.viabilityScore >= 75 { return "Strong" }
