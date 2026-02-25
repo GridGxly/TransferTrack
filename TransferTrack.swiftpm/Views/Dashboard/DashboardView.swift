@@ -8,6 +8,7 @@ struct DashboardView: View {
     @State private var showEditSheet: Bool = false
     @Binding var isOnboardingComplete: Bool
 
+    @State private var visitedTabs: Set<Int> = [0]
 
     private let tabs: [(icon: String, label: String)] = [
         ("chart.line.uptrend.xyaxis", "Forecast"),
@@ -20,7 +21,6 @@ struct DashboardView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             ScoreAwareBackground(score: vm.viabilityScore)
-
 
             GeometryReader { geo in
                 ZStack {
@@ -48,51 +48,57 @@ struct DashboardView: View {
                     .opacity(tabOpacity(for: 0))
                     .allowsHitTesting(selectedTab == 0)
 
-
-                    NavigationStack {
-                        AcademicsTab(vm: vm)
-                            .navigationTitle("Academics")
-                            .navigationBarTitleDisplayMode(.inline)
-                    }
-                    .frame(width: geo.size.width, height: geo.size.height)
-                    .offset(x: slideOffset(for: 1, in: geo.size.width))
-                    .opacity(tabOpacity(for: 1))
-                    .allowsHitTesting(selectedTab == 1)
-
-
-                    NavigationStack {
-                        HousingTab(vm: vm)
-                            .navigationTitle("Housing")
-                            .navigationBarTitleDisplayMode(.inline)
-                    }
-                    .frame(width: geo.size.width, height: geo.size.height)
-                    .offset(x: slideOffset(for: 2, in: geo.size.width))
-                    .opacity(tabOpacity(for: 2))
-                    .allowsHitTesting(selectedTab == 2)
-
-                    NavigationStack {
-                        ScrollView(showsIndicators: false) {
-                            SolutionsTab(vm: vm)
-                            Spacer(minLength: 120)
+                    if visitedTabs.contains(1) {
+                        NavigationStack {
+                            AcademicsTab(vm: vm)
+                                .navigationTitle("Academics")
+                                .navigationBarTitleDisplayMode(.inline)
                         }
-                        .background(Color.clear)
-                        .navigationTitle("Solutions")
-                        .navigationBarTitleDisplayMode(.inline)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .offset(x: slideOffset(for: 1, in: geo.size.width))
+                        .opacity(tabOpacity(for: 1))
+                        .allowsHitTesting(selectedTab == 1)
                     }
-                    .frame(width: geo.size.width, height: geo.size.height)
-                    .offset(x: slideOffset(for: 3, in: geo.size.width))
-                    .opacity(tabOpacity(for: 3))
-                    .allowsHitTesting(selectedTab == 3)
 
-                    NavigationStack {
-                        TimelineTab(vm: vm)
-                            .navigationTitle("Timeline")
-                            .navigationBarTitleDisplayMode(.inline)
+                    if visitedTabs.contains(2) {
+                        NavigationStack {
+                            HousingTab(vm: vm)
+                                .navigationTitle("Housing")
+                                .navigationBarTitleDisplayMode(.inline)
+                        }
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .offset(x: slideOffset(for: 2, in: geo.size.width))
+                        .opacity(tabOpacity(for: 2))
+                        .allowsHitTesting(selectedTab == 2)
                     }
-                    .frame(width: geo.size.width, height: geo.size.height)
-                    .offset(x: slideOffset(for: 4, in: geo.size.width))
-                    .opacity(tabOpacity(for: 4))
-                    .allowsHitTesting(selectedTab == 4)
+
+                    if visitedTabs.contains(3) {
+                        NavigationStack {
+                            ScrollView(showsIndicators: false) {
+                                SolutionsTab(vm: vm)
+                                Spacer(minLength: 120)
+                            }
+                            .background(Color.clear)
+                            .navigationTitle("Solutions")
+                            .navigationBarTitleDisplayMode(.inline)
+                        }
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .offset(x: slideOffset(for: 3, in: geo.size.width))
+                        .opacity(tabOpacity(for: 3))
+                        .allowsHitTesting(selectedTab == 3)
+                    }
+
+                    if visitedTabs.contains(4) {
+                        NavigationStack {
+                            TimelineTab(vm: vm)
+                                .navigationTitle("Timeline")
+                                .navigationBarTitleDisplayMode(.inline)
+                        }
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .offset(x: slideOffset(for: 4, in: geo.size.width))
+                        .opacity(tabOpacity(for: 4))
+                        .allowsHitTesting(selectedTab == 4)
+                    }
                 }
                 .clipped()
             }
@@ -107,8 +113,14 @@ struct DashboardView: View {
                 .presentationDragIndicator(.visible)
         }
         .sensoryFeedback(.impact(flexibility: .soft), trigger: selectedTab)
+        .onChange(of: selectedTab) { _, newTab in
+            visitedTabs.insert(newTab)
+            if newTab > 0 { visitedTabs.insert(newTab - 1) }
+            if newTab < tabs.count - 1 { visitedTabs.insert(newTab + 1) }
+        }
         .onAppear {
             vm.cacheForSiri()
+            visitedTabs.insert(1)
         }
     }
 

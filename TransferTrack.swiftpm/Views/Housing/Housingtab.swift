@@ -12,6 +12,7 @@ struct HousingTab: View {
     @State private var currentDetent: SheetDetent = .peek
     @State private var totalHeight: CGFloat = 800
     @State private var hasInitialized = false
+    @State private var mapReady = false
 
     enum SheetDetent: CGFloat {
         case peek = 0.15
@@ -40,146 +41,25 @@ struct HousingTab: View {
             let totalH = max(geo.size.height, 400)
 
             ZStack(alignment: .bottom) {
-                Map(position: $mapPosition) {
-                    Annotation(vm.selectedUni, coordinate: uniCoord) {
-                        ZStack {
-                            Circle().fill(TTBrand.skyBlue).frame(width: 36, height: 36)
-                            Image(systemName: "graduationcap.fill").font(.system(size: 16)).foregroundStyle(.white)
-                        }
-                        .shadow(color: TTBrand.skyBlue.opacity(0.4), radius: 4, y: 2)
-                    }
-
-                    ForEach(Array(apartments.enumerated()), id: \.element.id) { index, apt in
-                        let coord = aptCoord(apt, index: index)
-                        let selected = selectedApartment == index
-                        Annotation(apt.name, coordinate: coord) {
-                            Button {
-                                withAnimation(.spring(response: 0.3)) {
-                                    selectedApartment = index
-                                }
-                                panTo(coord)
-                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                            } label: {
-                                ZStack {
-                                    if selected {
-                                        Circle().fill(TTBrand.skyBlue).frame(width: 40, height: 40)
-                                        Image(systemName: "house.fill").font(.system(size: 18)).foregroundStyle(.white)
-                                    } else {
-                                        Circle().fill(oddsColor(apt.odds)).frame(width: 16, height: 16)
-                                        Circle().stroke(Color.white, lineWidth: 2).frame(width: 16, height: 16)
-                                    }
-                                }
-                                .shadow(color: .black.opacity(0.2), radius: 3, y: 2)
-                                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selected)
+                if mapReady {
+                    mapView
+                        .ignoresSafeArea(edges: .top)
+                } else {
+                    Color(uiColor: .systemGroupedBackground)
+                        .ignoresSafeArea(edges: .top)
+                        .overlay {
+                            VStack(spacing: 12) {
+                                Image(systemName: "map.fill")
+                                    .font(.largeTitle)
+                                    .foregroundStyle(.secondary)
+                                Text("Loading map...")
+                                    .font(.system(.subheadline, design: .rounded))
+                                    .foregroundStyle(.secondary)
                             }
                         }
-                    }
-
-                    if selectedApartment < apartments.count {
-                        MapPolyline(coordinates: [aptCoord(apartments[selectedApartment], index: selectedApartment), uniCoord])
-                            .stroke(TTBrand.skyBlue.opacity(0.6), lineWidth: 3)
-                    }
                 }
-                .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
-                .ignoresSafeArea(edges: .top)
 
-                VStack(spacing: 0) {
-                    VStack(spacing: 0) {
-                        Capsule()
-                            .fill(Color(uiColor: .tertiaryLabel))
-                            .frame(width: 36, height: 5)
-                            .padding(.top, 8).padding(.bottom, 8)
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Housing Near \(vm.selectedUni)")
-                                .font(.system(.title3, design: .rounded).weight(.semibold))
-                                .foregroundStyle(.primary)
-                            HStack(spacing: 0) {
-                                Text("Rent ")
-                                    .font(.subheadline).foregroundStyle(.secondary)
-                                Text("\(rentDiff >= 0 ? "+" : "")$\(rentDiff)/mo")
-                                    .font(.system(.subheadline, design: .rounded).weight(.medium))
-                                    .foregroundStyle(rentDiffColor)
-                                Text(" vs. current · \(apartments.count) listings")
-                                    .font(.subheadline).foregroundStyle(.secondary)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 20).padding(.bottom, 12)
-                    }
-
-                    if currentDetent == .peek {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(Array(apartments.enumerated()), id: \.element.id) { index, apt in
-                                    Button {
-                                        withAnimation(.spring(response: 0.3)) {
-                                            selectedApartment = index
-                                            currentDetent = .half
-                                            sheetOffset = SheetDetent.half.height(in: totalH)
-                                        }
-                                        panTo(aptCoord(apt, index: index))
-                                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                    } label: {
-                                        MiniApartmentCard(apartment: apt, isSelected: selectedApartment == index)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                            .padding(.horizontal, 20).padding(.bottom, 12)
-                        }
-                    } else {
-                        TabView(selection: $selectedApartment) {
-                            ForEach(Array(apartments.enumerated()), id: \.element.id) { index, apt in
-                                ApartmentCardView(
-                                    apartment: apt,
-                                    isSelected: selectedApartment == index,
-                                    userRent: Int(vm.userRent)
-                                )
-                                .tag(index)
-                            }
-                        }
-                        .tabViewStyle(.page(indexDisplayMode: .always))
-                        .frame(height: currentDetent == .full ? nil : 260)
-                        .onChange(of: selectedApartment) { _, newVal in
-                            if newVal < apartments.count {
-                                panTo(aptCoord(apartments[newVal], index: newVal))
-                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                            }
-                        }
-
-                        if currentDetent == .full, selectedApartment < apartments.count {
-                            let apt = apartments[selectedApartment]
-                            ScrollView(showsIndicators: false) {
-                                VStack(alignment: .leading, spacing: 16) {
-                                    ApartmentDetailSection(apartment: apt, userRent: Int(vm.userRent))
-                                }
-                                .padding(.horizontal, 20).padding(.bottom, 120)
-                            }
-                        }
-                    }
-                }
-                .frame(height: max(sheetOffset, SheetDetent.peek.height(in: totalH)))
-                .frame(maxWidth: .infinity)
-                .background(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(.regularMaterial)
-                        .shadow(color: .black.opacity(0.15), radius: 12, y: -4)
-                )
-                .gesture(
-                    DragGesture(minimumDistance: 5)
-                        .onChanged { value in
-                            let peekH = SheetDetent.peek.height(in: totalH)
-                            let fullH = SheetDetent.full.height(in: totalH)
-                            let newH = dragStartOffset - value.translation.height
-                            sheetOffset = max(peekH, min(newH, fullH))
-                        }
-                        .onEnded { value in
-                            let velocity = -value.predictedEndTranslation.height / totalH
-                            snapToNearest(totalHeight: totalH, velocity: velocity)
-                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        }
-                )
+                bottomSheet(totalH: totalH)
             }
             .onAppear {
                 if !hasInitialized {
@@ -192,6 +72,11 @@ struct HousingTab: View {
                         center: uniCoord,
                         span: MKCoordinateSpan(latitudeDelta: 0.06, longitudeDelta: 0.06)
                     ))
+                    DispatchQueue.main.async {
+                        withAnimation(.easeIn(duration: 0.3)) {
+                            mapReady = true
+                        }
+                    }
                 }
             }
             .onChange(of: geo.size.height) { _, newH in
@@ -215,6 +100,158 @@ struct HousingTab: View {
         }
         .toolbarBackground(.visible, for: .navigationBar)
     }
+
+    @ViewBuilder
+    private var mapView: some View {
+        Map(position: $mapPosition) {
+            Annotation(vm.selectedUni, coordinate: uniCoord) {
+                ZStack {
+                    Circle().fill(TTBrand.skyBlue).frame(width: 36, height: 36)
+                    Image(systemName: "graduationcap.fill").font(.system(size: 16)).foregroundStyle(.white)
+                }
+                .shadow(color: TTBrand.skyBlue.opacity(0.4), radius: 4, y: 2)
+            }
+
+            ForEach(Array(apartments.enumerated()), id: \.element.id) { index, apt in
+                let coord = aptCoord(apt, index: index)
+                let selected = selectedApartment == index
+                Annotation(apt.name, coordinate: coord) {
+                    Button {
+                        withAnimation(.spring(response: 0.3)) {
+                            selectedApartment = index
+                        }
+                        panTo(coord)
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    } label: {
+                        ZStack {
+                            if selected {
+                                Circle().fill(TTBrand.skyBlue).frame(width: 40, height: 40)
+                                Image(systemName: "house.fill").font(.system(size: 18)).foregroundStyle(.white)
+                            } else {
+                                Circle().fill(oddsColor(apt.odds)).frame(width: 16, height: 16)
+                                Circle().stroke(Color.white, lineWidth: 2).frame(width: 16, height: 16)
+                            }
+                        }
+                        .shadow(color: .black.opacity(0.2), radius: 3, y: 2)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selected)
+                    }
+                }
+            }
+
+            if selectedApartment < apartments.count {
+                let apt = apartments[selectedApartment]
+                let aptC = aptCoord(apt, index: selectedApartment)
+                if abs(aptC.latitude - uniCoord.latitude) > 0.0001 ||
+                   abs(aptC.longitude - uniCoord.longitude) > 0.0001 {
+                    MapPolyline(coordinates: [aptC, uniCoord])
+                        .stroke(TTBrand.skyBlue.opacity(0.6), lineWidth: 3)
+                }
+            }
+        }
+        .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
+    }
+
+    @ViewBuilder
+    private func bottomSheet(totalH: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            VStack(spacing: 0) {
+                Capsule()
+                    .fill(Color(uiColor: .tertiaryLabel))
+                    .frame(width: 36, height: 5)
+                    .padding(.top, 8).padding(.bottom, 8)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Housing Near \(vm.selectedUni)")
+                        .font(.system(.title3, design: .rounded).weight(.semibold))
+                        .foregroundStyle(.primary)
+                    HStack(spacing: 0) {
+                        Text("Rent ")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                        Text("\(rentDiff >= 0 ? "+" : "")$\(rentDiff)/mo")
+                            .font(.system(.subheadline, design: .rounded).weight(.medium))
+                            .foregroundStyle(rentDiffColor)
+                        Text(" vs. current · \(apartments.count) listings")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20).padding(.bottom, 12)
+            }
+
+            if currentDetent == .peek {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(Array(apartments.enumerated()), id: \.element.id) { index, apt in
+                            Button {
+                                withAnimation(.spring(response: 0.3)) {
+                                    selectedApartment = index
+                                    currentDetent = .half
+                                    sheetOffset = SheetDetent.half.height(in: totalH)
+                                }
+                                panTo(aptCoord(apt, index: index))
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            } label: {
+                                MiniApartmentCard(apartment: apt, isSelected: selectedApartment == index)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 20).padding(.bottom, 12)
+                }
+            } else {
+                TabView(selection: $selectedApartment) {
+                    ForEach(Array(apartments.enumerated()), id: \.element.id) { index, apt in
+                        ApartmentCardView(
+                            apartment: apt,
+                            isSelected: selectedApartment == index,
+                            userRent: Int(vm.userRent)
+                        )
+                        .tag(index)
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: .always))
+                .frame(height: currentDetent == .full ? nil : 260)
+                .onChange(of: selectedApartment) { _, newVal in
+                    if newVal < apartments.count {
+                        panTo(aptCoord(apartments[newVal], index: newVal))
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    }
+                }
+
+                if currentDetent == .full, selectedApartment < apartments.count {
+                    let apt = apartments[selectedApartment]
+                    ScrollView(showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 16) {
+                            ApartmentDetailSection(apartment: apt, userRent: Int(vm.userRent))
+                        }
+                        .padding(.horizontal, 20).padding(.bottom, 120)
+                    }
+                }
+            }
+        }
+        .frame(height: max(sheetOffset, SheetDetent.peek.height(in: totalH)))
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(.regularMaterial)
+                .shadow(color: .black.opacity(0.15), radius: 12, y: -4)
+        )
+        .gesture(
+            DragGesture(minimumDistance: 5)
+                .onChanged { value in
+                    let peekH = SheetDetent.peek.height(in: totalH)
+                    let fullH = SheetDetent.full.height(in: totalH)
+                    let newH = dragStartOffset - value.translation.height
+                    sheetOffset = max(peekH, min(newH, fullH))
+                }
+                .onEnded { value in
+                    let velocity = -value.predictedEndTranslation.height / totalH
+                    snapToNearest(totalHeight: totalH, velocity: velocity)
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                }
+        )
+    }
+
 
     private func snapToNearest(totalHeight: CGFloat, velocity: CGFloat) {
         let peekH = SheetDetent.peek.height(in: totalHeight)
@@ -277,6 +314,7 @@ struct HousingTab: View {
         return Double(d.components(separatedBy: CharacterSet.decimalDigits.union(CharacterSet(charactersIn: ".")).inverted).joined()) ?? 1.0
     }
 }
+
 
 @available(iOS 17.0, *)
 struct MiniApartmentCard: View {
