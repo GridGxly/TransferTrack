@@ -13,6 +13,7 @@ struct ForecastTab: View {
     @State private var selectedChartSchool: String? = nil
     @State private var ringBounce: CGFloat = 1.0
     @State private var showTransportSheet = false
+    @State private var showGapExplainer = false
 
     private var runwayMonths: Int {
         if vm.monthlyGap >= 0 { return -1 }
@@ -54,6 +55,9 @@ struct ForecastTab: View {
         .animation(.spring(response: 0.4), value: vm.transportMode)
         .sheet(isPresented: $showTransportSheet) {
             TransportComparisonSheet(vm: vm)
+        }
+        .sheet(isPresented: $showGapExplainer) {
+            GapExplainerSheet(vm: vm)
         }
     }
 
@@ -105,11 +109,30 @@ struct ForecastTab: View {
                     .tracking(1.2)
                     .foregroundStyle(.secondary)
 
-                CountingDollarText(value: animatedGap, fontSize: 42)
+                CountingDollarText(value: animatedGap, fontSize: 48)
 
-                Text("per month after transfer")
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    Text("per month after transfer")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+
+                    Button {
+                        showGapExplainer = true
+                    } label: {
+                        Image(systemName: "info.circle")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .accessibilityLabel("How is this calculated?")
+                }
+
+                HStack(spacing: 4) {
+                    Image(systemName: vm.monthlyGap >= 0 ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                        .font(.caption2)
+                    Text(vm.monthlyGap >= 0 ? "Surplus" : "Deficit")
+                        .font(.system(.caption2, design: .rounded).weight(.semibold))
+                }
+                .foregroundStyle(vm.monthlyGap >= 0 ? TTBrand.mint : TTBrand.coral)
 
                 if vm.solutionMonthlyBonus > 0 {
                     HStack(spacing: 4) {
@@ -139,7 +162,7 @@ struct ForecastTab: View {
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Viability Score")
-            .accessibilityValue("\(vm.viabilityScore) out of 100")
+            .accessibilityValue("\(vm.viabilityScore) out of 100, \(shortViabilityLabel)")
             .accessibilityAddTraits(.updatesFrequently)
         }
         .glassCard(radius: 24, padding: 20)
@@ -220,6 +243,7 @@ struct ForecastTab: View {
                     Spacer()
                     Text("+$\(vm.transportCost)/mo")
                         .font(.system(.subheadline, design: .rounded).weight(.bold))
+                        .monospacedDigit()
                         .foregroundStyle(.primary)
                         .contentTransition(.numericText())
                 }
@@ -260,6 +284,7 @@ struct ForecastTab: View {
                             Image(systemName: transportIcons[mode]).font(.system(size: 10))
                             Text(shortTransportCost(mode))
                                 .font(.system(.caption2, design: .rounded).weight(.medium))
+                                .monospacedDigit()
                         }
                         .padding(.horizontal, 10).padding(.vertical, 6)
                         .background(
@@ -292,18 +317,19 @@ struct ForecastTab: View {
                 .textCase(.uppercase)
                 .tracking(1.0)
                 .foregroundStyle(.secondary)
-            
+
             HStack {
                 Text("Annual Tuition")
                     .font(.system(.headline, design: .rounded))
                     .foregroundStyle(.primary)
                 Spacer()
-                Text("+$\(vm.tuitionJump.formatted())/yr")
-                    .font(.system(.subheadline, design: .rounded).weight(.bold))
+                Text("\(vm.selectedUni) is +$\(vm.tuitionJump.formatted())/yr")
+                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                    .monospacedDigit()
                     .foregroundStyle(TTBrand.coral)
                     .contentTransition(.numericText())
             }
-            
+
             Chart([
                 TuitionEntry(school: vm.selectedCC, amount: vm.ccTuition, isCC: true),
                 TuitionEntry(school: vm.selectedUni, amount: vm.uniTuition, isCC: false)
@@ -311,13 +337,14 @@ struct ForecastTab: View {
                 BarMark(x: .value("Tuition", entry.amount), y: .value("School", entry.school))
                     .foregroundStyle(
                         entry.isCC
-                        ? TTBrand.skyBlue.opacity(colorScheme == .light ? 0.35 : 0.45)
-                        : TTBrand.skyBlue.opacity(colorScheme == .light ? 0.70 : 0.85)
+                        ? TTBrand.skyBlue.opacity(colorScheme == .light ? 0.40 : 0.45)
+                        : TTBrand.skyBlue.opacity(colorScheme == .light ? 0.80 : 0.85)
                     )
                     .cornerRadius(6)
                     .annotation(position: .trailing, spacing: 6) {
                         Text("$\(entry.amount.formatted())")
                             .font(.system(.caption, design: .rounded).weight(.semibold))
+                            .monospacedDigit()
                             .foregroundStyle(.primary)
                     }
             }
@@ -332,11 +359,14 @@ struct ForecastTab: View {
             .chartYSelection(value: $selectedChartSchool)
             .frame(height: 100)
             .padding(.vertical, 4)
-            
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Tuition comparison chart. \(vm.selectedCC) costs $\(vm.ccTuition) per year. \(vm.selectedUni) costs $\(vm.uniTuition) per year.")
+
             if let school = selectedChartSchool {
                 let amount = school == vm.selectedCC ? vm.ccTuition : vm.uniTuition
                 Text("\(school): $\(amount.formatted())/year")
                     .font(.system(.caption, design: .rounded).weight(.medium))
+                    .monospacedDigit()
                     .foregroundStyle(TTBrand.skyBlue)
                     .transition(.opacity)
             }
@@ -379,4 +409,95 @@ struct TuitionEntry: Identifiable {
     let school: String
     let amount: Int
     let isCC: Bool
+}
+
+
+@available(iOS 17.0, *)
+struct GapExplainerSheet: View {
+    let vm: TransferViewModel
+    @Environment(\.dismiss) private var dismiss
+
+    private var tuitionMonthly: Int { (SchoolDatabase.uniTuition[vm.selectedUni] ?? 7000) / 12 }
+    private var income: Int { 1800 }
+    private var living: Int { 400 }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Text("Based on tuition + rent + transport + living expenses for \(vm.selectedUni), here's how your monthly budget breaks down.")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+
+                Section("Income") {
+                    HStack {
+                        Label("Estimated Monthly Income", systemImage: "dollarsign.circle.fill")
+                            .font(.system(.subheadline, design: .rounded))
+                        Spacer()
+                        Text("$\(income.formatted())")
+                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .monospacedDigit()
+                            .foregroundStyle(TTBrand.mint)
+                    }
+                }
+
+                Section("Expenses") {
+                    expenseRow("Tuition (monthly)", icon: "graduationcap.fill", amount: tuitionMonthly)
+                    expenseRow("Rent", icon: "house.fill", amount: Int(vm.userRent))
+                    expenseRow("Living Expenses", icon: "cart.fill", amount: living)
+                    expenseRow("Transport", icon: "car.fill", amount: vm.transportCost)
+                }
+
+                Section {
+                    HStack {
+                        Text("Monthly Gap")
+                            .font(.system(.headline, design: .rounded).weight(.bold))
+                        Spacer()
+                        Text("\(vm.monthlyGap >= 0 ? "+" : "")$\(vm.monthlyGap.formatted())")
+                            .font(.system(.headline, design: .rounded).weight(.bold))
+                            .monospacedDigit()
+                            .foregroundStyle(vm.monthlyGap >= 0 ? TTBrand.mint : TTBrand.coral)
+                    }
+
+                    if vm.solutionMonthlyBonus > 0 {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(TTBrand.mint)
+                            Text("Includes +$\(vm.solutionMonthlyBonus)/mo from completed actions")
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
+                Section {
+                    Text("Complete actions in the Solutions tab to improve your monthly gap and viability score.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .navigationTitle("How It's Calculated")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
+    }
+
+    private func expenseRow(_ label: String, icon: String, amount: Int) -> some View {
+        HStack {
+            Label(label, systemImage: icon)
+                .font(.system(.subheadline, design: .rounded))
+            Spacer()
+            Text("-$\(amount.formatted())")
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .monospacedDigit()
+                .foregroundStyle(TTBrand.coral)
+        }
+    }
 }

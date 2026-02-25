@@ -9,21 +9,23 @@ extension View {
     func syncSystemTheme(theme: AppTheme) -> some View {
         if #available(iOS 17.0, *) {
             self.onChange(of: theme, initial: true) { _, newTheme in
-                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                for scene in UIApplication.shared.connectedScenes {
+                    guard let windowScene = scene as? UIWindowScene else { continue }
                     for window in windowScene.windows {
-                        switch newTheme {
-                        case .system:
-                            window.overrideUserInterfaceStyle = .unspecified
-                        case .light:
-                            window.overrideUserInterfaceStyle = .light
-                        case .dark:
-                            window.overrideUserInterfaceStyle = .dark
+                        UIView.animate(withDuration: 0.3) {
+                            switch newTheme {
+                            case .system:
+                                window.overrideUserInterfaceStyle = .unspecified
+                            case .light:
+                                window.overrideUserInterfaceStyle = .light
+                            case .dark:
+                                window.overrideUserInterfaceStyle = .dark
+                            }
                         }
                     }
                 }
             }
         } else {
-            // Fallback on earlier versions: no-op, return the original view
             self
         }
     }
@@ -37,14 +39,7 @@ struct TransferTrackApp: App {
     @AppStorage("appTheme") private var appTheme: String = AppTheme.system.rawValue
 
     init() {
-        try? Tips.configure([
-            .datastoreLocation(.applicationDefault)
-        ])
-
-        #if DEBUG
-        try? Tips.resetDatastore()
-        #endif
-
+        try? Tips.configure()
         TransferTrackShortcuts.updateAppShortcutParameters()
     }
 

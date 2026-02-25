@@ -516,6 +516,11 @@ struct AddCourseSheet: View {
                         Text("Credits"); Spacer()
                         TextField("3", text: $credits).keyboardType(.numberPad)
                             .multilineTextAlignment(.trailing).frame(width: 60)
+                            .onChange(of: credits) { _, newVal in
+                                let cleaned = newVal.filter { $0.isNumber }
+                                if let val = Int(cleaned), val > 12 { credits = "3" }
+                                else { credits = cleaned }
+                            }
                     }
                     Picker("Grade", selection: $grade) {
                         ForEach(grades, id: \.self) { Text($0) }
@@ -526,6 +531,7 @@ struct AddCourseSheet: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Add Course")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -541,8 +547,19 @@ struct AddCourseSheet: View {
                     .fontWeight(.semibold)
                     .disabled(courseTitle.isEmpty && courseCode.isEmpty)
                 }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(
+                            #selector(UIResponder.resignFirstResponder),
+                            to: nil, from: nil, for: nil
+                        )
+                    }
+                }
             }
             .onAppear { titleFocused = true }
         }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 }

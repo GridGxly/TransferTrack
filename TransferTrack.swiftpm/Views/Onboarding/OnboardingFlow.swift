@@ -18,6 +18,7 @@ struct OnboardingFlow: View {
     @State private var transferSemester = "Fall 2026"
 
     private let totalPages = 6
+    private var contentSteps: Int { totalPages - 2 }
 
     var body: some View {
         ZStack {
@@ -25,17 +26,24 @@ struct OnboardingFlow: View {
 
             VStack(spacing: 0) {
                 if currentPage > 0 && currentPage < totalPages - 1 {
-                    HStack(spacing: 4) {
-                        ForEach(1..<totalPages - 1, id: \.self) { step in
-                            Capsule()
-                                .fill(step <= currentPage ? Color.white : Color.white.opacity(0.2))
-                                .frame(height: 3)
-                                .animation(.spring(response: 0.4), value: currentPage)
+                    VStack(spacing: 6) {
+                        HStack(spacing: 4) {
+                            ForEach(1..<totalPages - 1, id: \.self) { step in
+                                Capsule()
+                                    .fill(step <= currentPage ? Color.white : Color.white.opacity(0.2))
+                                    .frame(height: 3)
+                                    .animation(.spring(response: 0.4), value: currentPage)
+                            }
                         }
+                        .padding(.horizontal, 24)
+
+                        Text("Step \(currentPage) of \(contentSteps)")
+                            .font(.system(.caption2, design: .rounded).weight(.medium))
+                            .foregroundStyle(.white.opacity(0.5))
                     }
-                    .padding(.horizontal, 24)
                     .padding(.top, 12)
                     .transition(.opacity)
+                    .accessibilityLabel("Step \(currentPage) of \(contentSteps)")
                 }
 
                 TabView(selection: $currentPage) {
@@ -170,7 +178,7 @@ struct OnboardingHero: View {
             Spacer()
             Spacer()
 
-            OnboardingButton(title: "Start Your Journey", icon: "arrow.right", action: onNext)
+            OnboardingButton(title: "Get started", icon: "arrow.right", action: onNext)
                 .staggerFade(delay: 0.60, yOffset: 24)
         }
     }
@@ -198,36 +206,43 @@ struct OnboardingName: View {
                 .padding(.top, 16)
                 .staggerFade(delay: 0.20)
 
-            HStack(spacing: 0) {
-                Text("Hi, I'm ")
-                    .font(.system(size: 32, weight: .medium, design: .rounded))
+            VStack(spacing: 6) {
+                Text("Name")
+                    .font(.system(.caption, design: .rounded).weight(.medium))
                     .foregroundStyle(.white.opacity(0.5))
-                TextField("", text: $name, prompt: Text("Ralph").foregroundStyle(.white.opacity(0.25)))
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .submitLabel(.continue)
-                    .onSubmit { if !name.isEmpty { onNext() } }
-                    .autocorrectionDisabled()
-                    .focused($nameFocused)
-                    .frame(maxWidth: 200)
-                Text(".")
-                    .font(.system(size: 32, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.5))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 50)
+
+                HStack(spacing: 0) {
+                    Text("Hi, I'm ")
+                        .font(.system(size: 32, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.5))
+                    TextField("", text: $name, prompt: Text("Ralph").foregroundStyle(.white.opacity(0.25)))
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .submitLabel(.next)
+                        .onSubmit { if !name.isEmpty { onNext() } }
+                        .autocorrectionDisabled()
+                        .focused($nameFocused)
+                        .frame(maxWidth: 200)
+                    Text(".")
+                        .font(.system(size: 32, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.5))
+                }
+
+                Rectangle()
+                    .fill(name.isEmpty ? Color.white.opacity(0.2) : TTBrand.skyBlue)
+                    .frame(height: 2)
+                    .padding(.horizontal, 50)
+                    .animation(.spring(response: 0.3), value: name.isEmpty)
             }
             .padding(.top, 32)
             .staggerFade(delay: 0.35)
 
-            Rectangle()
-                .fill(name.isEmpty ? Color.white.opacity(0.2) : TTBrand.skyBlue)
-                .frame(height: 2)
-                .padding(.horizontal, 50)
-                .padding(.top, 4)
-                .animation(.spring(response: 0.3), value: name.isEmpty)
-
             Spacer()
             Spacer()
 
-            OnboardingButton(title: "Continue", action: onNext)
+            OnboardingButton(title: "Next", icon: "arrow.right", action: onNext)
                 .disabled(name.isEmpty)
                 .opacity(name.isEmpty ? 0.4 : 1.0)
                 .staggerFade(delay: 0.50)
@@ -262,7 +277,7 @@ struct OnboardingPath: View {
                         .foregroundStyle(.white.opacity(0.8))
                         .staggerFade(delay: 0.10)
 
-                    Text("Hey \(name), where\nare you transferring?")
+                    Text("Where are you\ntransferring, \(name)?")
                         .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
@@ -274,6 +289,7 @@ struct OnboardingPath: View {
                             CollegeLogo(schoolName: selectedCC, size: 56)
                                 .id(selectedCC)
                                 .transition(.scale.combined(with: .opacity))
+                                .environment(\.colorScheme, .dark)
                             Text("From")
                                 .font(.system(.caption2, design: .rounded).weight(.bold))
                                 .foregroundStyle(.white.opacity(0.5))
@@ -313,6 +329,7 @@ struct OnboardingPath: View {
                             CollegeLogo(schoolName: selectedUni, size: 56)
                                 .id(selectedUni)
                                 .transition(.scale.combined(with: .opacity))
+                                .environment(\.colorScheme, .dark)
                             Text("To")
                                 .font(.system(.caption2, design: .rounded).weight(.bold))
                                 .foregroundStyle(.white.opacity(0.5))
@@ -334,21 +351,21 @@ struct OnboardingPath: View {
                     }
 
                     VStack(spacing: 16) {
-                        OnboardingPickerRow(label: "Your State", icon: "mappin.and.ellipse") {
+                        OnboardingPickerRow(label: "Your state", icon: "mappin.and.ellipse") {
                             Picker("State", selection: $selectedState) {
                                 ForEach(SchoolDatabase.states, id: \.self) { Text($0) }
                             }.pickerStyle(.menu).tint(.white)
                         }
                         .staggerFade(delay: 0.40)
 
-                        OnboardingPickerRow(label: "Community College", icon: "building.columns.fill") {
+                        OnboardingPickerRow(label: "Community college", icon: "building.columns.fill") {
                             Picker("CC", selection: $selectedCC) {
                                 ForEach(ccs, id: \.self) { Text($0) }
                             }.pickerStyle(.menu).tint(.white)
                         }
                         .staggerFade(delay: 0.50)
 
-                        OnboardingPickerRow(label: "Dream School", icon: "graduationcap.fill") {
+                        OnboardingPickerRow(label: "Dream school", icon: "graduationcap.fill") {
                             Picker("Uni", selection: $selectedUni) {
                                 ForEach(unis, id: \.self) { Text($0) }
                             }.pickerStyle(.menu).tint(.white)
@@ -390,114 +407,131 @@ struct OnboardingAcademics: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Spacer()
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    Spacer().frame(height: 40)
 
-            Image(systemName: "book.circle.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(.white.opacity(0.8))
-                .staggerFade(delay: 0.10)
+                    Image(systemName: "book.circle.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .staggerFade(delay: 0.10)
 
-            Text("Let's check your\nacademics, \(name).")
-                .font(.system(size: 26, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.center)
-                .padding(.top, 16)
-                .staggerFade(delay: 0.20)
-
-            VStack(spacing: 36) {
-                VStack(spacing: 10) {
-                    Text("Current GPA")
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .foregroundStyle(.white.opacity(0.6))
-
-                    TextField("3.20", text: $gpaText)
-                        .font(.system(size: 52, weight: .bold, design: .rounded))
+                    Text("Your academics,\n\(name).")
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
-                        .keyboardType(.decimalPad)
                         .multilineTextAlignment(.center)
-                        .minimumScaleFactor(0.5)
-                        .focused($gpaFocused)
-                        .onChange(of: gpaText) { _, newVal in
-                            gpaText = clampGPAInput(newVal)
-                        }
+                        .padding(.top, 16)
+                        .staggerFade(delay: 0.20)
 
-                    HStack(spacing: 0) {
-                        ForEach([0.0, 1.0, 2.0, 3.0, 4.0], id: \.self) { mark in
-                            VStack(spacing: 4) {
-                                Rectangle()
-                                    .fill(gpaValue >= mark ? TTBrand.mint : Color.white.opacity(0.2))
-                                    .frame(width: 2, height: 8)
-                                if mark == 0 || mark == 2 || mark == 4 {
-                                    Text(String(format: "%.0f", mark))
-                                        .font(.system(size: 9, design: .rounded))
-                                        .foregroundStyle(.white.opacity(0.4))
+                    VStack(spacing: 36) {
+                        VStack(spacing: 10) {
+                            Text("Current GPA")
+                                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                                .foregroundStyle(.white.opacity(0.6))
+
+                            TextField("", text: $gpaText, prompt: Text("3.20").foregroundStyle(.white.opacity(0.3)))
+                                .font(.system(size: 52, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(.white)
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.center)
+                                .minimumScaleFactor(0.5)
+                                .focused($gpaFocused)
+                                .onChange(of: gpaText) { _, newVal in
+                                    gpaText = clampGPAInput(newVal)
+                                }
+
+                            HStack(spacing: 0) {
+                                ForEach([0.0, 1.0, 2.0, 3.0, 4.0], id: \.self) { mark in
+                                    VStack(spacing: 4) {
+                                        Rectangle()
+                                            .fill(gpaValue >= mark ? TTBrand.mint : Color.white.opacity(0.2))
+                                            .frame(width: 2, height: 8)
+                                        if mark == 0 || mark == 2 || mark == 4 {
+                                            Text(String(format: "%.0f", mark))
+                                                .font(.system(size: 9, design: .rounded))
+                                                .foregroundStyle(.white.opacity(0.4))
+                                        }
+                                    }
+                                    if mark < 4 { Spacer() }
                                 }
                             }
-                            if mark < 4 { Spacer() }
-                        }
-                    }
-                    .frame(maxWidth: 220)
+                            .frame(maxWidth: 220)
 
-                    GeometryReader { geo in
-                        let progress = min(1.0, gpaValue / 4.0)
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(Color.white.opacity(0.1)).frame(height: 4)
-                            Capsule()
-                                .fill(LinearGradient(colors: [TTBrand.coral, TTBrand.amber, TTBrand.mint], startPoint: .leading, endPoint: .trailing))
-                                .frame(width: max(0, geo.size.width * CGFloat(progress)), height: 4)
-                                .animation(.spring(response: 0.3), value: gpaValue)
-                        }
-                    }
-                    .frame(maxWidth: 220, maxHeight: 4)
-
-                    Text(gpaFeedback)
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.5))
-                        .transition(.opacity)
-                        .animation(.easeInOut(duration: 0.3), value: gpaText)
-                }
-                .staggerFade(delay: 0.35)
-
-                VStack(spacing: 10) {
-                    Text("Credits Earned")
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .foregroundStyle(.white.opacity(0.6))
-
-                    TextField("45", text: $creditsText)
-                        .font(.system(size: 52, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .keyboardType(.numberPad)
-                        .multilineTextAlignment(.center)
-                        .minimumScaleFactor(0.5)
-
-                    if creditsValue > 0 {
-                        let progress = min(1.0, Double(creditsValue) / 60.0)
-                        VStack(spacing: 4) {
                             GeometryReader { geo in
+                                let progress = min(1.0, gpaValue / 4.0)
                                 ZStack(alignment: .leading) {
                                     Capsule().fill(Color.white.opacity(0.1)).frame(height: 4)
                                     Capsule()
-                                        .fill(creditsValue >= 60 ? TTBrand.mint : TTBrand.skyBlue)
+                                        .fill(LinearGradient(colors: [TTBrand.coral, TTBrand.amber, TTBrand.mint], startPoint: .leading, endPoint: .trailing))
                                         .frame(width: max(0, geo.size.width * CGFloat(progress)), height: 4)
-                                        .animation(.spring(response: 0.3), value: creditsValue)
+                                        .animation(.spring(response: 0.3), value: gpaValue)
                                 }
                             }
                             .frame(maxWidth: 220, maxHeight: 4)
 
-                            Text(creditsValue >= 60 ? "AA/AS threshold reached!" : "\(creditsValue)/60 toward Associate's")
+                            Text(gpaFeedback)
                                 .font(.system(.caption, design: .rounded))
-                                .foregroundStyle(creditsValue >= 60 ? TTBrand.mint : .white.opacity(0.5))
-                        }
-                        .transition(.opacity)
-                    }
-                }
-                .staggerFade(delay: 0.45)
-            }
-            .padding(.top, 40)
-            .padding(.horizontal, 24)
+                                .foregroundStyle(.white.opacity(0.5))
+                                .transition(.opacity)
+                                .animation(.easeInOut(duration: 0.3), value: gpaText)
 
-            Spacer()
-            Spacer()
+                            Text("Used to estimate transfer readiness")
+                                .font(.system(.caption2, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.35))
+                        }
+                        .staggerFade(delay: 0.35)
+
+                        VStack(spacing: 10) {
+                            Text("Credits Earned")
+                                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                                .foregroundStyle(.white.opacity(0.6))
+
+                            TextField("", text: $creditsText, prompt: Text("45").foregroundStyle(.white.opacity(0.3)))
+                                .font(.system(size: 52, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(.white)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.center)
+                                .minimumScaleFactor(0.5)
+                                .onChange(of: creditsText) { _, newVal in
+                                    creditsText = clampCreditsInput(newVal)
+                                }
+
+                            if creditsValue > 0 {
+                                let progress = min(1.0, Double(creditsValue) / 60.0)
+                                VStack(spacing: 4) {
+                                    GeometryReader { geo in
+                                        ZStack(alignment: .leading) {
+                                            Capsule().fill(Color.white.opacity(0.1)).frame(height: 4)
+                                            Capsule()
+                                                .fill(creditsValue >= 60 ? TTBrand.mint : TTBrand.skyBlue)
+                                                .frame(width: max(0, geo.size.width * CGFloat(progress)), height: 4)
+                                                .animation(.spring(response: 0.3), value: creditsValue)
+                                        }
+                                    }
+                                    .frame(maxWidth: 220, maxHeight: 4)
+
+                                    Text(creditsValue >= 60 ? "AA/AS threshold reached!" : "\(creditsValue)/60 toward Associate's")
+                                        .font(.system(.caption, design: .rounded))
+                                        .foregroundStyle(creditsValue >= 60 ? TTBrand.mint : .white.opacity(0.5))
+                                }
+                                .transition(.opacity)
+                            }
+
+                            Text("Used to track degree progress")
+                                .font(.system(.caption2, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.35))
+                        }
+                        .staggerFade(delay: 0.45)
+                    }
+                    .padding(.top, 40)
+                    .padding(.horizontal, 24)
+
+                    Spacer().frame(height: 100)
+                }
+            }
+            .scrollDismissesKeyboard(.interactively)
 
             OnboardingButton(title: "Next", icon: "arrow.right", action: onNext)
                 .disabled(!isValid)
@@ -553,18 +587,44 @@ struct OnboardingFinances: View {
                     VStack(spacing: 36) {
                         OnboardingMoneyInput(
                             label: "Current Savings",
-                            placeholder: "2500",
+                            placeholder: "2,500",
                             text: $savingsText,
-                            hint: "This determines your financial runway"
+                            hint: "Used to calculate your financial runway"
                         )
                         .staggerFade(delay: 0.35)
 
-                        OnboardingMoneyInput(
-                            label: "Monthly Rent",
-                            placeholder: "1200",
-                            text: $rentText,
-                            hint: "What you're paying now (we'll compare)"
-                        )
+                        VStack(spacing: 10) {
+                            Text("Monthly Rent")
+                                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                                .foregroundStyle(.white.opacity(0.6))
+
+                            HStack(spacing: 4) {
+                                Text("$")
+                                    .font(.system(size: 44, weight: .bold, design: .rounded))
+                                    .foregroundStyle(rentText.isEmpty ? .white.opacity(0.2) : .white.opacity(0.6))
+                                TextField("", text: $rentText, prompt: Text("1,200").foregroundStyle(.white.opacity(0.3)))
+                                    .font(.system(size: 44, weight: .bold, design: .rounded))
+                                    .monospacedDigit()
+                                    .foregroundStyle(.white)
+                                    .keyboardType(.numberPad)
+                                    .multilineTextAlignment(.center)
+                                    .minimumScaleFactor(0.5)
+                                Text("/mo")
+                                    .font(.system(size: 20, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.white.opacity(0.4))
+                            }
+                            .frame(maxWidth: .infinity)
+
+                            Rectangle()
+                                .fill(rentText.isEmpty ? Color.white.opacity(0.15) : TTBrand.amber.opacity(0.6))
+                                .frame(height: 2)
+                                .padding(.horizontal, 40)
+                                .animation(.spring(response: 0.3), value: rentText.isEmpty)
+
+                            Text("Used to calculate your monthly gap")
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.4))
+                        }
                         .staggerFade(delay: 0.45)
 
                         OnboardingPickerRow(label: "When do you plan to transfer?", icon: "calendar") {
@@ -582,7 +642,7 @@ struct OnboardingFinances: View {
             }
             .scrollDismissesKeyboard(.interactively)
 
-            OnboardingButton(title: "Generate My Forecast", icon: "arrow.right.circle.fill", action: onNext)
+            OnboardingButton(title: "Generate my forecast", icon: "arrow.right.circle.fill", action: onNext)
                 .disabled(!isValid)
                 .opacity(isValid ? 1.0 : 0.4)
                 .staggerFade(delay: 0.65)
@@ -609,7 +669,7 @@ struct OnboardingLoading: View {
             ("magnifyingglass", "Analyzing \(uniName) degree requirements"),
             ("house.lodge.fill", "Calculating off-campus housing odds"),
             ("dollarsign.arrow.circlepath", "Finding hidden scholarships"),
-            ("checkmark.shield.fill", "Building your Transfer Plan")
+            ("checkmark.shield.fill", "Building your transfer plan")
         ]
     }
 
@@ -617,7 +677,6 @@ struct OnboardingLoading: View {
         VStack(spacing: 32) {
             Spacer()
 
-       
             ZStack {
                 Circle()
                     .fill(TTBrand.skyBlue.opacity(0.06 + glowPhase * 0.08))
@@ -672,7 +731,7 @@ struct OnboardingLoading: View {
             Spacer()
 
             if showButton {
-                OnboardingButton(title: "View Your Plan", icon: "arrow.right", action: onComplete)
+                OnboardingButton(title: "View your plan", icon: "arrow.right", action: onComplete)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -701,6 +760,8 @@ struct OnboardingLoading: View {
 
 
 
+
+@available(iOS 17.0, *)
 struct OnboardingButton: View {
     let title: String
     var icon: String? = nil
@@ -732,6 +793,7 @@ struct OnboardingButton: View {
     }
 }
 
+@available(iOS 17.0, *)
 struct OnboardingPickerRow<Content: View>: View {
     let label: String
     let icon: String
@@ -761,6 +823,7 @@ struct OnboardingPickerRow<Content: View>: View {
     }
 }
 
+@available(iOS 17.0, *)
 struct OnboardingMoneyInput: View {
     let label: String
     let placeholder: String
@@ -777,8 +840,9 @@ struct OnboardingMoneyInput: View {
                 Text("$")
                     .font(.system(size: 44, weight: .bold, design: .rounded))
                     .foregroundStyle(text.isEmpty ? .white.opacity(0.2) : .white.opacity(0.6))
-                TextField(placeholder, text: $text)
+                TextField("", text: $text, prompt: Text(placeholder).foregroundStyle(.white.opacity(0.3)))
                     .font(.system(size: 44, weight: .bold, design: .rounded))
+                    .monospacedDigit()
                     .foregroundStyle(.white)
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.center)
@@ -857,6 +921,7 @@ struct PathPickerWithLogo<Content: View>: View {
     }
 }
 
+@available(iOS 17.0, *)
 struct BigNumberInput: View {
     let label: String
     let placeholder: String
@@ -876,6 +941,7 @@ struct BigNumberInput: View {
                 }
                 TextField(placeholder, text: $text)
                     .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .monospacedDigit()
                     .foregroundStyle(.primary)
                     .keyboardType(keyboardType)
                     .multilineTextAlignment(.center)

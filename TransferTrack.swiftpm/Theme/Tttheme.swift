@@ -37,7 +37,6 @@ enum TTColors {
     static let danger   = TTBrand.coral
     static let points   = TTBrand.mint
 
-
     static let pageBg   = Color(uiColor: .systemGroupedBackground)
     static let cardBg   = Color(uiColor: .secondarySystemGroupedBackground)
     static let subtle   = Color(uiColor: .tertiarySystemGroupedBackground)
@@ -56,13 +55,13 @@ struct ScoreAwareBackground: View {
     }
 
     private var orbOpacity: Double {
-        colorScheme == .light ? 0.08 : 0.18
+        colorScheme == .light ? 0.06 : 0.15
     }
 
     private var baseColor: Color {
         colorScheme == .light
             ? Color(uiColor: .systemGroupedBackground)
-            : Color(red: 0.06, green: 0.06, blue: 0.08)
+            : Color(uiColor: .systemBackground)
     }
 
     var body: some View {
@@ -109,7 +108,6 @@ struct ScoreAwareBackground: View {
 
 
 
-
 struct GlassCard: ViewModifier {
     var radius: CGFloat = 20
     var padding: CGFloat = 16
@@ -117,29 +115,35 @@ struct GlassCard: ViewModifier {
 
     private var strokeColor: Color {
         colorScheme == .light
-            ? Color(uiColor: .separator).opacity(0.3)
+            ? Color(uiColor: .separator).opacity(0.35)
             : Color.white.opacity(0.08)
     }
 
     private var shadowColor: Color {
         colorScheme == .light
-            ? Color.black.opacity(0.08)
-            : Color.black.opacity(0.3)
+            ? Color.black.opacity(0.06)
+            : Color.black.opacity(0.25)
     }
 
     private var shadowRadius: CGFloat {
-        colorScheme == .light ? 8 : 12
+        colorScheme == .light ? 6 : 10
     }
 
     func body(content: Content) -> some View {
         content
             .padding(padding)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .background {
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .fill(colorScheme == .light
+                        ? AnyShapeStyle(Color(uiColor: .secondarySystemGroupedBackground))
+                        : AnyShapeStyle(.regularMaterial)
+                    )
+            }
             .overlay(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .stroke(strokeColor, lineWidth: 0.5)
             )
-            .shadow(color: shadowColor, radius: shadowRadius, y: 4)
+            .shadow(color: shadowColor, radius: shadowRadius, y: 3)
     }
 }
 
@@ -243,20 +247,21 @@ struct ScorePill: View {
 
 
 
-
 @available(iOS 17.0, *)
 struct OnboardingBackground: View {
     let step: Int
     let totalSteps: Int
 
+ 
     private var gradientColors: [Color] {
         switch step {
-        case 0: return [Color(red: 0.15, green: 0.20, blue: 0.45), Color(red: 0.08, green: 0.10, blue: 0.25)]
-        case 1: return [Color(red: 0.18, green: 0.22, blue: 0.50), Color(red: 0.10, green: 0.08, blue: 0.28)]
-        case 2: return [Color(red: 0.25, green: 0.15, blue: 0.45), Color(red: 0.15, green: 0.08, blue: 0.30)]
-        case 3: return [Color(red: 0.10, green: 0.30, blue: 0.32), Color(red: 0.06, green: 0.18, blue: 0.22)]
-        case 4: return [Color(red: 0.35, green: 0.22, blue: 0.10), Color(red: 0.20, green: 0.12, blue: 0.06)]
-        default: return [Color(red: 0.08, green: 0.15, blue: 0.12), Color(red: 0.04, green: 0.08, blue: 0.08)]
+        case 0:
+            return [Color(red: 0.12, green: 0.18, blue: 0.42), Color(red: 0.06, green: 0.10, blue: 0.28)]
+        case 1:            return [Color(red: 0.14, green: 0.20, blue: 0.48), Color(red: 0.08, green: 0.12, blue: 0.32)]
+        case 2:            return [Color(red: 0.18, green: 0.18, blue: 0.52), Color(red: 0.10, green: 0.10, blue: 0.35)]
+        case 3:            return [Color(red: 0.22, green: 0.16, blue: 0.52), Color(red: 0.12, green: 0.09, blue: 0.35)]
+        case 4:            return [Color(red: 0.28, green: 0.15, blue: 0.52), Color(red: 0.16, green: 0.08, blue: 0.35)]
+        default:            return [Color(red: 0.30, green: 0.14, blue: 0.48), Color(red: 0.18, green: 0.08, blue: 0.32)]
         }
     }
 
@@ -267,13 +272,13 @@ struct OnboardingBackground: View {
             GeometryReader { geo in
                 let w = geo.size.width
                 Circle()
-                    .fill(gradientColors[0].opacity(0.4))
+                    .fill(gradientColors[0].opacity(0.35))
                     .frame(width: w * 0.7)
                     .blur(radius: 80)
                     .offset(x: -w * 0.15, y: -60)
 
                 Circle()
-                    .fill(gradientColors[1].opacity(0.3))
+                    .fill(gradientColors[1].opacity(0.25))
                     .frame(width: w * 0.5)
                     .blur(radius: 60)
                     .offset(x: w * 0.3, y: geo.size.height * 0.6)

@@ -38,6 +38,14 @@ func clampGPAInput(_ text: String) -> String {
     return result
 }
 
+func clampCreditsInput(_ text: String) -> String {
+    if text.isEmpty { return text }
+    let cleaned = text.filter { $0.isNumber }
+    guard let val = Int(cleaned) else { return cleaned }
+    if val > 200 { return "60" }
+    if val < 0 { return "0" }
+    return cleaned
+}
 
 
 @available(iOS 17.0, *)

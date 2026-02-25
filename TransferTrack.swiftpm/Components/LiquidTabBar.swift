@@ -38,8 +38,40 @@ struct GlassSegmentedTabBar: UIViewRepresentable {
         let control = UISegmentedControl(items: items)
         control.selectedSegmentIndex = selectedTab
 
+        renderImages(for: control, selectedIndex: selectedTab)
+
+        DispatchQueue.main.async {
+            for subview in control.subviews {
+                if subview is UIImageView && subview != control.subviews.last {
+                    subview.alpha = 0
+                }
+            }
+        }
+
+        control.selectedSegmentTintColor = UIColor.systemGray.withAlphaComponent(0.3)
+        control.addTarget(context.coordinator, action: #selector(context.coordinator.tabSelected(_:)), for: .valueChanged)
+        return control
+    }
+
+    func updateUIView(_ uiView: UISegmentedControl, context: Context) {
+        if uiView.selectedSegmentIndex != selectedTab {
+            uiView.selectedSegmentIndex = selectedTab
+        }
+        renderImages(for: uiView, selectedIndex: selectedTab)
+        for subview in uiView.subviews {
+            if subview is UIImageView && subview != uiView.subviews.last {
+                subview.alpha = 0
+            }
+        }
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UISegmentedControl, context: Context) -> CGSize? {
+        return size
+    }
+
+    private func renderImages(for control: UISegmentedControl, selectedIndex: Int) {
         for (index, tab) in tabs.enumerated() {
-            let isActive = index == selectedTab
+            let isActive = index == selectedIndex
             let content = VStack(spacing: 2) {
                 Image(systemName: tab.icon)
                     .font(.system(size: 16, weight: isActive ? .bold : .medium))
@@ -56,26 +88,6 @@ struct GlassSegmentedTabBar: UIViewRepresentable {
                 control.setImage(image, forSegmentAt: index)
             }
         }
-
-        DispatchQueue.main.async {
-            for subview in control.subviews {
-                if subview is UIImageView && subview != control.subviews.last {
-                    subview.alpha = 0
-                }
-            }
-        }
-
-        control.selectedSegmentTintColor = UIColor.systemGray.withAlphaComponent(0.3)
-        control.addTarget(context.coordinator, action: #selector(context.coordinator.tabSelected(_:)), for: .valueChanged)
-        return control
-    }
-
-    func updateUIView(_ uiView: UISegmentedControl, context: Context) {
-        uiView.selectedSegmentIndex = selectedTab
-    }
-
-    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UISegmentedControl, context: Context) -> CGSize? {
-        return size
     }
 
     @MainActor
@@ -91,6 +103,8 @@ struct GlassSegmentedTabBar: UIViewRepresentable {
         }
     }
 }
+
+
 
 
 @available(iOS 17.0, *)
@@ -134,10 +148,8 @@ struct FloatingTabBar: View {
                     .frame(height: barHeight)
                     .shadow(color: .black.opacity(colorScheme == .dark ? 0.3 : 0.08), radius: 16, y: 6)
 
-
                 blobView(tw: tw)
                 rimLightView(tw: tw)
-
 
                 HStack(spacing: 0) {
                     ForEach(Array(tabs.enumerated()), id: \.offset) { index, tab in

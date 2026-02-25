@@ -105,13 +105,14 @@ struct TimelineTab: View {
                             proxy.scrollTo(events[safe: todayIndex]?.id, anchor: .center)
                         }
                     }
-                    withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                    withAnimation(.easeInOut(duration: 3.0).repeatForever(autoreverses: true)) {
                         pulsePhase = 1.0
                     }
                 }
             }
         }
         .safeAreaPadding(.bottom, 80)
+        .background(Color(uiColor: .systemBackground))
         .sheet(item: $selectedGuideEvent) { event in
             TimelineGuideSheet(event: event, uni: vm.selectedUni, cc: vm.selectedCC, state: vm.selectedState)
         }

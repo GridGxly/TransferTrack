@@ -1,97 +1,135 @@
 import SwiftUI
+import SwiftData
 
 @available(iOS 17.0, *)
 struct DashboardView: View {
-    @Binding var isOnboardingComplete: Bool
     @State private var vm = TransferViewModel()
-    @State private var selectedTab = 0
-    @State private var showEditSheet = false
+    @State private var selectedTab: Int = 0
+    @State private var showEditSheet: Bool = false
+    @Binding var isOnboardingComplete: Bool
+
 
     private let tabs: [(icon: String, label: String)] = [
-        ("chart.bar.fill", "Forecast"),
+        ("chart.line.uptrend.xyaxis", "Forecast"),
         ("book.closed.fill", "Academics"),
         ("house.fill", "Housing"),
         ("lightbulb.fill", "Solutions"),
-        ("calendar.badge.clock", "Timeline"),
+        ("calendar", "Timeline")
     ]
 
     var body: some View {
         ZStack(alignment: .bottom) {
             ScoreAwareBackground(score: vm.viabilityScore)
 
-            TabView(selection: $selectedTab) {
-                NavigationStack {
-                    ScrollView(showsIndicators: false) {
-                        ForecastTab(vm: vm, showEditSheet: $showEditSheet)
-                        Spacer(minLength: 120)
-                    }
-                    .background(Color.clear)
-                    .navigationTitle("Forecast")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .primaryAction) {
-                            Button { showEditSheet = true } label: {
-                                Image(systemName: "slider.horizontal.3")
-                                    .font(.body)
-                                    .foregroundStyle(.primary)
+
+            GeometryReader { geo in
+                ZStack {
+                    NavigationStack {
+                        ScrollView(showsIndicators: false) {
+                            ForecastTab(vm: vm, showEditSheet: $showEditSheet)
+                            Spacer(minLength: 120)
+                        }
+                        .background(Color.clear)
+                        .navigationTitle("Forecast")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .primaryAction) {
+                                Button { showEditSheet = true } label: {
+                                    Image(systemName: "slider.horizontal.3")
+                                        .font(.body)
+                                        .foregroundStyle(.primary)
+                                }
+                                .accessibilityLabel("Edit transfer path")
                             }
-                            .accessibilityLabel("Edit transfer path")
                         }
                     }
-                }
-                .tag(0)
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .offset(x: slideOffset(for: 0, in: geo.size.width))
+                    .opacity(tabOpacity(for: 0))
+                    .allowsHitTesting(selectedTab == 0)
 
-                NavigationStack {
-                    AcademicsTab(vm: vm)
-                        .navigationTitle("Academics")
-                        .navigationBarTitleDisplayMode(.inline)
-                }
-                .tag(1)
 
-                NavigationStack {
-                    HousingTab(vm: vm)
-                        .navigationTitle("Housing")
-                        .navigationBarTitleDisplayMode(.inline)
-                }
-                .tag(2)
-
-                NavigationStack {
-                    ScrollView(showsIndicators: false) {
-                        SolutionsTab(vm: vm)
-                        Spacer(minLength: 120)
+                    NavigationStack {
+                        AcademicsTab(vm: vm)
+                            .navigationTitle("Academics")
+                            .navigationBarTitleDisplayMode(.inline)
                     }
-                    .background(Color.clear)
-                    .navigationTitle("Solutions")
-                    .navigationBarTitleDisplayMode(.inline)
-                }
-                .tag(3)
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .offset(x: slideOffset(for: 1, in: geo.size.width))
+                    .opacity(tabOpacity(for: 1))
+                    .allowsHitTesting(selectedTab == 1)
 
-                NavigationStack {
-                    TimelineTab(vm: vm)
-                        .navigationTitle("Timeline")
+
+                    NavigationStack {
+                        HousingTab(vm: vm)
+                            .navigationTitle("Housing")
+                            .navigationBarTitleDisplayMode(.inline)
+                    }
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .offset(x: slideOffset(for: 2, in: geo.size.width))
+                    .opacity(tabOpacity(for: 2))
+                    .allowsHitTesting(selectedTab == 2)
+
+                    NavigationStack {
+                        ScrollView(showsIndicators: false) {
+                            SolutionsTab(vm: vm)
+                            Spacer(minLength: 120)
+                        }
+                        .background(Color.clear)
+                        .navigationTitle("Solutions")
                         .navigationBarTitleDisplayMode(.inline)
-                }
-                .tag(4)
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
+                    }
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .offset(x: slideOffset(for: 3, in: geo.size.width))
+                    .opacity(tabOpacity(for: 3))
+                    .allowsHitTesting(selectedTab == 3)
 
-            if #available(iOS 26.0, *) {
-                LiquidTabBar(selectedTab: $selectedTab, tabs: tabs)
-            } else {
-                FloatingTabBar(selectedTab: $selectedTab, tabs: tabs)
+                    NavigationStack {
+                        TimelineTab(vm: vm)
+                            .navigationTitle("Timeline")
+                            .navigationBarTitleDisplayMode(.inline)
+                    }
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .offset(x: slideOffset(for: 4, in: geo.size.width))
+                    .opacity(tabOpacity(for: 4))
+                    .allowsHitTesting(selectedTab == 4)
+                }
+                .clipped()
             }
+            .animation(.spring(response: 0.4, dampingFraction: 0.85), value: selectedTab)
+            .ignoresSafeArea(.keyboard)
+
+            tabBarView
         }
-        .ignoresSafeArea(edges: [])
         .sheet(isPresented: $showEditSheet) {
             EditPathSheet(vm: vm, isOnboardingComplete: $isOnboardingComplete)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
-        .sensoryFeedback(.increase, trigger: vm.monthlyGap) { old, new in new > old }
-        .sensoryFeedback(.decrease, trigger: vm.monthlyGap) { old, new in new < old }
-        .onAppear { vm.cacheForSiri() }
-        .onChange(of: vm.monthlyGap) { _, _ in vm.cacheForSiri() }
-        .onChange(of: vm.updateTrigger) { _, _ in vm.cacheForSiri() }
+        .sensoryFeedback(.impact(flexibility: .soft), trigger: selectedTab)
+        .onAppear {
+            vm.cacheForSiri()
+        }
+    }
+
+    private func slideOffset(for tabIndex: Int, in width: CGFloat) -> CGFloat {
+        CGFloat(tabIndex - selectedTab) * width
+    }
+
+    private func tabOpacity(for tabIndex: Int) -> Double {
+        abs(tabIndex - selectedTab) <= 1 ? 1.0 : 0.0
+    }
+
+    @ViewBuilder
+    private var tabBarView: some View {
+        if #available(iOS 26.0, *) {
+            LiquidTabBar(selectedTab: $selectedTab, tabs: tabs)
+        } else {
+            FloatingTabBar(selectedTab: $selectedTab, tabs: tabs)
+        }
     }
 }
+
 
 
 @available(iOS 17.0, *)
@@ -99,147 +137,261 @@ struct EditPathSheet: View {
     @Bindable var vm: TransferViewModel
     @Binding var isOnboardingComplete: Bool
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
+
+    @State private var editState: String
+    @State private var editCC: String
+    @State private var editUni: String
+    @State private var editGPA: String
+    @State private var editCredits: String
+    @State private var editSavings: String
+    @State private var editRent: String
+    @State private var editSemester: String
+    @State private var editTheme: AppTheme
+
+    @State private var showRestartConfirmation = false
+
     @AppStorage("appTheme") private var appTheme: String = AppTheme.system.rawValue
 
-    @State private var localState: String
-    @State private var localCC: String
-    @State private var localUni: String
-    @State private var gpaText: String
-    @State private var creditsText: String
-    @State private var savingsText: String
-    @State private var rentText: String
+    private var ccs: [String] { SchoolDatabase.stateData[editState]?.ccs ?? [] }
+    private var unis: [String] { SchoolDatabase.stateData[editState]?.unis ?? [] }
+
+
+    private var hasChanges: Bool {
+        editState != vm.selectedState ||
+        editCC != vm.selectedCC ||
+        editUni != vm.selectedUni ||
+        editGPA != String(format: "%.2f", vm.userGPA) ||
+        editCredits != "\(Int(vm.userCredits))" ||
+        editSavings != "\(Int(vm.userSavings))" ||
+        editRent != "\(Int(vm.userRent))" ||
+        editSemester != vm.transferSemester ||
+        editTheme.rawValue != appTheme
+    }
+
+
+    private let semesters = ["Fall 2026", "Spring 2027", "Fall 2027", "Spring 2028"]
+
+    private var semesterTerm: String {
+        editSemester.components(separatedBy: " ").first ?? "Fall"
+    }
+    private var semesterYear: String {
+        editSemester.components(separatedBy: " ").last ?? "2026"
+    }
 
     init(vm: TransferViewModel, isOnboardingComplete: Binding<Bool>) {
         self.vm = vm
         self._isOnboardingComplete = isOnboardingComplete
-        _localState = State(initialValue: vm.selectedState)
-        _localCC = State(initialValue: vm.selectedCC)
-        _localUni = State(initialValue: vm.selectedUni)
-        _gpaText = State(initialValue: String(format: "%.2f", vm.userGPA))
-        _creditsText = State(initialValue: "\(Int(vm.userCredits))")
-        _savingsText = State(initialValue: "\(Int(vm.userSavings))")
-        _rentText = State(initialValue: "\(Int(vm.userRent))")
-    }
+        _editState = State(initialValue: vm.selectedState)
+        _editCC = State(initialValue: vm.selectedCC)
+        _editUni = State(initialValue: vm.selectedUni)
+        _editGPA = State(initialValue: String(format: "%.2f", vm.userGPA))
+        _editCredits = State(initialValue: "\(Int(vm.userCredits))")
+        _editSavings = State(initialValue: "\(Int(vm.userSavings))")
+        _editRent = State(initialValue: "\(Int(vm.userRent))")
+        _editSemester = State(initialValue: vm.transferSemester)
 
-    private var ccs: [String] { SchoolDatabase.stateData[localState]?.ccs ?? [] }
-    private var unis: [String] { SchoolDatabase.stateData[localState]?.unis ?? [] }
-    private var selectedTheme: AppTheme { AppTheme(rawValue: appTheme) ?? .system }
+        let current = AppTheme(rawValue: UserDefaults.standard.string(forKey: "appTheme") ?? "system") ?? .system
+        _editTheme = State(initialValue: current)
+    }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Transfer Path") {
-                    Picker("State", selection: $localState) {
-                        ForEach(SchoolDatabase.states, id: \.self) { Text($0) }
-                    }
-                    HStack {
-                        CollegeLogo(schoolName: localCC, size: 28)
-                        Picker("From", selection: $localCC) {
-                            ForEach(ccs, id: \.self) { Text($0) }
+                Section {
+                    Picker("State", selection: $editState) {
+                        ForEach(SchoolDatabase.states, id: \.self) { state in
+                            Text(state).tag(state)
                         }
                     }
-                    HStack {
-                        CollegeLogo(schoolName: localUni, size: 28)
-                        Picker("To", selection: $localUni) {
-                            ForEach(unis, id: \.self) { Text($0) }
-                        }
-                    }
-                }
 
-                Section("Academics") {
-                    HStack {
-                        Text("GPA"); Spacer()
-                        TextField("3.20", text: $gpaText)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                            .onChange(of: gpaText) { _, newVal in
-                                gpaText = clampGPAInput(newVal)
+                    HStack(spacing: 12) {
+                        CollegeLogo(schoolName: editCC, size: 32)
+                            .id(editCC)
+                            .transition(.scale.combined(with: .opacity))
+                        Picker("Community College", selection: $editCC) {
+                            ForEach(ccs, id: \.self) { cc in
+                                Text(cc).tag(cc)
                             }
+                        }
+                        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: editCC)
                     }
-                    HStack {
-                        Text("Credits Earned"); Spacer()
-                        TextField("45", text: $creditsText)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                    }
-                }
 
-                Section("Finances") {
-                    HStack {
-                        Text("Savings"); Spacer()
-                        HStack(spacing: 2) {
-                            Text("$").foregroundStyle(.secondary)
-                            TextField("2500", text: $savingsText)
-                                .keyboardType(.numberPad)
-                                .multilineTextAlignment(.trailing)
-                                .frame(width: 80)
+                    HStack(spacing: 12) {
+                        CollegeLogo(schoolName: editUni, size: 32)
+                            .id(editUni)
+                            .transition(.scale.combined(with: .opacity))
+                        Picker("University", selection: $editUni) {
+                            ForEach(unis, id: \.self) { uni in
+                                Text(uni).tag(uni)
+                            }
                         }
+                        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: editUni)
                     }
-                    HStack {
-                        Text("Monthly Rent"); Spacer()
-                        HStack(spacing: 2) {
-                            Text("$").foregroundStyle(.secondary)
-                            TextField("1200", text: $rentText)
-                                .keyboardType(.numberPad)
-                                .multilineTextAlignment(.trailing)
-                                .frame(width: 80)
-                        }
-                    }
-                }
-
-                Section("Appearance") {
-                    Picker("Theme", selection: Binding(
-                        get: { selectedTheme },
-                        set: { appTheme = $0.rawValue }
-                    )) {
-                        ForEach(AppTheme.allCases) { theme in
-                            Label(theme.label, systemImage: theme.icon).tag(theme)
-                        }
-                    }
-                    .pickerStyle(.segmented)
+                } header: {
+                    Text("Transfer Path")
                 }
 
                 Section {
-                    Button("Reset Onboarding", role: .destructive) {
-                        UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+                    HStack {
+                        Text("GPA")
+                        Spacer()
+                        TextField("3.20", text: $editGPA)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .monospacedDigit()
+                            .frame(width: 80)
+                            .foregroundStyle(.primary)
+                            .onChange(of: editGPA) { _, newVal in
+                                editGPA = clampGPAInput(newVal)
+                            }
+                    }
+                    HStack {
+                        Text("Credits Earned")
+                        Spacer()
+                        TextField("45", text: $editCredits)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .monospacedDigit()
+                            .frame(width: 80)
+                            .foregroundStyle(.primary)
+                            .onChange(of: editCredits) { _, newVal in
+                                editCredits = clampCreditsInput(newVal)
+                            }
+                    }
+                } header: {
+                    Text("Academics")
+                }
+
+                Section {
+                    HStack {
+                        Text("Current Savings")
+                        Spacer()
+                        Text("$")
+                            .foregroundStyle(.secondary)
+                        TextField("2,500", text: $editSavings)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .monospacedDigit()
+                            .frame(width: 80)
+                            .foregroundStyle(.primary)
+                    }
+                    HStack {
+                        Text("Monthly Rent")
+                        Spacer()
+                        Text("$")
+                            .foregroundStyle(.secondary)
+                        TextField("1,200", text: $editRent)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .monospacedDigit()
+                            .frame(width: 80)
+                            .foregroundStyle(.primary)
+                    }
+
+                    Picker("Transfer Semester", selection: $editSemester) {
+                        ForEach(semesters, id: \.self) { semester in
+                            Text(semester).tag(semester)
+                        }
+                    }
+                } header: {
+                    Text("Finances")
+                } footer: {
+                    Text("Used to calculate your monthly forecast and financial runway.")
+                        .font(.caption)
+                }
+
+                Section {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Theme")
+                            .font(.subheadline)
+                        Picker("Theme", selection: $editTheme) {
+                            ForEach(AppTheme.allCases) { theme in
+                                Label(theme.label, systemImage: theme.icon)
+                                    .tag(theme)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+                    .padding(.vertical, 4)
+                } header: {
+                    Text("Appearance")
+                }
+
+                Section {
+                    Button(role: .destructive) {
+                        showRestartConfirmation = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.counterclockwise")
+                            Text("Restart Onboarding")
+                        }
+                    }
+                } header: {
+                    Text("Reset")
+                } footer: {
+                    Text("This will clear your current setup and start the onboarding process over. Your saved course data will not be deleted.")
+                        .font(.caption)
+                }
+            }
+            .navigationTitle("Edit Transfer Path")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        applyChanges()
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
                         dismiss()
-                        withAnimation { isOnboardingComplete = false }
+                    }
+                    .fontWeight(.semibold)
+                    .disabled(!hasChanges)
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(
+                            #selector(UIResponder.resignFirstResponder),
+                            to: nil, from: nil, for: nil
+                        )
                     }
                 }
             }
-            .navigationTitle("Edit Plan")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { save() }.fontWeight(.semibold)
-                }
+            .onChange(of: editState) { _, _ in
+                editCC = ccs.first ?? ""
+                editUni = unis.first ?? ""
             }
-            .onChange(of: localState) { _, _ in
-                localCC = ccs.first ?? ""
-                localUni = unis.first ?? ""
+            .confirmationDialog(
+                "Restart Onboarding?",
+                isPresented: $showRestartConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Restart", role: .destructive) {
+                    UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+                    isOnboardingComplete = false
+                    dismiss()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This will reset your transfer path setup. You'll need to re-enter your information. Your added courses will be kept.")
             }
         }
-        .presentationDetents([.large])
-        .preferredColorScheme(selectedTheme.colorScheme)
     }
 
-    private func save() {
-        withAnimation(.spring(response: 0.4)) {
-            vm.selectedState = localState
-            vm.selectedCC = localCC
-            vm.selectedUni = localUni
-            vm.userGPA = clampGPA(Double(gpaText) ?? vm.userGPA)
-            vm.userCredits = Double(creditsText) ?? vm.userCredits
-            vm.userSavings = Double(savingsText) ?? vm.userSavings
-            vm.userRent = Double(rentText) ?? vm.userRent
-        }
+    private func applyChanges() {
+        vm.selectedState = editState
+        vm.selectedCC = editCC
+        vm.selectedUni = editUni
+        vm.userGPA = clampGPA(Double(editGPA) ?? vm.userGPA)
+        vm.userCredits = Double(editCredits) ?? vm.userCredits
+        vm.userSavings = Double(editSavings) ?? vm.userSavings
+        vm.userRent = Double(editRent) ?? vm.userRent
+        vm.transferSemester = editSemester
+
+        appTheme = editTheme.rawValue
+
         vm.forceRecalculate()
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { dismiss() }
     }
 }
-
-

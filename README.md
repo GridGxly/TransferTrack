@@ -200,5 +200,3 @@ MIT License. See [LICENSE](LICENSE) for details.
 ## Author
 
 **[Ralph Clavens Love Noel](https://www.linkedin.com/in/ralphnoel/)**
-
-Built from personal adversity. Designed for every transfer student who deserves a plan.

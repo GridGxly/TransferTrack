@@ -16,7 +16,7 @@ struct TTAdaptiveCardBorder: ViewModifier {
                         isHighlighted
                             ? highlightColor.opacity(0.4)
                             : (colorScheme == .light
-                                ? Color(uiColor: .separator).opacity(0.2)
+                                ? Color(uiColor: .separator).opacity(0.25)
                                 : Color.white.opacity(0.06)),
                         lineWidth: isHighlighted ? 1.5 : 0.5
                     )

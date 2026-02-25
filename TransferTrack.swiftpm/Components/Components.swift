@@ -16,14 +16,15 @@ struct CountingDollarText: View, Animatable {
     private var isPositive: Bool { displayValue >= 0 }
 
     var body: some View {
-        Text("\(isPositive ? "+$" : "-$")\(abs(displayValue))")
+        Text("\(isPositive ? "+$" : "-$")\(abs(displayValue).formatted())")
             .font(.system(size: fontSize, weight: .bold, design: .rounded))
+            .monospacedDigit()
             .foregroundStyle(isPositive ? TTBrand.mint : TTBrand.coral)
             .minimumScaleFactor(0.5)
             .lineLimit(1)
             .shadow(
-                color: (isPositive ? TTBrand.mint : TTBrand.coral).opacity(0.35),
-                radius: 16, y: 3
+                color: (isPositive ? TTBrand.mint : TTBrand.coral).opacity(0.25),
+                radius: 12, y: 2
             )
     }
 }
@@ -41,6 +42,7 @@ struct CountingText: View, Animatable {
 
     var body: some View {
         Text("\(Int(value))")
+            .monospacedDigit()
     }
 }
 
@@ -200,6 +202,13 @@ struct ViabilityRing: View, Animatable {
 
     var gradient: [Color] { TTBrand.gradient(for: Int(animated)) }
 
+    private var scoreLabel: String {
+        let s = Int(animated)
+        if s >= 75 { return "Strong" }
+        else if s >= 50 { return "Moderate" }
+        else { return "At Risk" }
+    }
+
     var body: some View {
         ZStack {
 
@@ -235,6 +244,7 @@ struct ViabilityRing: View, Animatable {
             VStack(spacing: 1) {
                 Text("\(Int(animated))")
                     .font(.system(size > 80 ? .title2 : .caption2, design: .rounded).weight(.bold))
+                    .monospacedDigit()
                     .foregroundStyle(.primary)
                 if size > 60 {
                     Text("/100")
@@ -244,7 +254,7 @@ struct ViabilityRing: View, Animatable {
             }
         }
         .frame(width: size, height: size)
-        .accessibilityLabel("Viability Score: \(score) out of 100")
+        .accessibilityLabel("Viability Score: \(score) out of 100, \(scoreLabel)")
     }
 }
 
@@ -266,7 +276,7 @@ struct StatCard: View {
                 .font(.callout)
                 .foregroundStyle(iconColor)
                 .padding(6)
-                .background(iconColor.opacity(colorScheme == .dark ? 0.20 : 0.15))
+                .background(iconColor.opacity(colorScheme == .dark ? 0.20 : 0.12))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
 
             Text(title)
@@ -279,6 +289,7 @@ struct StatCard: View {
 
             Text(value)
                 .font(.system(.callout, design: .rounded).weight(.bold))
+                .monospacedDigit()
                 .foregroundStyle(valueColor)
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
@@ -286,6 +297,7 @@ struct StatCard: View {
             if let sub = subtitle {
                 Text(sub)
                     .font(.caption2)
+                    .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
 
