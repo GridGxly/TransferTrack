@@ -12,8 +12,8 @@ struct HousingTab: View {
     @State private var currentDetent: SheetDetent = .peek
     @State private var totalHeight: CGFloat = 800
     @State private var hasInitialized = false
-    @State private var mapReady = false
-
+    @State private var mapReady = true
+    
     enum SheetDetent: CGFloat {
         case peek = 0.15
         case half = 0.50
@@ -72,11 +72,6 @@ struct HousingTab: View {
                         center: uniCoord,
                         span: MKCoordinateSpan(latitudeDelta: 0.06, longitudeDelta: 0.06)
                     ))
-                    DispatchQueue.main.async {
-                        withAnimation(.easeIn(duration: 0.3)) {
-                            mapReady = true
-                        }
-                    }
                 }
             }
             .onChange(of: geo.size.height) { _, newH in

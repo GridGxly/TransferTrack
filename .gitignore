@@ -1,15 +1,28 @@
+# macOS
 .DS_Store
 .AppleDouble
 .LSOverride
-.uvc
-*.xcuserstate
-*.xcuserdata/
+
+# Build and crash logs
+build/
+DerivedData/
 *.hmap
 *.ipa
 *.dSYM.zip
 *.dSYM
+
+# Swift Package Manager
 .build/
 Packages/
 Package.resolved
+
+# Swift Playgrounds specifics
+.uvc
 timeline.xctimeline
 playground.xcworkspace
+
+# User-specific Xcode data
+xcuserdata/
+*.xcuserdata/
+*.xcuserstate
+.swiftpm/xcode/xcuserdata/
