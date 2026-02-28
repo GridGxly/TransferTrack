@@ -14,7 +14,7 @@
 
 ## The Problem
 
-Every year, 2.6 million students transfer from community colleges to four-year universities. Most of them have no idea what the financial shock will look like until it's too late. Tuition doubles. Rent spikes. Credits get rejected and cost thousands. The academic transfer path is mapped out by advisors, but the financial transition is completely uncharted.
+Every year, over 1.2 million students transfer between U.S. institutions — nearly 500,000 moving from community colleges to four-year universities each fall. Most of them have no idea what the financial shock will look like until it's too late. Tuition doubles. Rent spikes. Credits get rejected and cost thousands. The academic transfer path is mapped out by advisors, but the financial transition is completely uncharted.
 
 I know because I live it. I'm a first-generation CS student at Valencia College transferring to UCF. I built TransferTrack because no tool existed that could show me (in one screen) whether I could actually afford to transfer.
 
@@ -28,7 +28,9 @@ TransferTrack is a **100% offline, on-device financial forecasting agent** built
 
 - **Transfer Timeline** — A zigzag timeline built with SwiftUI `Canvas` that maps your entire transfer journey against real dates. State-specific milestones (DirectConnect, TAG, Cal Grant, Texas Core, GAA, DTA, CAA, NJ Transfer) appear automatically based on your transfer path. A pulsing "NOW" indicator shows where you are. Each event has a "See Guide" button that opens a step-by-step instruction sheet.
 
-- **CoreML Transcript Scanner** — Point your camera at a physical paper transcript. VisionKit + CoreML detect course codes (regex pattern: `[A-Z]{2,4}\s?\d{4}[A-Z]?`), and the app digitizes them into transferable vs. wasted credit buckets instantly.
+- **CoreML Viability Score** — A tabular regression model trained with Create ML predicts transfer viability (0–100) from GPA, credits, savings, and rent. Inference runs entirely on-device with zero network dependency. The score updates instantly when inputs change, with a heuristic fallback for graceful degradation.
+
+- **Transcript Scanner** — Point your camera at a physical paper transcript. VisionKit's `DataScannerViewController` detects course codes (regex pattern: `[A-Z]{2,4}\s?\d{4}[A-Z]?`), and the app digitizes them into transferable vs. wasted credit buckets instantly.
 
 - **Siri Integration (AppIntents)** — Say "Siri, check my transfer plan in TransferTrack." Siri reads your Monthly Gap and Viability Score hands-free. Ten phrase variations registered.
 
@@ -58,7 +60,7 @@ TransferTrack is a **100% offline, on-device financial forecasting agent** built
 |-------|-----------|-----|
 | UI | SwiftUI | Declarative, fits the single-file .swiftpm constraint |
 | Data | SwiftData + `@Observable` | Persistent user courses with `@Query`, reactive ViewModel |
-| ML | CoreML | On-device viability prediction (GPA, Credits, Savings, Rent) |
+| ML | CoreML + Create ML | On-device viability prediction (GPA, Credits, Savings, Rent) |
 | Vision | VisionKit `DataScannerViewController` | Live camera text recognition for transcript scanning |
 | Voice | AppIntents + `AppShortcutsProvider` | Siri integration with 10 registered phrases |
 | Animation | `Animatable` protocol + `Canvas` | Frame-by-frame counting text, zigzag timeline rendering |
@@ -199,4 +201,4 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 ## Author
 
-**[Ralph Clavens Love Noel](https://www.linkedin.com/in/ralphnoel/)**
+**[Ralph Clavens Love Noel](https://rnoel.dev/)**
