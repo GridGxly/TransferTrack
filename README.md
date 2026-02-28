@@ -1,3 +1,5 @@
+<div align="center">
+
 # TransferTrack
 
 **Navigate the 2+2 transfer path without losing credits or cash.**
@@ -9,6 +11,8 @@
 [![Siri](https://img.shields.io/badge/Voice-AppIntents-purple?logo=apple&logoColor=white)](https://developer.apple.com/documentation/appintents)
 [![License](https://img.shields.io/badge/License-MIT-lightgrey)](LICENSE)
 [![Swift Student Challenge](https://img.shields.io/badge/SSC-2026_Submission-gold?logo=apple&logoColor=white)](https://developer.apple.com/swift-student-challenge/)
+
+</div>
 
 ---
 
