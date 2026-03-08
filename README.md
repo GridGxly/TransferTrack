@@ -41,7 +41,7 @@ A tabular regression model trained with Create ML predicts transfer viability (0
 
 ### Gap Explainer
 
-Tap "How is this calculated?" on the Forecast tab and the app breaks down exactly how your Monthly Gap is computed — income vs. tuition (annualized to monthly) vs. rent vs. living expenses vs. transport. Color-coded line items. If you've completed solutions, it shows the cumulative impact: *"Includes +$450/mo from completed actions."*
+Tap "How is this calculated?" on the Forecast tab and the app breaks down exactly how your Monthly Gap is computed — income vs. tuition (annualized to monthly) vs. rent vs. living expenses vs. transport. Color-coded line items. If you've completed solutions, it shows the cumulative impact: _"Includes +$450/mo from completed actions."_
 
 ### State-Specific Financial Risk Engine
 
@@ -61,13 +61,13 @@ Each alert tells the student the exact dollar cost of their wasted credits and t
 
 Every solution contains specific deadlines, dollar amounts, and advice you'd normally need to pay an advisor for:
 
-> *"TAG locks in your admission — but the window is literally one month in September. Miss it by a day and you're in the regular pool with 80,000 other applicants."*
+> _"TAG locks in your admission — but the window is literally one month in September. Miss it by a day and you're in the regular pool with 80,000 other applicants."_
 
-> *"Your FAFSA from your CC does NOT auto-transfer. Refile it and add the university's school code on studentaid.gov. Do this the week you get accepted — late filers get less aid."*
+> _"Your FAFSA from your CC does NOT auto-transfer. Refile it and add the university's school code on studentaid.gov. Do this the week you get accepted — late filers get less aid."_
 
-> *"Most transfer students skip scholarships thinking they're only for freshmen. Wrong. Your university has transfer-specific awards — usually $1,000–$3,000/year. Application takes 20 minutes."*
+> _"Most transfer students skip scholarships thinking they're only for freshmen. Wrong. Your university has transfer-specific awards — usually $1,000–$3,000/year. Application takes 20 minutes."_
 
-When you complete a solution, the app recalculates your finances in real time. The roommate solution calculates 30% of *your specific rent*. FAFSA adds $250/mo. Work-study adds $200/mo. Complete enough actions to push your viability score past 75 and confetti rains down.
+When you complete a solution, the app recalculates your finances in real time. The roommate solution calculates 30% of _your specific rent_. FAFSA adds $250/mo. Work-study adds $200/mo. Complete enough actions to push your viability score past 75 and confetti rains down.
 
 ### Transfer Timeline
 
@@ -96,6 +96,7 @@ Switch your transfer path from Valencia → UCF to Santa Monica → UCLA and eve
 ### Graceful Degradation
 
 Three defensive fallback chains run through the app:
+
 - **CoreML** → heuristic score if model fails to load
 - **VisionKit DataScanner** → `ContentUnavailableView` with manual entry on unsupported devices
 - **iOS 26 GlassEffect tab bar** → custom `FloatingTabBar` with liquid blob animation on older devices
@@ -112,32 +113,32 @@ Segmented picker in the Edit Plan sheet applies instantly via `.preferredColorSc
 
 ## Tech Stack
 
-| Layer | Technology | Why |
-|-------|-----------|-----|
-| UI | SwiftUI | Declarative, fits the .swiftpm constraint |
-| Data | SwiftData + `@Observable` | `UserCourse` persisted with `@Model` and `@Query` for reactive display alongside static data |
-| ML | CoreML + Create ML | On-device viability prediction with `.cpuOnly` for Simulator compatibility |
-| Vision | VisionKit `DataScannerViewController` | Live camera transcript scanning with `ContentUnavailableView` fallback |
-| Voice | AppIntents + `AppShortcutsProvider` | Siri reads cached gap/score via `UserDefaults` without launching UI |
-| Animation | `Animatable` protocol + `Canvas` | Frame-by-frame counting text, zigzag timeline spine rendering |
-| Glass | iOS 26 `GlassEffect` + `GlassEffectContainer` | Liquid glass tab bar with `FloatingTabBar` fallback |
-| Tips | TipKit | `ExcessCreditTip` fires via `@Parameter` rule when wasted credits are detected |
-| Maps | MapKit | `Map(position:)` with `MapPolyline` distance lines between apartments and campus |
-| Charts | Swift Charts | Tuition comparison bar chart with tap interaction |
-| Haptics | `UIImpactFeedbackGenerator` + `.sensoryFeedback` | Tactile response on gap changes, tab switches, solution completions |
+| Layer     | Technology                                       | Why                                                                                          |
+| --------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| UI        | SwiftUI                                          | Declarative, fits the .swiftpm constraint                                                    |
+| Data      | SwiftData + `@Observable`                        | `UserCourse` persisted with `@Model` and `@Query` for reactive display alongside static data |
+| ML        | CoreML + Create ML                               | On-device viability prediction with `.cpuOnly` for Simulator compatibility                   |
+| Vision    | VisionKit `DataScannerViewController`            | Live camera transcript scanning with `ContentUnavailableView` fallback                       |
+| Voice     | AppIntents + `AppShortcutsProvider`              | Siri reads cached gap/score via `UserDefaults` without launching UI                          |
+| Animation | `Animatable` protocol + `Canvas`                 | Frame-by-frame counting text, zigzag timeline spine rendering                                |
+| Glass     | iOS 26 `GlassEffect` + `GlassEffectContainer`    | Liquid glass tab bar with `FloatingTabBar` fallback                                          |
+| Tips      | TipKit                                           | `ExcessCreditTip` fires via `@Parameter` rule when wasted credits are detected               |
+| Maps      | MapKit                                           | `Map(position:)` with `MapPolyline` distance lines between apartments and campus             |
+| Charts    | Swift Charts                                     | Tuition comparison bar chart with tap interaction                                            |
+| Haptics   | `UIImpactFeedbackGenerator` + `.sensoryFeedback` | Tactile response on gap changes, tab switches, solution completions                          |
 
 ---
 
 ## Accessibility
 
-| Guideline | Implementation |
-|-----------|---------------|
-| **Dynamic Type** | All text uses semantic styles (`.headline`, `.caption`) with `minimumScaleFactor` |
-| **VoiceOver** | Key controls carry `.accessibilityLabel`; Viability ring announces "Viability Score: X out of 100, [status]" with `.updatesFrequently` trait; tuition chart reads both schools and costs; tab bar uses `.isSelected` trait |
-| **Color Independence** | Icons + text labels accompany every color-coded indicator |
-| **Light/Dark Mode** | Environment-aware `TTAdaptiveCardBorder` with adaptive borders and shadows |
-| **Reduce Motion** | Spring animations use implicit SwiftUI handling |
-| **Hands-Free** | Full Siri integration via AppIntents for screen-free operation |
+| Guideline              | Implementation                                                                                                                                                                                                             |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Dynamic Type**       | All text uses semantic styles (`.headline`, `.caption`) with `minimumScaleFactor`                                                                                                                                          |
+| **VoiceOver**          | Key controls carry `.accessibilityLabel`; Viability ring announces "Viability Score: X out of 100, [status]" with `.updatesFrequently` trait; tuition chart reads both schools and costs; tab bar uses `.isSelected` trait |
+| **Color Independence** | Icons + text labels accompany every color-coded indicator                                                                                                                                                                  |
+| **Light/Dark Mode**    | Environment-aware `TTAdaptiveCardBorder` with adaptive borders and shadows                                                                                                                                                 |
+| **Reduce Motion**      | Spring animations use implicit SwiftUI handling                                                                                                                                                                            |
+| **Hands-Free**         | Full Siri integration via AppIntents for screen-free operation                                                                                                                                                             |
 
 ---
 
@@ -180,15 +181,15 @@ TransferTrack.swiftpm/
 
 ## State Coverage
 
-| State | Community Colleges | Universities | Transfer Agreement |
-|-------|-------------------|-------------|-------------------|
-| Florida | 5 | 5 | DirectConnect |
-| California | 5 | 5 | TAG |
-| Texas | 5 | 5 | TEXAS Grant |
-| Virginia | 4 | 5 | GAA |
-| Washington | 4 | 4 | DTA |
-| North Carolina | 4 | 5 | CAA |
-| New Jersey | 4 | 5 | NJ Transfer |
+| State          | Community Colleges | Universities | Transfer Agreement |
+| -------------- | ------------------ | ------------ | ------------------ |
+| Florida        | 5                  | 5            | DirectConnect      |
+| California     | 5                  | 5            | TAG                |
+| Texas          | 5                  | 5            | TEXAS Grant        |
+| Virginia       | 4                  | 5            | GAA                |
+| Washington     | 4                  | 4            | DTA                |
+| North Carolina | 4                  | 5            | CAA                |
+| New Jersey     | 4                  | 5            | NJ Transfer        |
 
 **31 community colleges · 34 universities · 7 states**
 
@@ -227,14 +228,15 @@ TransferTrack is built as a Swift Playground for the challenge, but the architec
 
 ## Installation
 
-1. **Xcode 15.3+** on macOS Sonoma or later (Xcode 26 for Liquid Glass tab bar)
+1. **Xcode 15.3+** on macOS Sonoma or later (Xcode 26 beta for Liquid Glass tab bar)
 2. Clone the repo:
    ```bash
    git clone https://github.com/GridGxly/TransferTrack.git
    ```
-3. Open `TransferTrack.swiftpm` in Xcode (or Swift Playgrounds on iPad)
+3. Open `TransferTrack.swiftpm` in Xcode
 4. Build and run on **iPhone Simulator** (iOS 17+) or a physical device
-5. No external dependencies. No API keys. No internet required.
+5. **iPad Note:** Swift Playgrounds on iPad cannot resolve iOS 26 APIs (`GlassEffectContainer`, `GlassEffect`), which will cause a build failure in `LiquidTabBar.swift`. To run on iPad, build and deploy from Xcode on your Mac with your iPad as the run destination. The app includes a `FloatingTabBar` fallback that activates automatically on devices running below iOS 26.
+6. No external dependencies. No API keys. No internet required.
 
 ---
 
