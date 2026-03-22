@@ -228,16 +228,16 @@ TransferTrack is built as a Swift Playground for the challenge, but the architec
 
 ## Installation
 
-1. **Xcode 26** on macOS Sequoia or later (required for iOS 26 GlassEffect APIs)
+1. **Xcode 26** on macOS Sequoia or later, **or Swift Playgrounds 4.7** on iPad (both include the iOS 26 SDK)
 2. Clone the repo:
    ```bash
    git clone https://github.com/GridGxly/TransferTrack.git
    ```
-3. Open `TransferTrack.swiftpm` in Xcode
+3. Open `TransferTrack.swiftpm` in Xcode or Swift Playgrounds
 4. Build and run on **iPhone Simulator** (iOS 26) for the full experience including Liquid Glass tab bar
 5. **iOS 17–25 Simulator:** The app builds and runs — the `FloatingTabBar` fallback activates automatically. Some iOS 26-specific APIs will be unavailable.
 6. **Physical devices:** You'll need to set your own signing team in Xcode under Signing & Capabilities.
-7. **iPad Swift Playgrounds:** Will not build due to `GlassEffectContainer` requiring the iOS 26 SDK. Build from Xcode on Mac with iPad as the run destination instead.
+7. **iPad Swift Playgrounds 4.7+:** Fully supported — the iOS 26 SDK ships with Playgrounds, so `GlassEffectContainer` and all Liquid Glass APIs build natively on iPad.
 8. No external dependencies. No API keys. No internet required.
 
 ---
